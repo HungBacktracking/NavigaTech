@@ -4,8 +4,8 @@ import os
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from cv_grading import semantic_scoring, llm_grading, clean_resume, final_score
-from pdfParser.pdf_parser import read_pdf
+from cv_grading import clean_resume, final_score
+from Pdf_parser.pdf_parser import read_pdf
 
 st.set_page_config(page_title="CV Grader AI", layout="wide")
 st.title("AI CV Grader Demo")
@@ -31,7 +31,7 @@ if resume_file and jd_text_input:
         st.markdown("---")
         st.subheader("AI Grading Report")
         st.subheader("LLM Grading Score")
-        st.success(f"{grading['overall_match']:.4f}")
+        st.success(f"{grading['overall_match']["overall"]:.4f}")
 
         if grading.get("skills_missing"):
             st.subheader("Skills You Should Learn/Improve")
@@ -54,4 +54,4 @@ elif resume_file is None and jd_text_input:
 
 elif resume_file and not jd_text_input:
     st.info("Please paste the job description to continue.")
-# streamlit run c:/Users/leduc/OneDrive/Desktop/NLP/Grab-project/extractors/demo.py
+# streamlit run C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech\AI_modules\CVs_grader\CVs_Scorer\demo.py
