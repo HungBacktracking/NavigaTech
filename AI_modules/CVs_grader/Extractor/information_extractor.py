@@ -12,7 +12,7 @@ with open(r"C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech
     data = json.load(f)
 df = pd.DataFrame(data)
 
-# Cần thêm GEMINI_API TOKEN vào đây
+# Cần thêm GEMINI_API TOKEN vào đây, lên web tạo ấy
 genai.configure(api_key=os.environ["GEMINI_TOKEN"])
 ge_model = genai.GenerativeModel("gemini-2.0-flash")
 
