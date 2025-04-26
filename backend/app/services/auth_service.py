@@ -1,12 +1,12 @@
 from datetime import timedelta
 
 from app.core.config import configs
-from app.core.exceptions import AuthError
+from app.core.exceptions.custom_error import CustomError
+from app.core.exceptions.exceptions import AuthError
 from app.core.security import create_access_token, get_password_hash, verify_password
 from app.model.user import User
 from app.repository.user_repository import UserRepository
 from app.schema.auth_schema import Payload, SignIn, SignUp
-from app.core.exceptions import DuplicatedError
 from sqlalchemy.exc import IntegrityError
 
 from app.services.base_service import BaseService
@@ -49,6 +49,6 @@ class AuthService(BaseService):
         try:
             created_user = self.user_repository.create(user)
         except IntegrityError as e:
-            raise DuplicatedError(detail=str(e.orig))
+            raise CustomError.DUPLICATE_RESOURCE.as_exception()
 
         return created_user.to_response()
