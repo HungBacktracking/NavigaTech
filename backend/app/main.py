@@ -4,6 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.routes import routers
 from app.core.config import configs
 from app.core.container import Container
+from app.core.exceptions.exception_handlers import register_exception_handlers
 from app.util.class_object import singleton
 
 
@@ -16,6 +17,7 @@ class AppCreator:
             openapi_url=f"{configs.API}/openapi.json",
             version="0.0.1",
         )
+        register_exception_handlers(self.app)
 
         # set db and container
         self.container = Container()

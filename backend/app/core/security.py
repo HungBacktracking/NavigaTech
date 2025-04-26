@@ -7,7 +7,7 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from app.core.config import configs
-from app.core.exceptions import AuthError
+from app.core.exceptions.exceptions import AuthError
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 ALGORITHM = "HS256"

@@ -5,7 +5,7 @@ from pydantic import ValidationError
 
 from app.core.config import configs
 from app.core.container import Container
-from app.core.exceptions import AuthError
+from app.core.exceptions.exceptions import AuthError
 from app.core.security import ALGORITHM, JWTBearer
 from app.schema.auth_schema import Payload
 from app.schema.user_schema import UserResponse
