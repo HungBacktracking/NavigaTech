@@ -2,10 +2,10 @@ from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends
 
 from app.core.container import Container
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.schema.auth_schema import SignIn, SignInResponse, SignUp
-from app.schema.user_schema import User
+from app.schema.user_schema import UserResponse
 from app.services.auth_service import AuthService
 
 router = APIRouter(
@@ -20,13 +20,13 @@ def sign_in(user_info: SignIn, service: AuthService = Depends(Provide[Container.
     return service.sign_in(user_info)
 
 
-@router.post("/sign-up", response_model=User)
+@router.post("/sign-up", response_model=UserResponse)
 @inject
 def sign_up(user_info: SignUp, service: AuthService = Depends(Provide[Container.auth_service])):
     return service.sign_up(user_info)
 
 
-@router.get("/me", response_model=User)
+@router.get("/me", response_model=UserResponse)
 @inject
-def get_me(current_user: User = Depends(get_current_active_user)):
+def get_me(current_user: UserResponse = Depends(get_current_user)):
     return current_user

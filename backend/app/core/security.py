@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Tuple
 
 from fastapi import Request
@@ -15,12 +15,14 @@ ALGORITHM = "HS256"
 
 def create_access_token(subject: dict, expires_delta: timedelta = None) -> Tuple[str, str]:
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = datetime.now(UTC) + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=configs.ACCESS_TOKEN_EXPIRE_MINUTES)
+        expire = datetime.now(UTC) + timedelta(minutes=configs.ACCESS_TOKEN_EXPIRE_MINUTES)
+
     payload = {"exp": expire, **subject}
     encoded_jwt = jwt.encode(payload, configs.SECRET_KEY, algorithm=ALGORITHM)
     expiration_datetime = expire.strftime(configs.DATETIME_FORMAT)
+
     return encoded_jwt, expiration_datetime
 
 
@@ -35,7 +37,7 @@ def get_password_hash(password: str) -> str:
 def decode_jwt(token: str) -> dict:
     try:
         decoded_token = jwt.decode(token, configs.SECRET_KEY, algorithms=ALGORITHM)
-        return decoded_token if decoded_token["exp"] >= int(round(datetime.utcnow().timestamp())) else None
+        return decoded_token if decoded_token["exp"] >= int(round(datetime.now(UTC).timestamp())) else None
     except Exception as e:
         return {}
 
@@ -55,7 +57,8 @@ class JWTBearer(HTTPBearer):
         else:
             raise AuthError(detail="Invalid authorization code.")
 
-    def verify_jwt(self, jwt_token: str) -> bool:
+    @staticmethod
+    def verify_jwt(jwt_token: str) -> bool:
         is_token_valid: bool = False
         try:
             payload = decode_jwt(jwt_token)
@@ -63,4 +66,5 @@ class JWTBearer(HTTPBearer):
             payload = None
         if payload:
             is_token_valid = True
+
         return is_token_valid

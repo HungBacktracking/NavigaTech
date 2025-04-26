@@ -1,12 +1,10 @@
 from datetime import datetime
-
 from pydantic import BaseModel
-
-from app.schema.user_schema import User
+from app.schema.user_schema import UserResponse
 
 
 class SignIn(BaseModel):
-    email__eq: str
+    email: str
     password: str
 
 
@@ -20,10 +18,9 @@ class Payload(BaseModel):
     id: int
     email: str
     name: str
-    is_superuser: bool
 
 
 class SignInResponse(BaseModel):
     access_token: str
     expiration: datetime
-    user_info: User
+    user_info: UserResponse

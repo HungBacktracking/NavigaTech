@@ -1,6 +1,4 @@
-from datetime import datetime
-
-from sqlmodel import Column, DateTime, Field, SQLModel, func
+from sqlmodel import Field, SQLModel
 
 
 class BaseModel(SQLModel):
