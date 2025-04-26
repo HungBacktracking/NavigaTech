@@ -1,45 +1,23 @@
-version: '3.8'
-
 services:
-  app:
-    build: .
-    ports:
-      - "8080:8080"
+  db:
+    image: postgis/postgis:17-3.5
+    restart: always
     environment:
-      - SERVER_PORT=8080
-      - DATABASE_HOST=mysql
-      - DATABASE_PORT=3306
-      - DATABASE_USER=root
-      - DATABASE_PASSWORD=password
-      - DATABASE_NAME=todo_db
-    depends_on:
-      mysql:
-        condition: service_healthy
+      POSTGRES_USER: local
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: local
     networks:
-      - app-network
-
-  mysql:
-    image: mysql:latest
-    environment:
-      - MYSQL_ROOT_PASSWORD=password
-      - MYSQL_DATABASE=todo_db
-      - MYSQL_PASSWORD=mypassword
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p$$MYSQL_ROOT_PASSWORD"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-      start_period: 10s
+      - api_net
+    command: postgres -N 500
+    ports:
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
-    ports:
-      - "3306:3306"
-    networks:
-      - app-network
+      - db_data:/var/lib/postgresql@17/data
 
-volumes:
-  mysql_data: 
 
 networks:
-  app-network:
-    driver: bridge
+  api_net:
+    name: ci_net
+
+volumes:
+  db_data:
