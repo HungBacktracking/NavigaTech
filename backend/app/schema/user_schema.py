@@ -1,9 +1,6 @@
-from typing import List, Optional
-
+from typing import Optional
 from pydantic import BaseModel
-
-from app.schema.base_schema import FindBase, ModelBaseInfo, SearchOptions
-from app.util.schema import AllOptional
+from app.schema.base_schema import ModelBaseInfo
 
 
 class BaseUser(BaseModel):
@@ -13,22 +10,18 @@ class BaseUser(BaseModel):
     class Config:
         orm_mode = True
 
+class UserResponse(ModelBaseInfo, BaseUser): ...
 
-class BaseUserWithPassword(BaseUser):
+
+class UserCreate(BaseModel):
+    email: str
     password: str
+    name: str
+
+class UserUpdate(BaseModel):
+    password: Optional[str] = None
+    name: Optional[str] = None
 
 
-class User(ModelBaseInfo, BaseUser, metaclass=AllOptional): ...
 
 
-class FindUser(FindBase, BaseUser, metaclass=AllOptional):
-    email__eq: str
-    ...
-
-
-class UpsertUser(BaseUser, metaclass=AllOptional): ...
-
-
-class FindUserResult(BaseModel):
-    founds: Optional[List[User]]
-    search_options: Optional[SearchOptions]

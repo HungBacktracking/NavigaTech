@@ -11,7 +11,6 @@ class Container(containers.DeclarativeContainer):
         modules=[
             "app.api.endpoints.auth",
             "app.api.endpoints.user",
-            "app.api.endpoints.auth",
             "app.core.dependencies",
         ]
     )

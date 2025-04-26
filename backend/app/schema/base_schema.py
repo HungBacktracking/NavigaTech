@@ -1,6 +1,5 @@
 from datetime import datetime
-from typing import List, Optional, Union
-
+from typing import Optional
 from pydantic import BaseModel
 
 
@@ -8,21 +7,14 @@ class ModelBaseInfo(BaseModel):
     id: int
     created_at: datetime
     updated_at: datetime
+    deleted_at: Optional[datetime] = None
 
 
 class FindBase(BaseModel):
     ordering: Optional[str]
     page: Optional[int]
-    page_size: Optional[Union[int, str]]
-
-
-class SearchOptions(FindBase):
+    page_size: Optional[int]
     total_count: Optional[int]
-
-
-class FindResult(BaseModel):
-    founds: Optional[List]
-    search_options: Optional[SearchOptions]
 
 
 class FindDateRange(BaseModel):
