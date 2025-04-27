@@ -2,7 +2,7 @@ from fastapi import Request, FastAPI
 from fastapi.responses import JSONResponse
 
 from app.core.exceptions.custom_error import CustomError
-from app.core.exceptions.exceptions import ClientException, AuthError
+from app.core.exceptions.exceptions import ClientException
 from app.schema.error import ErrorResponse
 
 
@@ -11,11 +11,11 @@ def register_exception_handlers(app: FastAPI):
     async def client_exception_handler(request: Request, exc: ClientException):
         payload = ErrorResponse(message=exc.detail, code=exc.code)
 
-        return JSONResponse(status_code=exc.status_code, content=payload.dict())
+        return JSONResponse(status_code=exc.status_code, content=payload.model_dump())
 
     @app.exception_handler(Exception)
     async def generic_exception_handler(request: Request, exc: Exception):
-        err = CustomError.INTERNAL_SERVER_ERROR
+        err = CustomError.INTERNAL_SERVER_ERROR.as_exception()
         payload = ErrorResponse(message=err.message, code=err.code)
 
-        return JSONResponse(status_code=err.http_status, content=payload.dict())
+        return JSONResponse(status_code=err.http_status, content=payload.model_dump())

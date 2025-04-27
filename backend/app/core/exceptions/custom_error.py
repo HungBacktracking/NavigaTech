@@ -3,6 +3,7 @@ from starlette import status
 from .exceptions import ClientException
 
 class CustomError(Enum):
+    INTERNAL_SERVER_ERROR = (status.HTTP_500_INTERNAL_SERVER_ERROR, "100", "Internal server error")
     NOT_FOUND = (status.HTTP_404_NOT_FOUND, "10", "The resource could not be found")
     DUPLICATE_RESOURCE = (status.HTTP_409_CONFLICT, "11", "The resource already exists")
     # …
