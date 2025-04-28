@@ -1,29 +1,37 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-import { TodoList } from './components/TodoList'
-import './App.css'
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60,
-      gcTime: 1000 * 60 * 5,
-    },
-  },
-})
+import { QueryClientProvider } from '@tanstack/react-query';
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import './App.css';
+import { Spin } from 'antd';
+import AppRouter from './routes';
+import { Suspense } from 'react';
+import queryClient from './lib/clients/query-client';
+import AuthProvider from './contexts/auth/auth-provider';
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="app-container">
-        <header className="app-header">
-          <h1>Todo App</h1>
-        </header>
-        <TodoList />
-      </div>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
-  )
+    <Suspense
+      fallback={
+        <Spin
+          size="large"
+          tip="Loading..."
+          style={{
+            width: '100%',
+            height: '100vh',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+          }}
+        />
+      }
+    >
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <AppRouter />
+        </AuthProvider>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </Suspense>
+  );
 }
 
-export default App
+export default App;
