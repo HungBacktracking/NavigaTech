@@ -1,29 +1,15 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
-import './App.css';
-import { Spin } from 'antd';
 import AppRouter from './routes';
 import { Suspense } from 'react';
 import queryClient from './lib/clients/query-client';
 import AuthProvider from './contexts/auth/auth-provider';
+import FullscreenLoader from './components/fullscreen-loader';
+import './App.css';
 
 function App() {
   return (
-    <Suspense
-      fallback={
-        <Spin
-          size="large"
-          tip="Loading..."
-          style={{
-            width: '100%',
-            height: '100vh',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-          }}
-        />
-      }
-    >
+    <Suspense fallback={<FullscreenLoader />}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
           <AppRouter />

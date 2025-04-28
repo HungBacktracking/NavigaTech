@@ -1,0 +1,66 @@
+.customMenu {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  position: relative;
+}
+
+.menuItems {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+}
+
+.menuItem {
+  padding: 8px 16px;
+  cursor: pointer;
+  position: relative;
+  font-size: 16px;
+  font-weight: 500;
+  border-radius: 20px;
+  z-index: 1;
+}
+
+.selected {
+  color: #1677ff;
+}
+
+.indicator {
+  position: absolute;
+  top: 30%;
+  left: 0;
+  right: 0;
+  bottom: 30%;
+  background-color: rgba(105, 177, 255, 0.2);
+  border-radius: 32px;
+  z-index: -1;
+}
+
+.mobileMenu {
+  display: flex;
+  flex-direction: column;
+}
+
+.mobileMenuItem {
+  transition: all 0.3s ease;
+}
+
+.mobileMenuItem:hover {
+  color: #1677ff;
+}
+
+.mobileSelected {
+  color: #1677ff;
+  background-color: rgba(105, 177, 255, 0.2);
+  border-radius: 32px;
+}
+
+@media (max-width: 768px) {
+  .burgerIcon {
+    display: block;
+  }
+
+  .customMenu {
+    display: none;
+  }
+}
