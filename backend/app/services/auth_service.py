@@ -1,9 +1,10 @@
 from datetime import timedelta
 
 from app.core.config import configs
-from app.core.exceptions.custom_error import CustomError
-from app.core.exceptions.exceptions import AuthError
+
 from app.core.security import create_access_token, get_password_hash, verify_password
+from app.exceptions.custom_error import CustomError
+from app.exceptions.errors.CustomClientException import AuthError
 from app.model.user import User
 from app.repository.user_repository import UserRepository
 from app.schema.auth_schema import Payload, SignIn, SignUp
@@ -33,11 +34,10 @@ class AuthService(BaseService):
         token_lifespan = timedelta(minutes=configs.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token, expiration_datetime = create_access_token(payload.model_dump(), token_lifespan)
 
-        user_info = user.to_response()
         sign_in_result = {
             "access_token": access_token,
             "expiration": expiration_datetime,
-            "user_info": user_info,
+            "user_info": user,
         }
 
         return sign_in_result
@@ -51,4 +51,4 @@ class AuthService(BaseService):
         except IntegrityError as e:
             raise CustomError.DUPLICATE_RESOURCE.as_exception()
 
-        return created_user.to_response()
+        return created_user

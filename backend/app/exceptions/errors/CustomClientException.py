@@ -1,6 +1,5 @@
-from typing import Any, Dict, Optional
-
 from fastapi import HTTPException, status
+from typing import Any, Dict, Optional
 
 
 class AuthError(HTTPException):

@@ -15,13 +15,3 @@ class User(BaseModel, table=True):
     updated_at: datetime = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))
     deleted_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=True))
 
-
-    def to_response(self) -> UserResponse:
-        return UserResponse(
-            id=self.id,
-            email=self.email,
-            name=self.name,
-            created_at=self.created_at,
-            updated_at=self.updated_at,
-            deleted_at=self.deleted_at
-        )

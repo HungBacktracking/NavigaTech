@@ -4,7 +4,7 @@ from starlette.middleware.cors import CORSMiddleware
 from app.api.routes import routers
 from app.core.config import configs
 from app.core.container import Container
-from app.core.exceptions.exception_handlers import register_exception_handlers
+from app.exceptions.exception_handlers import register_exception_handlers
 from app.util.class_object import singleton
 
 
@@ -22,7 +22,7 @@ class AppCreator:
         # set db and container
         self.container = Container()
         self.db = self.container.db()
-        # self.db.create_database()
+        self.db.create_database()
 
         # set cors
         if configs.BACKEND_CORS_ORIGINS:
