@@ -6,7 +6,9 @@ cffi==1.17.1
 click==8.1.8
 cryptography==44.0.2
 dependency-injector==4.46.0
+dnspython==2.7.0
 ecdsa==0.19.1
+email_validator==2.2.0
 fastapi==0.115.12
 h11==0.16.0
 httptools==0.6.4
