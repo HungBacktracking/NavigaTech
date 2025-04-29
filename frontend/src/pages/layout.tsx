@@ -2,6 +2,7 @@ import { Layout } from 'antd';
 import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import NavBar from '../components/navbar';
+import FullscreenLoader from '../components/fullscreen-loader';
 
 const { Content, Footer } = Layout;
 
@@ -18,7 +19,7 @@ const MainLayout = () => {
           boxSizing: 'border-box',
         }}
       >
-        <Suspense fallback={<div>Loading...</div>}>
+        <Suspense fallback={<FullscreenLoader />}>
           <Outlet />
         </Suspense>
       </Content>

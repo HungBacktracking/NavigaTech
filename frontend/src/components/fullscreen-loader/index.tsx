@@ -1,30 +1,48 @@
 import { Flex, Spin } from 'antd';
-import { LoadingOutlined } from '@ant-design/icons';
 import styles from './styles.module.css';
-import { ReactElement } from 'react';
+import { CSSProperties } from 'react';
 
 interface FullscreenLoaderProps {
   tip?: string;
   size?: 'small' | 'default' | 'large';
-  icon?: ReactElement;
+  fullscreen?: boolean;
   backdrop?: boolean;
+  height?: string | number;
 }
 
 const FullscreenLoader = ({
   tip = 'Loading...',
   size = 'large',
-  icon,
-  backdrop = true,
+  fullscreen = true,
+  backdrop = false,
+  height = '100%',
 }: FullscreenLoaderProps) => {
-  const defaultIcon = <LoadingOutlined style={{ fontSize: size === 'large' ? 40 : size === 'small' ? 24 : 32 }} />;
+  const containerStyles: CSSProperties = fullscreen
+    ? {
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      zIndex: 9999,
+    }
+    : {
+      position: 'relative',
+      width: '100%',
+      height,
+    };
 
   return (
     <Flex
       justify="center"
-      align="center" 
-      className={`${styles['loader-container']} ${backdrop ? styles['with-backdrop'] : ''}`}>
+      align="center"
+      className={`
+        ${styles.container}
+        ${backdrop ? styles.withBackdrop : ''}
+      `}
+      style={containerStyles}
+    >
       <Spin
-        indicator={icon || defaultIcon}
         tip={tip}
         size={size}
         className={styles.spinner}

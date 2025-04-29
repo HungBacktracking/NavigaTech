@@ -4,3 +4,31 @@ body {
   min-height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
+
+.app-gradient {
+  background: linear-gradient(180deg, #1677FF 0%, #5466EF 50%, #9254DE 100%);
+}
+
+.app-gradient-text {
+  background: linear-gradient(180deg, #1677FF 0%, #5466EF 50%, #9254DE 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.app-gradient-interactive {
+  background: linear-gradient(180deg, #1677FF 0%, #5466EF 50%, #9254DE 100%);
+  transition: filter 0.3s ease;
+}
+
+.app-gradient-interactive:hover {
+  scale: 1.05;
+  transition: scale 0.3s ease;
+}
+
+.app-gradient-overlay {
+  background: linear-gradient(180deg,
+      rgba(22, 119, 255, 0.9) 0%,
+      rgba(84, 102, 239, 0.85) 50%,
+      rgba(146, 84, 222, 0.8) 100%);
+}
