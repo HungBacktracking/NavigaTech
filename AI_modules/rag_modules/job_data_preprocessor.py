@@ -1,11 +1,13 @@
+import sys
+sys.path.insert(1, r"NavigaTech\AI_modules\CVs_grader\Extractor")
+
 import pandas as pd
 import json
 import os
 import re
 from translator import VietnameseTranslator
 import asyncio
-import sys
-sys.path.insert(1, r"NavigaTech\AI_modules\CVs_grader\Extractor")
+
 
 
 class JobDataMapperAndTranslator:
