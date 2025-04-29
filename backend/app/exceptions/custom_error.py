@@ -1,6 +1,8 @@
 from enum import Enum
 from starlette import status
-from .exceptions import ClientException
+
+from app.exceptions.errors.CustomClientException import ClientException
+
 
 class CustomError(Enum):
     INTERNAL_SERVER_ERROR = (status.HTTP_500_INTERNAL_SERVER_ERROR, "100", "Internal server error")
