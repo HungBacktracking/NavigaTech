@@ -3,7 +3,7 @@ import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, Aud
 import { Job } from "../../../../lib/types/job";
 import styles from "./styles.module.css";
 import { blue, blueDark, gray, orange } from "@ant-design/colors";
-import { extractDomainFromUrl } from "../../../../lib/helpers/string";
+import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 
 const { Text, Title } = Typography;
@@ -15,29 +15,27 @@ interface JobCardProps {
   isSelected: boolean;
 }
 
-const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps) => {
-  const formatDate = (date: Date) => {
-    const now = new Date();
-    const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-
-    if (diffDays === 0) return "Today";
-    if (diffDays === 1) return "Yesterday";
-    if (diffDays < 7) return `${diffDays} days ago`;
-    if (diffDays < 30) return `${Math.floor(diffDays / 7)} weeks ago`;
-    return `${Math.floor(diffDays / 30)} months ago`;
-  };
-
+const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCardProps) => {
   const handleFavoriteToggle = (e: MouseEvent) => {
     e.stopPropagation();
     // TODO: Handle favorite toggle logic here
+  }
+
+  const handleJobAnalysisClick = (id: string) => {
+    console.log(`Job Analysis for job ID: ${id}`);
+    // TODO: Implement job analysis logic here
+  }
+
+  const handleCreateCVClick = (id: string) => {
+    console.log(`Create CV for job ID: ${id}`);
+    // TODO: Implement create CV logic here
   }
 
   return (
     <Card
       hoverable
       title={
-        <Flex 
+        <Flex
           horizontal
           justify="space-between"
           align="center"
@@ -82,6 +80,9 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps)
       style={{
         width: 500,
         borderRadius: 16,
+        border: isSelected ? `0.5px solid ${blue[3]}` : undefined,
+        boxShadow: isSelected ? `0 0 12px ${blue[2]}` : undefined,
+        position: isSelected ? 'relative' : undefined,
       }}
       styles={{
         body: {
@@ -89,6 +90,20 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps)
         }
       }}
     >
+      {isSelected && (
+        <div
+          style={{
+            position: 'absolute',
+            left: 0,
+            top: 10,
+            bottom: 10,
+            width: 4,
+            backgroundColor: blue[3],
+            borderRadius: 24,
+            transition: 'all 0.3s ease-in-out',
+          }}
+        />
+      )}
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Flex vertical gap="small">
           <Space>
@@ -107,7 +122,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps)
           {job.datePosted && (
             <Space>
               <ClockCircleOutlined />
-              {formatDate(job.datePosted)}
+              {formatDateToEngPeriodString(job.datePosted)}
             </Space>
           )}
         </Flex>
@@ -134,7 +149,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps)
               icon={<BarChartOutlined />}
               onClick={(e: MouseEvent) => {
                 e.stopPropagation();
-                // Job Analysis logic here
+                handleJobAnalysisClick(job.id);
               }}
             >
               Analysis
@@ -144,7 +159,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps)
               icon={<BookOutlined />}
               onClick={(e: MouseEvent) => {
                 e.stopPropagation();
-                // Save job logic
+                handleCreateCVClick(job.id);
               }}
             >
               Create CV
@@ -152,7 +167,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected }: JobCardProps)
           </Space>
         </Flex>
       </Space>
-      
+
     </Card>
   );
 };
