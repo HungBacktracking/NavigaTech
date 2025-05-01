@@ -5,7 +5,6 @@ from sqlmodel import Column, Field, func, DateTime, String, ARRAY
 from app.model.base_model import BaseModel
 
 
-
 class JobPref(BaseModel, table=True):
     user_id: UUID = Field(primary_key=True, foreign_key="user.id")
     desired_title: str = Field(default=None, nullable=True)
