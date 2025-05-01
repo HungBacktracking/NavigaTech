@@ -10,9 +10,9 @@ class SignIn(BaseModel):
 
 
 class SignUp(BaseModel):
+    name: str
     email: EmailStr
     password: str
-    name: str
 
     @field_validator("password")
     def check_password_complexity(cls, v):

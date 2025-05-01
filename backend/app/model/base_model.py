@@ -1,5 +1,8 @@
+from uuid import uuid4, UUID
 from sqlmodel import Field, SQLModel
 
 
 class BaseModel(SQLModel):
-    id: int = Field(primary_key=True)
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+
+
