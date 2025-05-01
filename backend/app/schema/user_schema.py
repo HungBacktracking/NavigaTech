@@ -6,7 +6,16 @@ from app.util.regex import PASSWORD_REGEX
 
 class BaseUser(BaseModel):
     email: EmailStr
-    name: str
+    name: Optional[str] = None
+    headline: Optional[str] = None
+    phone_number: Optional[str] = None
+    location: Optional[str] = None
+    education: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    avatar_url: Optional[str] = None
+    resume_url: Optional[str] = None
+    introduction: Optional[str] = None
 
     class Config:
         from_attributes = True
@@ -15,9 +24,20 @@ class UserResponse(ModelBaseInfo, BaseUser): ...
 
 
 
+
 class UserUpdate(BaseModel):
     password: Optional[str] = None
     name: Optional[str] = None
+    headline: Optional[str] = None
+    phone_number: Optional[str] = None
+    location: Optional[str] = None
+    education: Optional[str] = None
+    linkedin_url: Optional[str] = None
+    github_url: Optional[str] = None
+    avatar_url: Optional[str] = None
+    resume_url: Optional[str] = None
+    introduction: Optional[str] = None
+
 
 
     @field_validator("password")

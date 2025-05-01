@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel
 
 
 class ModelBaseInfo(BaseModel):
-    id: int
+    id: UUID
 
 class FindBase(BaseModel):
     ordering: Optional[str]
