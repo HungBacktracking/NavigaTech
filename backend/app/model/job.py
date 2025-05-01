@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from typing import List
-from sqlalchemy import Column, Field, Text, String, ARRAY, DateTime, func
+from sqlmodel import Column, Field, Text, String, ARRAY, DateTime, func
 from app.model.base_model import BaseModel
 
 class Job(BaseModel, table=True):

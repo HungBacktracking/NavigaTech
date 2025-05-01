@@ -1,5 +1,5 @@
 from uuid import uuid4, UUID
-from sqlalchemy import Field, SQLModel
+from sqlmodel import Field, SQLModel
 
 
 class BaseModel(SQLModel):

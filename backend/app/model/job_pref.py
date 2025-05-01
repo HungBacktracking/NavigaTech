@@ -1,7 +1,7 @@
 from datetime import datetime, date
 from typing import List
 from uuid import UUID
-from sqlalchemy import Column, Field, func, DateTime, String, ARRAY
+from sqlmodel import Column, Field, func, DateTime, String, ARRAY
 from app.model.base_model import BaseModel
 
 

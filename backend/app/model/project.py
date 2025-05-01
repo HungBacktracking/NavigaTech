@@ -1,6 +1,6 @@
 from datetime import datetime, date
 from uuid import UUID
-from sqlalchemy import Column, Field, func, Text, DateTime, Date
+from sqlmodel import Column, Field, func, Text, DateTime, Date
 from app.model.base_model import BaseModel
 
 
