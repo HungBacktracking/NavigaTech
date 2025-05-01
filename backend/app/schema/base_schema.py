@@ -5,10 +5,6 @@ from pydantic import BaseModel
 
 class ModelBaseInfo(BaseModel):
     id: int
-    created_at: datetime
-    updated_at: datetime
-    deleted_at: Optional[datetime] = None
-
 
 class FindBase(BaseModel):
     ordering: Optional[str]
