@@ -13,14 +13,15 @@ const { Title } = Typography;
 const { Search } = Input;
 
 export default function JobFindingPage() {
+  const queryClient = useQueryClient();
+  const [messageApi, contextHolder] = message.useMessage();
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [queryParams, setQueryParams] = useState<JobQueryParams>({
     page: 1,
-    pageSize: 5,
+    pageSize: 10,
     search: "",
   });
-  const queryClient = useQueryClient();
-
+  const [navbarHeight, setNavbarHeight] = useState(0);
   const [lastPaginationData, setLastPaginationData] = useState({
     page: 1,
     pageSize: 5,
@@ -31,22 +32,12 @@ export default function JobFindingPage() {
     data: jobsData,
     isLoading: isJobsLoading,
   } = useQuery({
-    queryKey: ["jobs", queryParams],
+    queryKey: ['jobs', queryParams],
     queryFn: () => jobApi.getJobs(queryParams),
   });
 
-  useEffect(() => {
-    if (jobsData) {
-      setLastPaginationData({
-        page: jobsData.page,
-        pageSize: jobsData.pageSize,
-        total: jobsData.total,
-      });
-    }
-  }, [jobsData]);
-
   const { data: suggestionItems = [], isLoading: isSuggestionsLoading } = useQuery({
-    queryKey: ["suggestions"],
+    queryKey: ['suggestions'],
     queryFn: jobApi.getPromptSuggestions,
   });
 
@@ -64,14 +55,14 @@ export default function JobFindingPage() {
         };
       });
 
-      message.success(`Job ${isFavorite ? 'added to' : 'removed from'} favorites`);
+      messageApi.success(`Job ${isFavorite ? 'added to' : 'removed from'} favorites`);
 
       if (selectedJob && selectedJob.id === jobId) {
         setSelectedJob({ ...selectedJob, isFavorite });
       }
     },
     onError: () => {
-      message.error("Failed to update favorites. Please try again.");
+      messageApi.error("Failed to update favorites. Please try again.");
     }
   });
 
@@ -79,12 +70,28 @@ export default function JobFindingPage() {
     mutationFn: jobApi.getPromptSuggestions,
     onSuccess: (newSuggestions) => {
       queryClient.setQueryData(['suggestions'], newSuggestions);
-      message.success("Suggestions refreshed successfully");
+      messageApi.success("Suggestions refreshed successfully");
     },
     onError: () => {
-      message.error("Failed to refresh suggestions. Please try again.");
+      messageApi.error("Failed to refresh suggestions. Please try again.");
     }
   });
+
+  useEffect(() => {
+    if (jobsData) {
+      setLastPaginationData({
+        page: jobsData.page,
+        pageSize: jobsData.pageSize,
+        total: jobsData.total,
+      });
+    }
+  }, [jobsData]);
+
+  useEffect(() => {
+    const navbar = document.querySelector('header');
+    const navbarHeightValue = navbar ? navbar.getBoundingClientRect().height + 16 : 48;
+    setNavbarHeight(navbarHeightValue);
+  }, []);
 
   useEffect(() => {
     if (jobsData) {
@@ -119,69 +126,65 @@ export default function JobFindingPage() {
     setQueryParams(prev => ({ ...prev, page: 1, search: value }));
   };
 
-  const shouldShowPagination = () => {
-    if (isJobsLoading) {
-      return lastPaginationData.total > 0;
-    } else {
-      return jobsData && jobsData.total > 0;
-    }
-  };
-
   return (
-    <div style={{ margin: "24px auto 0 auto" }}>
-      <Flex vertical align="center">
-        <Title level={2} style={{ textAlign: "center", margin: 0 }}>
-          <span className="app-gradient-text" style={{ fontWeight: 700 }}>
-            Find Your Dream Job
-          </span>
-        </Title>
-        <Title level={4} style={{ textAlign: "center", margin: 0 }}>
-          Discover opportunities that match your skills and preferences with our <span className="app-gradient-text" style={{ fontWeight: 600 }}>AI-Powered</span> job search
-        </Title>
-        <Space direction="vertical" size={12} style={{ width: isSuggestionsLoading ? 800 : undefined, maxWidth: "800px", marginTop: 16 }}>
-          <Flex horizontal justify="space-between" align="center" style={{ width: "100%" }}>
-            <Title level={5} style={{ textAlign: "left", margin: 0 }}>
-              Suggestions for you:
-            </Title>
-            <AIButton
-              icon={<ReloadOutlined />}
-              loading={isRefreshingSuggestions}
-              onClick={handleRefreshSuggestions}
-            >
-              Refresh
-            </AIButton>
-          </Flex>
-          {isSuggestionsLoading ? (
-            <Spin
-              size="large"
-              style={{ margin: "0 auto", display: "block" }}
-              tip="Loading suggestions..."
-            />
-          ) : (
-            suggestionItems.map((item, index) => (
-              <SuggestionItem
-                key={index}
-                content={item}
-                handleClick={() => {
-                  console.log(`Suggestion clicked: ${item}`);
-                }}
+    <>
+      {contextHolder}
+      <div style={{ margin: "24px auto 0 auto" }}>
+        <Flex vertical align="center">
+          <Title level={2} style={{ textAlign: "center", margin: 0 }}>
+            <span className="app-gradient-text" style={{ fontWeight: 700 }}>
+              Find Your Dream Job
+            </span>
+          </Title>
+          <Title level={4} style={{ textAlign: "center", margin: 0 }}>
+            Discover opportunities that match your skills and preferences with our <span className="app-gradient-text" style={{ fontWeight: 600 }}>AI-Powered</span> job search
+          </Title>
+          <Space direction="vertical" size={12} style={{ width: isSuggestionsLoading ? 800 : undefined, maxWidth: "800px", marginTop: 16 }}>
+            <Flex horizontal justify="space-between" align="center" style={{ width: "100%" }}>
+              <Title level={5} style={{ textAlign: "left", margin: 0 }}>
+                Suggestions for you:
+              </Title>
+              <AIButton
+                icon={<ReloadOutlined />}
+                loading={isRefreshingSuggestions}
+                onClick={handleRefreshSuggestions}
+              >
+                Refresh
+              </AIButton>
+            </Flex>
+            {isSuggestionsLoading ? (
+              <Spin
+                size="large"
+                style={{ margin: "0 auto", display: "block" }}
+                tip="Loading suggestions..."
               />
-            ))
-          )}
-        </Space>
-      </Flex>
-      <Row gutter={16} style={{ height: "100%", marginTop: 24 }}>
-        <Col span={9}>
-          <Space direction="vertical" size={16} style={{ width: "100%" }}>
-            <Search
-              placeholder="Search jobs by title, company, or location"
-              onSearch={handleSearch}
-              enterButton={<SearchOutlined />}
-              allowClear
-              size="large"
-            />
+            ) : (
+              suggestionItems.map((item, index) => (
+                <SuggestionItem
+                  key={index}
+                  content={item}
+                  handleClick={() => {
+                    console.log(`Suggestion clicked: ${item}`);
+                  }}
+                />
+              ))
+            )}
+          </Space>
+          <Search
+            placeholder="Search jobs by title, company, or location"
+            onSearch={handleSearch}
+            enterButton={<SearchOutlined />}
+            allowClear
+            size="large"
+            style={{ width: "100%", maxWidth: "800px", margin: "16px 0" }}
+          />
+        </Flex>
 
-            <Space direction="vertical" size={12} style={{ width: "100%", borderRadius: 8, padding: 8 }} className="scrollbar-custom">
+        <Row gutter={16} style={{ height: "100%", marginTop: 24 }}>
+          <Col
+            span={9}
+          >
+            <Space direction="vertical" size={12} style={{ width: "100%", borderRadius: 8 }}>
               {isJobsLoading ? (
                 Array(5).fill(0).map((_, index) => (
                   <div key={index} style={{ padding: '16px', border: '1px solid #f0f0f0', borderRadius: '8px' }}>
@@ -210,40 +213,47 @@ export default function JobFindingPage() {
                 </div>
               )}
 
-              {shouldShowPagination() && (
-                <Flex justify="center" style={{ marginTop: 16 }}>
-                  <Pagination
-                    current={isJobsLoading ? lastPaginationData.page : jobsData!.page}
-                    pageSize={isJobsLoading ? lastPaginationData.pageSize : jobsData!.pageSize}
-                    total={isJobsLoading ? lastPaginationData.total : jobsData!.total}
-                    onChange={handlePageChange}
-                    showSizeChanger={false}
-                    disabled={isJobsLoading}
-                  />
-                </Flex>
-              )}
+              <Flex justify="center" style={{ marginTop: 16, marginBottom: 24 }}>
+                <Pagination
+                  current={isJobsLoading ? lastPaginationData.page : jobsData!.page}
+                  pageSize={isJobsLoading ? lastPaginationData.pageSize : jobsData!.pageSize}
+                  total={isJobsLoading ? lastPaginationData.total : jobsData!.total}
+                  onChange={handlePageChange}
+                  showSizeChanger={false}
+                  disabled={isJobsLoading}
+                />
+              </Flex>
             </Space>
-          </Space>
-        </Col>
-        <Col span={15}>
-          {selectedJob ? (
-            <JobDetail
-              job={selectedJob}
-              isFavorite={selectedJob.isFavorite || false}
-              handleToggleFavorite={(e: MouseEvent) => {
-                e.stopPropagation();
-                toggleFavorite(selectedJob.id);
-              }}
-            />
-          ) : (
-            <div style={{ height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-              <Title level={5} style={{ textAlign: "center", margin: 0 }}>
-                Select a job to view details
-              </Title>
-            </div>
-          )}
-        </Col>
-      </Row>
-    </div>
+          </Col>
+
+          <Col
+            span={15}
+            style={{
+              position: 'sticky',
+              top: navbarHeight,
+              height: `calc(100vh - ${navbarHeight}px)`,
+              paddingBottom: 8,
+            }}
+          >
+            {selectedJob ? (
+              <JobDetail
+                job={selectedJob}
+                isFavorite={selectedJob.isFavorite || false}
+                handleToggleFavorite={(e: MouseEvent) => {
+                  e.stopPropagation();
+                  toggleFavorite(selectedJob.id);
+                }}
+              />
+            ) : (
+              <div style={{ height: '70vh', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <Title level={4} style={{ textAlign: "center", margin: 0 }}>
+                  Select a job to view details
+                </Title>
+              </div>
+            )}
+          </Col>
+        </Row>
+      </div>
+    </>
   );
 }

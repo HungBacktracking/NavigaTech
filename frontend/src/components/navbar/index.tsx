@@ -111,6 +111,7 @@ const NavBar = () => {
           left: '50%',
           transform: 'translateX(-50%)',
           padding: '0 24px',
+          height: '48px'
         }}
       >
         {isMobile && (

@@ -51,6 +51,8 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
       style={{
         borderRadius: 8,
         position: 'relative',
+        height: '100%',
+        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
       }}
       styles={{
         body: {

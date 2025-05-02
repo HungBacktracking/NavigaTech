@@ -122,17 +122,13 @@ export interface JobQueryParams {
   page: number;
   pageSize: number;
   search?: string;
-  sortBy?: string;
-  sortDirection?: 'asc' | 'desc';
   filterByJobType?: string[];
-  filterByLocation?: string[];
 }
 
 export const jobApi = {
   getJobs: async (params: JobQueryParams): Promise<PaginatedResponse<Job>> => {
     return new Promise<PaginatedResponse<Job>>((resolve) => {
       setTimeout(() => {
-        // Apply search filter if provided
         let filteredJobs = [...mockJobs];
         if (params.search) {
           const searchLower = params.search.toLowerCase();
@@ -143,53 +139,10 @@ export const jobApi = {
           );
         }
         
-        // Apply job type filters if provided
         if (params.filterByJobType && params.filterByJobType.length > 0) {
           filteredJobs = filteredJobs.filter(job => 
             params.filterByJobType!.some(type => job.type === type)
           );
-        }
-        
-        // Apply location filters if provided
-        if (params.filterByLocation && params.filterByLocation.length > 0) {
-          filteredJobs = filteredJobs.filter(job =>
-            params.filterByLocation!.some(loc => job.location.includes(loc))
-          );
-        }
-        
-        // Apply sorting if provided
-        if (params.sortBy) {
-          filteredJobs.sort((a: any, b: any) => {
-            let valueA, valueB;
-            
-            // Handle nested properties like company.name
-            if (params.sortBy!.includes('.')) {
-              const parts = params.sortBy!.split('.');
-              valueA = parts.reduce((obj, key) => obj?.[key], a);
-              valueB = parts.reduce((obj, key) => obj?.[key], b);
-            } else {
-              valueA = a[params.sortBy!];
-              valueB = b[params.sortBy!];
-            }
-            
-            // Handle different types of values
-            if (valueA instanceof Date && valueB instanceof Date) {
-              return params.sortDirection === 'asc' ? 
-                valueA.getTime() - valueB.getTime() : 
-                valueB.getTime() - valueA.getTime();
-            }
-            
-            if (typeof valueA === 'string' && typeof valueB === 'string') {
-              return params.sortDirection === 'asc' ? 
-                valueA.localeCompare(valueB) : 
-                valueB.localeCompare(valueA);
-            }
-            
-            // Default numeric comparison
-            return params.sortDirection === 'asc' ? 
-              (valueA - valueB) : 
-              (valueB - valueA);
-          });
         }
         
         const total = filteredJobs.length;
