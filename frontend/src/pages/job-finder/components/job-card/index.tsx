@@ -43,7 +43,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSel
             gap="middle"
             align="center"
             justify="start"
-            style={{ padding: "8px 0" }}>
+            style={{ padding: 0 }}>
             <div style={{ padding: 2, borderRadius: 4, backgroundColor: '#fafafa' }}>
               <Image
                 src={job.company.logo}

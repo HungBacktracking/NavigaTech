@@ -12,6 +12,7 @@ export interface Job {
   salary?: string;
   benefit?: string;
   isExpired?: boolean;
+  isFavorite?: boolean;
 }
 
 export interface Company {

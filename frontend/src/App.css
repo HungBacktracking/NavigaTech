@@ -35,14 +35,14 @@ body {
 
 .scrollbar-custom {
   overflow-y: auto;
-  padding: 8px;
+  padding: 4px;
   max-height: 1200px;
   scrollbar-width: thin;
   scrollbar-color: #bfbfbf transparent;
 }
 
 .scrollbar-custom::-webkit-scrollbar {
-  width: 8px;
+  width: 4px;
 }
 
 .scrollbar-custom::-webkit-scrollbar-track {

@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@ant-design/colors": "^8.0.0",
-    "@tanstack/react-query": "^5.67.3",
+    "@tanstack/react-query": "^5.75.0",
     "@tanstack/react-query-devtools": "^5.67.3",
     "antd": "^5.24.3",
     "axios": "^1.8.3",
