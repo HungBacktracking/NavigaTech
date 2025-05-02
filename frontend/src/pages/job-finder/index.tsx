@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Row, Col, Typography, Space, Flex, message, Pagination, Input, Skeleton, Card, Image } from "antd";
-import { ReloadOutlined, SearchOutlined } from "@ant-design/icons";
+import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image } from "antd";
+import { ReloadOutlined } from "@ant-design/icons";
 import JobCard from "./components/job-card";
 import { jobApi, JobQueryParams } from "../../services/job-finder";
 import { Job } from "../../lib/types/job";
@@ -10,9 +10,9 @@ import SuggestionItem from "./components/suggestion-item";
 import AIButton from "../../components/ai-button";
 import selectionSvg from "../../assets/selection.svg";
 import emptyStateSvg from "../../assets/empty-state.svg";
+import AISearchBar from "./components/ai-search-bar";
 
 const { Title } = Typography;
-const { Search } = Input;
 
 export default function JobFindingPage() {
   const queryClient = useQueryClient();
@@ -23,6 +23,7 @@ export default function JobFindingPage() {
     pageSize: 10,
     search: "",
   });
+  const [searchValue, setSearchValue] = useState("");
   const [navbarHeight, setNavbarHeight] = useState(0);
   const [lastPaginationData, setLastPaginationData] = useState({
     page: 1,
@@ -120,8 +121,8 @@ export default function JobFindingPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleSearch = (value: string) => {
-    setQueryParams(prev => ({ ...prev, page: 1, search: value }));
+  const handleSearch = () => {
+    setQueryParams(prev => ({ ...prev, page: 1, search: searchValue }));
   };
 
   return (
@@ -157,19 +158,16 @@ export default function JobFindingPage() {
                 key={index}
                 content={item}
                 handleClick={() => {
-                  
+                  setSearchValue(item);
                 }}
               />
             ))
           )}
         </Space>
-        <Search
-          placeholder="Search jobs by title, company, or location"
-          onSearch={handleSearch}
-          enterButton={<SearchOutlined />}
-          allowClear
-          size="large"
-          style={{ width: "100%", maxWidth: "800px", margin: "16px 0" }}
+        <AISearchBar
+          searchValue={searchValue}
+          setSearchValue={setSearchValue}
+          handleSearch={handleSearch}
         />
       </Flex>
 
@@ -180,12 +178,12 @@ export default function JobFindingPage() {
           <Space direction="vertical" size={12} style={{ width: "100%", borderRadius: 8 }}>
             {isJobsLoading ? (
               Array(5).fill(0).map((_, index) => (
-                <Card 
-                  key={index} 
+                <Card
+                  key={index}
                   style={{ padding: '4px', borderRadius: '16px' }}
                   title={
                     <Space size="large">
-                      <Skeleton.Node active style={{ width: 40, height: 40, borderRadius: 4 }}/>
+                      <Skeleton.Node active style={{ width: 40, height: 40, borderRadius: 4 }} />
                       <Skeleton.Node active style={{ height: 24 }} />
                     </Space>
 
