@@ -1,0 +1,70 @@
+.buttonWrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.aiButton {
+  position: relative;
+  border: none !important;
+  border-radius: 32px;
+  color: rgba(255, 255, 255, 0.95) !important;
+  font-weight: 500;
+  overflow: visible;
+  z-index: 1;
+  transform: translateZ(0);
+}
+
+.aiButton::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.primary::before {
+  background: linear-gradient(180deg, #1677FF 0%, #5466EF 50%, #9254DE 100%);
+}
+
+.secondary::before {
+  background: linear-gradient(180deg, #5466EF 0%, #9254DE 50%, #a16be0 100%);
+}
+
+.aiButton:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(22, 119, 255, 0.25);
+}
+
+.aiButton:active {
+  transform: translateY(1px) scale(0.98);
+  transition-duration: 0.1s;
+}
+
+.aiButton[disabled] {
+  background: #f5f5f5 !important;
+  color: rgba(0, 0, 0, 0.25) !important;
+  border-color: #d9d9d9 !important;
+  transform: none;
+  box-shadow: none;
+}
+
+.aiButton[disabled]::before {
+  opacity: 0;
+}
+
+.buttonWrapper:has(.aiButton[disabled])::before,
+.buttonWrapper:has(.aiButton[disabled])::after {
+  display: none;
+}
+
+/* Animations */
+@keyframes rotate-glow {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}

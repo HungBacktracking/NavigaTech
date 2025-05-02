@@ -7,6 +7,7 @@ export const useLogout = () => {
   const logout = () => {
     reset();
     removeTokens();
+    window.location.href = '/auth';
   };
 
   return { logout };

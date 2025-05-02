@@ -21,6 +21,7 @@ export default tseslint.config(
       'react-refresh': reactRefresh,
       'simple-import-sort': simpleImportSort,
       'unused-imports': unusedImports,
+      prettier: prettier,
     },
     rules: {
       ...reactHooks.configs.recommended.rules,
@@ -44,6 +45,30 @@ export default tseslint.config(
           printWidth: 120,
         },
       ],
+      'import/prefer-default-export': 'off',
+      'simple-import-sort/imports': [
+        'error',
+        {
+          'groups': [
+            // Packages `react` related packages.
+            ['^react', '^@?\\w'],
+            // Internal packages.
+            ['^(@|components)(/.*|$)'],
+            // Side effect imports.
+            ['^\\u0000'],
+            // Parent imports. Put `..` last.
+            ['^\\.\\.(?!/?$)', '^\\.\\./?$'],
+            // Other relative imports. Put same-folder imports and `.` last.
+            ['^\\./(?=.*/)(?!/?$)', '^\\.(?!/?$)', '^\\./?$'],
+            // Style imports
+            ['^.+\\.s?css$']
+          ]
+        }
+      ],
+      'react/react-in-jsx-scope': 'off',
+      'no-param-reassign': 'off',
+      'simple-import-sort/exports': 'error',
+      'no-case-declarations': 'off'
     },
   },
 );

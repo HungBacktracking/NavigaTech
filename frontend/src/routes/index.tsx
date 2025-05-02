@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import AuthLayout from '../pages/auth/layout';
 import MainLayout from '../pages/layout';
 import { lazy } from 'react';
+import NotFoundPage from '../pages/interrupts/not-found-page';
 
 
 const JobFinderPage = lazy(() => import('../pages/job-finder'));
@@ -17,14 +18,14 @@ const AppRouter = () => {
         <Route path="register" element={<div>Register Page</div>} />
       </Route>
 
-      <Route path="/*" element={<MainLayout />}>
+      <Route path="/" element={<MainLayout />}>
         <Route index element={<Navigate to="/home" replace />} />
         <Route path="home" element={<JobFinderPage />} />
         <Route path="job-analysis" element={<JobAnalysisPage />} />
         <Route path="ai-assistant" element={<AIAssistantPage />} />
       </Route>
 
-      <Route path="*" element={<div>Not found page</div>} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 };
