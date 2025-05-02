@@ -32,3 +32,24 @@ body {
       rgba(84, 102, 239, 0.85) 50%,
       rgba(146, 84, 222, 0.8) 100%);
 }
+
+.scrollbar-custom {
+  overflow-y: auto;
+  padding: 8px;
+  max-height: 1200px;
+  scrollbar-width: thin;
+  scrollbar-color: #bfbfbf transparent;
+}
+
+.scrollbar-custom::-webkit-scrollbar {
+  width: 8px;
+}
+
+.scrollbar-custom::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+
+.scrollbar-custom::-webkit-scrollbar-thumb {
+  background-color: #bfbfbf;
+  border-radius: 4px;
+}

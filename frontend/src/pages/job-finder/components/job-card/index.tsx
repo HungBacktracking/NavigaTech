@@ -1,25 +1,23 @@
 import { Button, Card, Flex, Image, Space, Tag, Tooltip, Typography } from "antd";
 import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BookOutlined, BarChartOutlined } from "@ant-design/icons";
 import { Job } from "../../../../lib/types/job";
-import styles from "./styles.module.css";
 import { blue, blueDark, gray, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
+import { useMobile } from "../../../../hooks/use-mobile";
 
 const { Text, Title } = Typography;
 
 interface JobCardProps {
   job: Job;
   isFavorite: boolean;
+  handleToggleFavorite: (e: MouseEvent) => void;
   handleSelectJob: (job: Job) => void;
   isSelected: boolean;
 }
 
-const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCardProps) => {
-  const handleFavoriteToggle = (e: MouseEvent) => {
-    e.stopPropagation();
-    // TODO: Handle favorite toggle logic here
-  }
+const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSelected = false }: JobCardProps) => {
+  const { isMobile: isTablet } = useMobile(1024);
 
   const handleJobAnalysisClick = (id: string) => {
     console.log(`Job Analysis for job ID: ${id}`);
@@ -46,7 +44,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCa
             align="center"
             justify="start"
             style={{ padding: "8px 0" }}>
-            <div className={styles.logoContainer}>
+            <div style={{ padding: 2, borderRadius: 4, backgroundColor: '#fafafa' }}>
               <Image
                 src={job.company.logo}
                 alt={`${job.company.name} logo`}
@@ -57,7 +55,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCa
               />
             </div>
             <Flex vertical>
-              <Title level={4} style={{ color: blue.primary, margin: 0, fontWeight: 500 }}>
+              <Title level={4} style={{ color: blue.primary, margin: 0, fontWeight: 500, textWrap: "wrap" }}>
                 {job.title}
               </Title>
               <Text type="secondary">
@@ -70,7 +68,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCa
               type="text"
               shape="circle"
               icon={isFavorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ color: gray[3], fontSize: 20 }} />}
-              onClick={handleFavoriteToggle}
+              onClick={handleToggleFavorite}
               style={{ marginLeft: "auto" }}
             />
           </Tooltip>
@@ -78,16 +76,18 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCa
       }
       onClick={() => handleSelectJob(job)}
       style={{
-        width: 500,
         borderRadius: 16,
         border: isSelected ? `0.5px solid ${blue[3]}` : undefined,
         boxShadow: isSelected ? `0 0 12px ${blue[2]}` : undefined,
         position: isSelected ? 'relative' : undefined,
       }}
       styles={{
+        header: {
+          padding: '8px 12px'
+        },
         body: {
-          padding: '16px 24px'
-        }
+          padding: '12px 16px'
+        },
       }}
     >
       {isSelected && (
@@ -133,13 +133,18 @@ const JobCard = ({ job, isFavorite, handleSelectJob, isSelected = false }: JobCa
             </Tag>
           ))}
         </Space>
-        <Flex horizontal justify="space-between" align="center" style={{ margin: "8px 0 0 0" }}>
+        <Flex 
+          horizontal={!isTablet}
+          vertical={isTablet}
+          gap="small"
+          justify="space-between"
+          align="center"
+          style={{ margin: "4px 0 0 0" }}>
           <a
             href={job.originalUrl}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
-            className={styles.sourceLink}
           >
             {extractDomainFromUrl(job.originalUrl)}
           </a>

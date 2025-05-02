@@ -22,5 +22,5 @@ export const useMobile = (breakpoint = MOBILE_BREAKPOINT) => {
     }
   }, [breakpoint]);
 
-  return isMobile;
+  return { isMobile };
 };

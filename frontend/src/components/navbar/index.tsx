@@ -33,7 +33,8 @@ const NavBar = () => {
   const location = useLocation();
   const [selectedKey, setSelectedKey] = useState('home');
   const [drawerVisible, setDrawerVisible] = useState(false);
-  const isMobile = useMobile();
+  const { isMobile } = useMobile();
+  const { isMobile: isTablet } = useMobile(1024);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -69,11 +70,10 @@ const NavBar = () => {
     scrolled: {
       backdropFilter: 'blur(8px)',
       boxShadow: '0 2px 8px rgba(0, 0, 0, 0.09)',
-      width: isMobile ? '90%' : '60%',
+      width: isMobile ? '90%' : isTablet ? '80%' : '70%',
       maxWidth: '1400px',
       marginTop: '8px',
       borderRadius: '32px',
-      padding: '0 24px',
       transition: {
         type: "tween",
         duration: 0.5,
@@ -110,6 +110,7 @@ const NavBar = () => {
           alignItems: 'center',
           left: '50%',
           transform: 'translateX(-50%)',
+          padding: '0 24px',
         }}
       >
         {isMobile && (
