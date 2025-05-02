@@ -13,7 +13,7 @@ const MainLayout = () => {
       <Content
         style={{
           padding: '24px',
-          margin: '24px auto 0 auto',
+          margin: '32px auto 0 auto',
           maxWidth: '1400px',
           width: '100%',
           boxSizing: 'border-box',
@@ -23,7 +23,7 @@ const MainLayout = () => {
           <Outlet />
         </Suspense>
       </Content>
-      <Footer style={{ textAlign: 'center' }}>JobTinder ©2025 Created by Brogrammers</Footer>
+      <Footer style={{ textAlign: 'center' }}><span className='app-gradient-text' style={{ fontWeight: 600 }}>JobTinder</span> ©2025 Created by Brogrammers</Footer>
     </Layout>
   );
 };
