@@ -1,6 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel, EmailStr, field_validator
-from app.schema.user_schema import UserResponse
+from app.schema.user_schema import UserBasicResponse
 from app.util.regex import PASSWORD_REGEX
 
 
@@ -34,4 +34,4 @@ class Payload(BaseModel):
 class SignInResponse(BaseModel):
     access_token: str
     expiration: datetime
-    user_info: UserResponse
+    user_info: UserBasicResponse
