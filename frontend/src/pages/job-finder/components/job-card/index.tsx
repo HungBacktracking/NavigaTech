@@ -5,6 +5,7 @@ import { blue, blueDark, gray, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
+import { MouseEvent } from "react";
 
 const { Text, Title } = Typography;
 
@@ -46,12 +47,14 @@ const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSel
             style={{ padding: 0 }}>
             <div style={{ padding: 2, borderRadius: 4, backgroundColor: '#fafafa' }}>
               <Image
-                src={job.company.logo}
-                alt={`${job.company.name} logo`}
+                src={job.companyLogo}
+                alt={`${job.companyName} logo`}
+                fallback={`https://placehold.co/100x100?text=${job.companyName[0]}`}
                 style={{
                   width: 40,
                   height: 40,
                 }}
+                preview={false}
               />
             </div>
             <Flex vertical>
@@ -59,7 +62,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSel
                 {job.title}
               </Title>
               <Text type="secondary">
-                {job.company.name}
+                {job.companyName}
               </Text>
             </Flex>
           </Flex>

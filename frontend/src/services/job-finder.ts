@@ -1,6 +1,7 @@
-import { Job } from "../lib/types/job";
+import { Job, DetailJob, JobQueryParams } from "../lib/types/job";
+import { PaginatedResponse } from "../lib/types/pagination";
 
-const generateMockJobs = (count: number): Job[] => {
+const generateMockDetailJobs = (count: number): DetailJob[] => {
   const mockJobsBase = [
     {
       id: "1",
@@ -67,15 +68,17 @@ const generateMockJobs = (count: number): Job[] => {
     }
   ];
 
-  const allJobs: Job[] = [...mockJobsBase];
+  const allJobs: DetailJob[] = [...mockJobsBase];
   
   // Start from ID 4 (we already have 1-3)
   for (let i = 4; i <= count; i++) {
     const baseJob = { ...mockJobsBase[Math.floor(Math.random() * mockJobsBase.length)] };
     
-    const newJob: Job = {
+    const newJob: DetailJob = {
       ...baseJob,
       id: i.toString(),
+      originalUrl: baseJob.originalUrl + `?ref=${i}`,
+      skills: baseJob.skills?.slice(0, Math.floor(Math.random() * baseJob.skills.length) + 1) || [],
       title: baseJob.title + " " + (i % 2 === 0 ? "(Senior)" : "(Junior)"),
       company: {
         ...baseJob.company,
@@ -91,10 +94,25 @@ const generateMockJobs = (count: number): Job[] => {
   return allJobs;
 };
 
-// Generate 30 mock jobs
-const mockJobs: Job[] = generateMockJobs(30);
+const generateMockJobs = (mockDetailJobs: DetailJob[]): Job[] => {
+  return mockDetailJobs.map((job) => ({
+    id: job.id,
+    title: job.title,
+    companyName: job.company.name,
+    companyLogo: job.company.logo,
+    originalUrl: job.originalUrl,
+    location: job.location,
+    datePosted: job.datePosted,
+    skills: job.skills,
+    isExpired: job.isExpired,
+    isFavorite: job.isFavorite,
+  }));
+};
 
-const allPromptSuggestions = [
+const mockDetailJobs: DetailJob[] = generateMockDetailJobs(30);
+const mockJobs: Job[] = generateMockJobs(mockDetailJobs);
+
+const mockPromptSuggestions = [
   "Which jobs match best with my programming skills in Python and data analysis?",
   "How can I find jobs that utilize my communication and leadership abilities?", 
   "What careers would suit someone with strong analytical thinking and problem-solving skills?", 
@@ -110,21 +128,6 @@ const allPromptSuggestions = [
 // Mock favorites storage
 let favoriteJobIds: string[] = [];
 
-export interface PaginatedResponse<T> {
-  items: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  totalPages: number;
-}
-
-export interface JobQueryParams {
-  page: number;
-  pageSize: number;
-  search?: string;
-  filterByJobType?: string[];
-}
-
 export const jobApi = {
   getJobs: async (params: JobQueryParams): Promise<PaginatedResponse<Job>> => {
     return new Promise<PaginatedResponse<Job>>((resolve) => {
@@ -134,31 +137,20 @@ export const jobApi = {
           const searchLower = params.search.toLowerCase();
           filteredJobs = filteredJobs.filter(job => 
             job.title.toLowerCase().includes(searchLower) || 
-            job.company.name.toLowerCase().includes(searchLower) ||
+            job.companyName.toLowerCase().includes(searchLower) ||
             job.location.toLowerCase().includes(searchLower)
           );
         }
-        
-        if (params.filterByJobType && params.filterByJobType.length > 0) {
-          filteredJobs = filteredJobs.filter(job => 
-            params.filterByJobType!.some(type => job.type === type)
-          );
-        }
-        
+
         const total = filteredJobs.length;
         const totalPages = Math.ceil(total / params.pageSize);
         const startIndex = (params.page - 1) * params.pageSize;
         const endIndex = startIndex + params.pageSize;
-        
+
         const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
-        
-        const jobsWithFavorites = paginatedJobs.map(job => ({
-          ...job,
-          isFavorite: favoriteJobIds.includes(job.id)
-        }));
-        
+
         resolve({
-          items: jobsWithFavorites,
+          items: paginatedJobs,
           total,
           page: params.page,
           pageSize: params.pageSize,
@@ -168,12 +160,25 @@ export const jobApi = {
     });
   },
 
+  getDetailJob: async (jobId: string): Promise<DetailJob> => {
+    return new Promise<DetailJob>((resolve, reject) => {
+      setTimeout(() => {
+        const job = mockDetailJobs.find(j => j.id === jobId);
+        if (job) {
+          resolve(job);
+        } else {
+          reject(new Error("Job not found"));
+        }
+      }, 1000);
+    });
+  },
+
   getPromptSuggestions: async () => {
-    const randomSuggestions = allPromptSuggestions.sort(() => 0.5 - Math.random()).slice(0, 3);
+    const randomSuggestions = mockPromptSuggestions.sort(() => 0.5 - Math.random()).slice(0, 3);
     return new Promise<string[]>((resolve) => {
       setTimeout(() => {
         resolve(randomSuggestions);
-      }, 10000);
+      }, 2000);
     });
   },
   
@@ -191,8 +196,4 @@ export const jobApi = {
       }, 500);
     });
   },
-  
-  refreshSuggestions: async () => {
-    return jobApi.getPromptSuggestions();
-  }
 };

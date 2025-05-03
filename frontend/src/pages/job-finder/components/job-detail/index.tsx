@@ -10,18 +10,19 @@ import {
   GlobalOutlined,
   DollarOutlined,
 } from "@ant-design/icons";
-import { Job } from "../../../../lib/types/job";
+import { DetailJob } from "../../../../lib/types/job";
 import { blue, blueDark, gray, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
 import ReactMarkdown from 'react-markdown';
 import styles from './styles.module.css';
+import { MouseEvent } from "react";
 
 const { Text, Title } = Typography;
 
 interface JobDetailProps {
-  job: Job;
+  job: DetailJob;
   isFavorite: boolean;
   handleToggleFavorite?: (e: MouseEvent) => void;
 }
@@ -84,7 +85,6 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
                     height: 60,
                     objectFit: "contain"
                   }}
-                  preview={false}
                 />
               </div>
               <Flex vertical>
@@ -136,7 +136,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
             <Space>
               <AIButton
                 icon={<BarChartOutlined />}
-                onClick={(e: React.MouseEvent) => {
+                onClick={(e: MouseEvent) => {
                   e.stopPropagation();
                   handleJobAnalysisClick(job.id);
                 }}
@@ -146,7 +146,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
 
               <AIButton
                 icon={<BookOutlined />}
-                onClick={(e: React.MouseEvent) => {
+                onClick={(e: MouseEvent) => {
                   e.stopPropagation();
                   handleCreateCVClick(job.id);
                 }}
