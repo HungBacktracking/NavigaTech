@@ -1,0 +1,9 @@
+chromedriver
+selenium
+beautifulsoup4
+requests
+pandas
+numpy
+python-jobspy
+tqdm
+google-generativeai
