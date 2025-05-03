@@ -29,6 +29,11 @@ class BaseJob(BaseModel):
 
 class JobResponse(ModelBaseInfo, BaseJob): ...
 
+class JobSearchRequest(BaseModel):
+    query: str
+    roles: Optional[List[str]] = None
+    levels: Optional[List[str]] = None
+
 
 
 

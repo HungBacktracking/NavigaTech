@@ -37,7 +37,7 @@ class BaseRepository:
                 return None
 
             model_data = update_request.model_dump(exclude_unset=True)
-            model_db.sqlmodel_update(Type[self.model], model_data)
+            model_db.sqlmodel_update(model_data)
             session.add(model_db)
             session.commit()
             session.refresh(model_db)
