@@ -40,7 +40,7 @@ with DAG('job_data_pipeline_bash',
         task_id='merge_jobs',
         bash_command='python3 /opt/airflow/dags/merge/merge_job.py'
     )
-
+    
     crawl_linkedin >> clean_linkedin
     crawl_vietnamworks >> clean_vietnamworks
     [clean_linkedin, clean_vietnamworks] >> merge
