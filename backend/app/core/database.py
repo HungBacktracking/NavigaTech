@@ -1,5 +1,5 @@
-from contextlib import AbstractContextManager, contextmanager
-from typing import Any, Generator
+from contextlib import contextmanager
+from typing import Any, Iterator
 
 from sqlalchemy import create_engine, orm
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
@@ -32,7 +32,7 @@ class Database:
         BaseModel.metadata.create_all(self._engine)
 
     @contextmanager
-    def session(self) -> Generator[Any, Any, AbstractContextManager[Session]]:
+    def session(self) -> Iterator[Session]:
         session: Session = self._session_factory()
         try:
             yield session

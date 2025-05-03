@@ -1,7 +1,10 @@
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, field_validator
 from app.schema.base_schema import ModelBaseInfo
+from app.schema.education_schema import EducationResponse
+from app.schema.experience_schema import ExperienceResponse
 from app.schema.project_schema import ProjectResponse
+from app.schema.skill_schema import SkillResponse
 from app.util.regex import PASSWORD_REGEX
 
 
@@ -25,15 +28,14 @@ class UserDetailResponse(ModelBaseInfo, BaseUser):
     resume_url: Optional[str] = None
     introduction: Optional[str] = None
     projects: List[ProjectResponse] = []
-    experiences: List[ProjectResponse] = []
-    educations: List[ProjectResponse] = []
-    skills: List[ProjectResponse] = []
+    experiences: List[ExperienceResponse] = []
+    educations: List[EducationResponse] = []
+    skills: List[SkillResponse] = []
 
 
 
 
 class UserUpdate(BaseModel):
-    password: Optional[str] = None
     name: Optional[str] = None
     headline: Optional[str] = None
     phone_number: Optional[str] = None
@@ -45,6 +47,9 @@ class UserUpdate(BaseModel):
     introduction: Optional[str] = None
 
 
+
+class UserPasswordUpdate(BaseModel):
+    password: str
 
     @field_validator("password")
     def check_password_complexity(cls, v):

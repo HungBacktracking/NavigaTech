@@ -1,9 +1,9 @@
 from datetime import date
 from typing import Optional
+from uuid import UUID
 
 from pydantic import BaseModel
 from app.schema.base_schema import ModelBaseInfo
-
 
 
 class BaseProject(BaseModel):
@@ -19,4 +19,5 @@ class BaseProject(BaseModel):
 
 class ProjectResponse(ModelBaseInfo, BaseProject): ...
 
-class ProjectRequest(ModelBaseInfo, BaseProject): ...
+class ProjectRequest(ModelBaseInfo, BaseProject):
+    user_id: UUID
