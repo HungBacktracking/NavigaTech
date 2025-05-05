@@ -31,6 +31,7 @@ class UserService(BaseService):
         self.skill_repository = skill_repository
         super().__init__(user_repository)
 
+
     def get_by_id(self, user_id) -> UserBasicResponse:
         user: User = self.user_repository.find_by_id(user_id)
         if not user:

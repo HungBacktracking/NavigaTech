@@ -6,6 +6,7 @@ from app.model.base_model import BaseModel
 class Job(BaseModel, table=True):
     job_url: str = Field()
     logo_url: str = Field()
+    job_name: str = Field()
     company_name: str = Field()
     company_type: str = Field(default=None, nullable=True)
     company_address: str = Field(default=None, nullable=True)

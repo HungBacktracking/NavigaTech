@@ -1,12 +1,9 @@
 from contextlib import AbstractContextManager
-from typing import Callable, Type, Optional
-from uuid import UUID
-
+from typing import Callable, Optional
 from sqlmodel import Session, select
 from app.model.user import User
 from app.repository.base_repository import BaseRepository
-from app.schema.auth_schema import SignUp
-from app.schema.user_schema import UserUpdate
+
 
 
 class UserRepository(BaseRepository):

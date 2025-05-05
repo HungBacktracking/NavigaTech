@@ -1,12 +1,9 @@
-from uuid import UUID
-
 from pydantic import BaseModel
 from app.schema.base_schema import ModelBaseInfo
 
 
 
 class BaseJobAnalytic(BaseModel):
-    job_id: UUID
     general_score: int
     general_feedback: str
     skill_feedback: str

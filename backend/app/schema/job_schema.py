@@ -2,12 +2,13 @@ from datetime import date
 from typing import Optional, List
 from pydantic import BaseModel
 from app.schema.base_schema import ModelBaseInfo
-
+from app.schema.job_analytic_schema import JobAnalyticResponse
 
 
 class BaseJob(BaseModel):
     job_url: str
     logo_url: str
+    job_name: str
     company_name: str
     company_type: Optional[str] = None
     company_address: Optional[str] = None
@@ -29,10 +30,18 @@ class BaseJob(BaseModel):
 
 class JobResponse(ModelBaseInfo, BaseJob): ...
 
+class JobFavoriteResponse(ModelBaseInfo, BaseJob):
+    job_analytics: Optional[JobAnalyticResponse] = None
+
+
+
 class JobSearchRequest(BaseModel):
     query: str
     roles: Optional[List[str]] = None
     levels: Optional[List[str]] = None
+
+
+
 
 
 

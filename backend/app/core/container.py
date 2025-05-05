@@ -5,9 +5,11 @@ from app.core.database import Database
 from app.repository import UserRepository
 from app.repository.education_repository import EducationRepository
 from app.repository.experience_repository import ExperienceRepository
+from app.repository.job_repository import JobRepository
 from app.repository.project_repository import ProjectRepository
 from app.repository.skill_repository import SkillRepository
 from app.services import AuthService, UserService
+from app.services.job_service import JobService
 
 
 class Container(containers.DeclarativeContainer):
@@ -15,6 +17,7 @@ class Container(containers.DeclarativeContainer):
         modules=[
             "app.api.endpoints.auth",
             "app.api.endpoints.user",
+            "app.api.endpoints.job",
             "app.core.dependencies",
         ]
     )
@@ -26,6 +29,7 @@ class Container(containers.DeclarativeContainer):
     project_repository = providers.Factory(ProjectRepository, session_factory=db.provided.session)
     experience_repository = providers.Factory(ExperienceRepository, session_factory=db.provided.session)
     education_repository = providers.Factory(EducationRepository, session_factory=db.provided.session)
+    job_repository = providers.Factory(JobRepository, session_factory=db.provided.session)
 
     auth_service = providers.Factory(AuthService, user_repository=user_repository)
     user_service = providers.Factory(
@@ -36,3 +40,4 @@ class Container(containers.DeclarativeContainer):
         experience_repository=experience_repository,
         education_repository=education_repository
     )
+    job_service = providers.Factory(JobService, job_repository=job_repository)
