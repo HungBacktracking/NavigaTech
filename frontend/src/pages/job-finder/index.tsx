@@ -11,6 +11,7 @@ import AIButton from "../../components/ai-button";
 import selectionSvg from "../../assets/selection.svg";
 import emptyStateSvg from "../../assets/empty-state.svg";
 import AISearchBar from "./components/ai-search-bar";
+import MultiChoiceFilter, { FilterOption } from "./components/multi-choice-filter";
 
 const { Title } = Typography;
 
@@ -22,6 +23,7 @@ export default function JobFindingPage() {
     page: 1,
     pageSize: 10,
     search: "",
+    filterByJobLevel: [],
   });
   const [searchValue, setSearchValue] = useState("");
   const [navbarHeight, setNavbarHeight] = useState(0);
@@ -30,6 +32,8 @@ export default function JobFindingPage() {
     pageSize: 5,
     total: 0,
   });
+  const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
+  const [selectedJobLevels, setSelectedJobLevels] = useState<string[]>([]);
 
   const { data: jobsData, isLoading: isJobsLoading } = useQuery({
     queryKey: ['jobs', queryParams],
@@ -48,6 +52,16 @@ export default function JobFindingPage() {
   const { data: suggestionItems, isLoading: isSuggestionsLoading, isFetching: isSuggestionsFetching, refetch: refreshSuggestions } = useQuery({
     queryKey: ['suggestions'],
     queryFn: jobApi.getPromptSuggestions,
+  });
+
+  const { data: jobLevels, isLoading: isJobLevelsLoading } = useQuery({
+    queryKey: ['jobLevelOptions'],
+    queryFn: jobApi.getJobLevelOptions,
+  });
+
+  const { data: jobTitles, isLoading: isJobTitlesLoading } = useQuery({
+    queryKey: ['jobTitleOptions'],
+    queryFn: jobApi.getJobTitleOptions,
   });
 
   const { mutate: toggleFavorite } = useMutation({
@@ -125,6 +139,35 @@ export default function JobFindingPage() {
     setQueryParams(prev => ({ ...prev, page: 1, search: searchValue }));
   };
 
+  const handleLevelFilterChange = (selectedLevels: string[]) => {
+    setSelectedJobLevels(selectedLevels);
+    if (selectedLevels.length > 0) {
+      setQueryParams(prev => ({
+        ...prev,
+        page: 1,
+        filterByJobLevel: selectedLevels,
+      }));
+    } else if (selectedLevels.length === 0 && queryParams.filterByJobLevel) {
+      setQueryParams(prev => ({ ...prev, page: 1, filterByJobLevel: [] }));
+    }
+  };
+
+  const handleJobTitleFilterChange = (selectedTitles: string[]) => {
+    setSelectedJobTitles(selectedTitles);
+    if (selectedTitles.length > 0) {
+      setQueryParams(prev => ({
+        ...prev,
+        page: 1,
+        search: selectedTitles.join(' ')
+      }));
+    } else if (selectedTitles.length === 0 && queryParams.search) {
+      setSearchValue('');
+      setQueryParams(prev => ({ ...prev, page: 1, search: '' }));
+    }
+  };
+
+
+
   return (
     <>
       {contextHolder}
@@ -169,9 +212,26 @@ export default function JobFindingPage() {
           setSearchValue={setSearchValue}
           handleSearch={handleSearch}
         />
+        <Flex vertical gap={16} align="start" style={{ width: "100%" }}>
+          <MultiChoiceFilter
+            label="Job Level"
+            options={Array.isArray(jobLevels) ? jobLevels : []}
+            selectedValues={selectedJobLevels}
+            onChange={handleLevelFilterChange}
+            isLoading={isJobLevelsLoading}
+          />
+
+          <MultiChoiceFilter
+            label="Job Title"
+            options={Array.isArray(jobTitles) ? jobTitles : []}
+            selectedValues={selectedJobTitles}
+            onChange={handleJobTitleFilterChange}
+            isLoading={isJobTitlesLoading}
+          />
+        </Flex>
       </Flex>
 
-      <Row gutter={16} style={{ height: "100%", marginTop: 24 }}>
+      <Row gutter={16} style={{ height: "100%", marginTop: 8 }}>
         <Col
           span={9}
         >

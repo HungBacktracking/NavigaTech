@@ -8,6 +8,7 @@ export interface Job {
   originalUrl: string;
   skills: string[];
   type?: string;
+  level?: string;
   salary?: string;
   isFavorite?: boolean;
 }
@@ -23,6 +24,7 @@ export interface DetailJob {
   jobDescription: string;
   jobRequirements?: string;
   type?: string;
+  level?: string;
   salary?: string;
   benefit?: string;
   isExpired?: boolean;
@@ -40,5 +42,5 @@ export interface JobQueryParams {
   page: number;
   pageSize: number;
   search?: string;
-  filterByJobType?: string[];
+  filterByJobLevel?: string[];
 }

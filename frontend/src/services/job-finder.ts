@@ -19,8 +19,9 @@ const generateMockDetailJobs = (count: number): DetailJob[] => {
       jobDescription: "We are looking for an experienced Frontend Developer to join our team and help build innovative, high-performance user interfaces for our products that are used by billions of people worldwide.\n\n### What You'll Do\n\n* Design and develop new user-facing features using React.js and TypeScript\n* Build reusable components and libraries for future use\n* Translate designs and wireframes into high-quality code\n* Optimize components for maximum performance across a vast array of web-capable devices and browsers\n* Collaborate with back-end developers and designers to improve usability\n* Help maintain code quality, organization, and automation\n\n### Project Highlights\n\nYou'll be working on projects that impact millions of users daily. Our current focus is on:\n\n1. Improving the performance of our main application by 50%\n2. Implementing a new design system using the latest front-end technologies\n3. Building accessibility features to make our products more inclusive",
       jobRequirements: "### Required Qualifications\n\n* Bachelor's degree in Computer Science, related technical field, or equivalent practical experience\n* 5+ years of experience with modern JavaScript frameworks (React preferred)\n* Strong proficiency in TypeScript and modern JavaScript (ES6+)\n* In-depth knowledge of CSS, HTML, and frontend best practices\n* Experience with responsive and adaptive design\n* Understanding of cross-browser compatibility issues and ways to work around them\n* Familiarity with RESTful APIs and GraphQL\n* Experience with state management libraries (Redux, MobX, or similar)\n* Strong understanding of performance optimization and security issues\n\n### Preferred Qualifications\n\n* Experience with server-side rendering and static site generation\n* Knowledge of modern authorization mechanisms, such as JWT\n* Experience with testing frameworks such as Jest, React Testing Library\n* Familiarity with continuous integration and deployment (CI/CD)\n* Contributions to open source projects\n* Experience mentoring junior developers",
       type: "Full-time",
+      level: "Senior",
       salary: "$120K - $150K",
-      benefit: "### Comprehensive Benefits Package\n\n* **Health and Wellness**: Comprehensive medical, dental, and vision insurance for you and your dependents\n* **Financial Benefits**: Competitive salary with equity options and 401(k) plan with company match\n* **Work-Life Balance**: Flexible work hours, generous PTO, and sabbatical opportunities\n* **Professional Development**: Learning stipend, tuition reimbursement, and conference attendance\n* **Family Support**: Parental leave, childcare assistance, and adoption assistance\n* **Office Perks**: Free meals, snacks, and beverages; on-site fitness centers; transportation benefits\n\n### Additional Perks\n\n* Home office setup allowance\n* Mental health resources and support\n* Employee resource groups and community building\n* Volunteer opportunities and donation matching",
+      benefit: "### Benefits & Perks\n\n* **Health & Wellness**\n  * Comprehensive health insurance\n  * On-site fitness centers\n  * Mental health resources\n  * Wellness programs and incentives\n\n* **Workspace**\n  * Modern, collaborative workspace\n  * Latest hardware and software\n  * Remote work flexibility\n  * Employee resource groups\n\n* **Professional Development**\n  * Learning & development budget\n  * Internal hackathons and innovation contests\n  * Mentorship opportunities\n  * Conference attendance\n\n* **Financial Benefits**\n  * Competitive compensation\n  * 401(k) matching\n  * Stock purchase plan\n  * Performance bonuses",
       isExpired: false,
       isFavorite: false,
     },
@@ -40,6 +41,7 @@ const generateMockDetailJobs = (count: number): DetailJob[] => {
       jobDescription: "As a UX/UI Designer at Microsoft, you'll be responsible for creating intuitive, accessible, and delightful user experiences for our flagship products used by millions worldwide.\n\n### Key Responsibilities\n\n* Create wireframes, user flows, prototypes and high-fidelity mockups for various digital products\n* Collaborate with product managers, engineers, and researchers to define user experiences\n* Design and test user interface elements, navigation components, and visual interactions\n* Develop and maintain design systems for consistent user experiences\n* Conduct user research and usability testing to validate designs\n* Present design concepts and research findings to stakeholders\n\n### Recent Projects\n\n### Windows 12 Interface Redesign\nOur team led the redesign of core system interfaces, focusing on:\n\n* Simplified navigation\n* Enhanced accessibility features\n* Personalized user experiences\n* Seamless integration across devices\n\n### Microsoft 365 Experience Evolution\nWe reimagined collaboration tools to create a more unified experience:\n\n* Collaborative document editing\n* Real-time communication integration\n* AI-assisted content creation\n* Cross-platform consistency",
       jobRequirements: "### Qualifications\n\n* Bachelor's degree in Design, Human-Computer Interaction, or related field\n* 3+ years of experience designing user interfaces for web and mobile applications\n* Strong portfolio demonstrating UI/UX design process and outcomes\n* Proficiency with industry-standard design tools (Figma, Adobe XD, Sketch)\n* Experience with design systems and component libraries\n* Understanding of accessibility standards (WCAG) and inclusive design principles\n* Strong communication skills and ability to articulate design decisions\n\n### Desired Skills\n\n* Experience conducting user research and usability testing\n* Knowledge of front-end development technologies (HTML, CSS, JavaScript)\n* Understanding of motion design and animation principles\n* Experience with data visualization design\n* Background in enterprise software or complex applications\n* Knowledge of AR/VR interaction design",
       type: "Contract",
+      level: "Mid-level",
       salary: "$90K - $110K",
       benefit: "### Benefits & Perks\n\n* **Health & Wellness**\n  * Comprehensive health insurance\n  * On-site fitness centers\n  * Mental health resources\n  * Wellness programs and incentives\n\n* **Workspace**\n  * Modern, collaborative workspace\n  * Latest hardware and software\n  * Remote work flexibility\n  * Employee resource groups\n\n* **Professional Development**\n  * Learning & development budget\n  * Internal hackathons and innovation contests\n  * Mentorship opportunities\n  * Conference attendance\n\n* **Financial Benefits**\n  * Competitive compensation\n  * 401(k) matching\n  * Stock purchase plan\n  * Performance bonuses",
       isExpired: false,
@@ -59,8 +61,9 @@ const generateMockDetailJobs = (count: number): DetailJob[] => {
       datePosted: new Date("2025-04-25"),
       skills: ["Node.js", "MongoDB", "Express", "AWS", "Kubernetes", "Docker", "Microservices", "Redis", "gRPC"],
       jobDescription: "### Overview\nJoin our engineering team at Startup XYZ and help us scale our backend infrastructure to support our rapidly growing user base. You'll be designing and implementing highly scalable, reliable, and maintainable backend services that power our financial analysis platform.\n\n### Role Description\nAs a Backend Engineer, you'll be part of a cross-functional team responsible for developing and maintaining our microservices architecture. You'll work closely with frontend engineers, data scientists, and product managers to build robust APIs that deliver personalized financial insights to our users.\n\n### Your Impact\nYour work will directly contribute to enabling our platform to:\n\n* Process financial transactions in real-time\n* Analyze large volumes of financial data efficiently\n* Generate personalized investment recommendations\n* Maintain the highest standards of data security and privacy\n\n### Technical Environment\n\nOur stack includes:\n\n```\nNode.js | Express | MongoDB | Redis | AWS Lambda | Docker | Kubernetes | gRPC\n```\n\nWe follow a microservices architecture with event-driven design patterns and implement CI/CD practices for rapid, reliable deployments.",
-      jobRequirements: "### Required Skills & Experience\n\n* **Technical Background**\n  * 3+ years of professional experience building backend services\n  * Strong proficiency with Node.js and Express framework\n  * Experience with NoSQL databases, particularly MongoDB\n  * Familiarity with containerization using Docker and orchestration with Kubernetes\n  * Understanding of RESTful API design principles\n  * Experience with cloud services, preferably AWS\n\n* **Engineering Practices**\n  * Solid understanding of microservices architecture\n  * Experience with test-driven development\n  * Knowledge of CI/CD pipelines\n  * Understanding of observability (logging, monitoring, alerting)\n\n### Bonus Points For\n\n* Experience with message brokers (Kafka, RabbitMQ)\n* Knowledge of GraphQL\n* Understanding of financial technology domain\n* Contributions to open-source projects\n* Experience with gRPC and protocol buffers\n\n### Code Challenge Example\n\n```javascript\n// We might ask you to optimize something like this:\nconst processTransactions = async (userId, date) => {\n  const transactions = await Transaction.find({ userId, date });\n  const processedData = transactions.map(t => {\n    // Complex processing logic\n  });\n  return processedData;\n};\n```",
+      jobRequirements: "### Required Skills & Experience\n\n* **Technical Background**\n  * 3+ years of professional experience building backend services\n  * Strong proficiency with Node.js and Express framework\n  * Experience with NoSQL databases, particularly MongoDB\n  * Familiarity with containerization using Docker and orchestration with Kubernetes\n  * Understanding of RESTful API design principles\n  * Experience with cloud services, preferably AWS\n\n* **Engineering Practices**\n  * Solid understanding of microservices architecture\n  * Experience with test-driven development\n  * Knowledge of CI/CD pipelines\n  * Understanding of observability (logging, monitoring, alerting)\n\n### Bonus Points For\n\n* Experience with message brokers (Kafka, RabbitMQ)\n* Knowledge of GraphQL\n* Understanding of financial technology domain\n* Contributions to open-source projects\n* Experience with gRPC and protocol buffers\n\n### Code Challenge Example\n\n```javascript\n// We might ask you to optimize something like this:\nconst processTransactions = async (userId, date) => {\n  const transactions = await Transaction.find({ userId, date });\n  // ...\n}\n```",
       type: "Part-time",
+      level: "Junior",
       salary: "$80K - $100K",
       benefit: "### Startup Benefits\n\n### Compensation & Equity\n* Competitive salary\n* Equity package with early-stage company\n* Performance-based bonuses\n* Flexible spending account\n\n### Health & Wellness\n* Health insurance with 100% premium coverage\n* Dental and vision plans\n* Mental health resources\n* Gym membership reimbursement\n\n### Work Environment\n* Flexible work arrangements (part-time, hybrid)\n* Modern office in downtown NYC\n* Home office stipend\n* Latest equipment of your choice\n\n### Growth & Development\n* Learning budget for courses and certifications\n* Weekly tech talks and knowledge sharing\n* Mentorship program\n* Conference attendance opportunities\n\n### Additional Perks\n* Unlimited PTO policy\n* Catered lunches three times a week\n* Monthly team building events\n* Commuter benefits",
       isExpired: false,
@@ -74,6 +77,14 @@ const generateMockDetailJobs = (count: number): DetailJob[] => {
   for (let i = 4; i <= count; i++) {
     const baseJob = { ...mockJobsBase[Math.floor(Math.random() * mockJobsBase.length)] };
     
+    // Generate random job level
+    const jobLevels = ["Intern", "Entry-level", "Junior", "Mid-level", "Senior", "Lead", "Manager"];
+    const randomLevel = jobLevels[Math.floor(Math.random() * jobLevels.length)];
+    
+    // Generate random job type
+    const jobTypes = ["Full-time", "Part-time", "Contract", "Internship", "Temporary"];
+    const randomType = jobTypes[Math.floor(Math.random() * jobTypes.length)];
+    
     const newJob: DetailJob = {
       ...baseJob,
       id: i.toString(),
@@ -85,6 +96,8 @@ const generateMockDetailJobs = (count: number): DetailJob[] => {
         name: baseJob.company?.name + " " + (i % 3 === 0 ? "Inc." : "LLC"),
       },
       location: i % 3 === 0 ? "Remote / Global" : i % 2 === 0 ? "Hybrid / Chicago" : "On-site / Boston",
+      type: randomType,
+      level: randomLevel,
       datePosted: new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000),
     };
     
@@ -104,6 +117,9 @@ const generateMockJobs = (mockDetailJobs: DetailJob[]): Job[] => {
     location: job.location,
     datePosted: job.datePosted,
     skills: job.skills,
+    type: job.type,
+    level: job.level,
+    salary: job.salary,
     isExpired: job.isExpired,
     isFavorite: job.isFavorite,
   }));
@@ -128,17 +144,65 @@ const mockPromptSuggestions = [
 // Mock favorites storage
 let favoriteJobIds: string[] = [];
 
+const jobLevelOptions = [
+  { value: "Intern", label: "Intern" },
+  { value: "Entry-level", label: "Entry Level" },
+  { value: "Junior", label: "Junior" },
+  { value: "Mid-level", label: "Mid-level" },
+  { value: "Senior", label: "Senior" },
+  { value: "Lead", label: "Lead" },
+  { value: "Manager", label: "Manager" },
+  { value: "Director", label: "Director" },
+  { value: "VP", label: "VP" },
+  { value: "Executive", label: "Executive" },
+  { value: "Principal", label: "Principal" },
+  { value: "Chief", label: "Chief" },
+  { value: "Head", label: "Head" },
+];
+
+const jobTitleOptions = [
+  { value: "Frontend Developer", label: "Frontend Developer" },
+  { value: "UX/UI Designer", label: "UX/UI Designer" },
+  { value: "Backend Engineer", label: "Backend Engineer" },
+  { value: "Data Scientist", label: "Data Scientist" },
+  { value: "Product Manager", label: "Product Manager" },
+  { value: "DevOps Engineer", label: "DevOps Engineer" },
+  { value: "Full Stack Developer", label: "Full Stack Developer" },
+  { value: "Software Engineer", label: "Software Engineer" },
+  { value: "QA Engineer", label: "QA Engineer" },
+  { value: "Business Analyst", label: "Business Analyst" },
+  { value: "Project Manager", label: "Project Manager" },
+  { value: "Data Analyst", label: "Data Analyst" },
+  { value: "Marketing Specialist", label: "Marketing Specialist" },
+  { value: "Sales Executive", label: "Sales Executive" },
+  { value: "Customer Support", label: "Customer Support" },
+  { value: "HR Manager", label: "HR Manager" },
+  { value: "Network Administrator", label: "Network Administrator" },
+  { value: "Cybersecurity Analyst", label: "Cybersecurity Analyst" },
+  { value: "Cloud Engineer", label: "Cloud Engineer" },
+  { value: "Game Developer", label: "Game Developer" },
+  { value: "Mobile Developer", label: "Mobile Developer" },
+];
+
 export const jobApi = {
   getJobs: async (params: JobQueryParams): Promise<PaginatedResponse<Job>> => {
     return new Promise<PaginatedResponse<Job>>((resolve) => {
       setTimeout(() => {
         let filteredJobs = [...mockJobs];
+        
         if (params.search) {
           const searchLower = params.search.toLowerCase();
           filteredJobs = filteredJobs.filter(job => 
             job.title.toLowerCase().includes(searchLower) || 
             job.companyName.toLowerCase().includes(searchLower) ||
             job.location.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        // Apply job level filter
+        if (params.filterByJobLevel && params.filterByJobLevel.length > 0) {
+          filteredJobs = filteredJobs.filter(job => 
+            job.level && params.filterByJobLevel?.includes(job.level)
           );
         }
 
@@ -193,6 +257,31 @@ export const jobApi = {
         
         const isFavorite = favoriteJobIds.includes(jobId);
         resolve({ jobId, isFavorite });
+      }, 500);
+    });
+  },
+  
+  // New API endpoints for filter options
+  getJobLevelOptions: async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(jobLevelOptions);
+      }, 500);
+    });
+  },
+  
+  getJobTitleOptions: async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(jobTitleOptions);
+      }, 500);
+    });
+  },
+  
+  getJobTypeOptions: async () => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve(jobTypeOptions);
       }, 500);
     });
   },
