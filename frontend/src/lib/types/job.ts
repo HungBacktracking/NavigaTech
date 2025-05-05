@@ -1,6 +1,21 @@
 export interface Job {
   id: string;
   title: string;
+  companyName: string;
+  companyLogo?: string;
+  location: string;
+  datePosted: Date;
+  originalUrl: string;
+  skills: string[];
+  type?: string;
+  level?: string;
+  salary?: string;
+  isFavorite?: boolean;
+}
+
+export interface DetailJob {
+  id: string;
+  title: string;
   originalUrl: string;
   company: Company;
   location: string;
@@ -9,6 +24,7 @@ export interface Job {
   jobDescription: string;
   jobRequirements?: string;
   type?: string;
+  level?: string;
   salary?: string;
   benefit?: string;
   isExpired?: boolean;
@@ -20,4 +36,11 @@ export interface Company {
   logo?: string;
   address?: string;
   description?: string;
+}
+
+export interface JobQueryParams {
+  page: number;
+  pageSize: number;
+  search?: string;
+  filterByJobLevel?: string[];
 }

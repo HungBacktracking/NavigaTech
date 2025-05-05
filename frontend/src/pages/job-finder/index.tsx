@@ -1,27 +1,29 @@
-import { useEffect, useState } from "react";
+import { MouseEvent, useEffect, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import JobCard from "./components/job-card";
-import { jobApi, JobQueryParams } from "../../services/job-finder";
-import { Job } from "../../lib/types/job";
+import { jobApi } from "../../services/job-finder";
+import { Job, JobQueryParams } from "../../lib/types/job";
 import JobDetail from "./components/job-detail";
 import SuggestionItem from "./components/suggestion-item";
 import AIButton from "../../components/ai-button";
 import selectionSvg from "../../assets/selection.svg";
 import emptyStateSvg from "../../assets/empty-state.svg";
 import AISearchBar from "./components/ai-search-bar";
+import MultiChoiceFilter, { FilterOption } from "./components/multi-choice-filter";
 
 const { Title } = Typography;
 
 export default function JobFindingPage() {
   const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [queryParams, setQueryParams] = useState<JobQueryParams>({
     page: 1,
     pageSize: 10,
     search: "",
+    filterByJobLevel: [],
   });
   const [searchValue, setSearchValue] = useState("");
   const [navbarHeight, setNavbarHeight] = useState(0);
@@ -30,18 +32,36 @@ export default function JobFindingPage() {
     pageSize: 5,
     total: 0,
   });
+  const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
+  const [selectedJobLevels, setSelectedJobLevels] = useState<string[]>([]);
 
-  const {
-    data: jobsData,
-    isLoading: isJobsLoading,
-  } = useQuery({
+  const { data: jobsData, isLoading: isJobsLoading } = useQuery({
     queryKey: ['jobs', queryParams],
     queryFn: () => jobApi.getJobs(queryParams),
   });
 
-  const { data: suggestionItems = [], isLoading: isSuggestionsLoading } = useQuery({
+  const { data: jobDetailData, isLoading: isJobDetailLoading } = useQuery({
+    queryKey: ['jobDetail', selectedJobId],
+    queryFn: () => {
+      if (!selectedJobId) return null;
+      return jobApi.getDetailJob(selectedJobId);
+    },
+    enabled: !!selectedJobId,
+  });
+
+  const { data: suggestionItems, isLoading: isSuggestionsLoading, isFetching: isSuggestionsFetching, refetch: refreshSuggestions } = useQuery({
     queryKey: ['suggestions'],
     queryFn: jobApi.getPromptSuggestions,
+  });
+
+  const { data: jobLevels, isLoading: isJobLevelsLoading } = useQuery({
+    queryKey: ['jobLevelOptions'],
+    queryFn: jobApi.getJobLevelOptions,
+  });
+
+  const { data: jobTitles, isLoading: isJobTitlesLoading } = useQuery({
+    queryKey: ['jobTitleOptions'],
+    queryFn: jobApi.getJobTitleOptions,
   });
 
   const { mutate: toggleFavorite } = useMutation({
@@ -60,23 +80,15 @@ export default function JobFindingPage() {
 
       messageApi.success(`Job ${isFavorite ? 'added to' : 'removed from'} favorites`);
 
-      if (selectedJob && selectedJob.id === jobId) {
-        setSelectedJob({ ...selectedJob, isFavorite });
+      if (jobDetailData && jobDetailData.id === jobId) {
+        queryClient.setQueryData(["jobDetail", jobId], (oldData: any) => {
+          if (!oldData) return oldData;
+          return { ...oldData, isFavorite };
+        });
       }
     },
     onError: () => {
       messageApi.error("Failed to update favorites. Please try again.");
-    }
-  });
-
-  const { mutate: refreshSuggestions, isPending: isRefreshingSuggestions } = useMutation({
-    mutationFn: jobApi.getPromptSuggestions,
-    onSuccess: (newSuggestions) => {
-      queryClient.setQueryData(['suggestions'], newSuggestions);
-      messageApi.success("Suggestions refreshed successfully");
-    },
-    onError: () => {
-      messageApi.error("Failed to refresh suggestions. Please try again.");
     }
   });
 
@@ -97,24 +109,26 @@ export default function JobFindingPage() {
   }, []);
 
   useEffect(() => {
-    if (jobsData) {
-      if (jobsData.items.length > 0 && !selectedJob) {
-        setSelectedJob(jobsData.items[0] || null);
-      } else if (jobsData.items.length > 0 && selectedJob) {
-        const stillExists = jobsData.items.some(job => job.id === selectedJob.id);
+    if (jobsData?.items) {
+      if (jobsData.items.length > 0 && !selectedJobId) {
+        setSelectedJobId(jobsData.items[0]?.id || null);
+      } else if (jobsData.items.length > 0 && selectedJobId) {
+        const stillExists = jobsData.items.some(job => job.id === selectedJobId);
         if (!stillExists) {
-          setSelectedJob(jobsData.items[0] || null);
+          setSelectedJobId(jobsData.items[0]?.id || null);
         } else {
-          const updatedJob = jobsData.items.find(job => job.id === selectedJob.id);
+          const updatedJob = jobsData.items.find(job => job.id === selectedJobId);
           if (updatedJob) {
-            setSelectedJob(updatedJob);
+            setSelectedJobId(updatedJob.id);
+          } else {
+            setSelectedJobId(jobsData.items[0]?.id || null);
           }
         }
       } else if (jobsData.items.length === 0) {
-        setSelectedJob(null);
+        setSelectedJobId(null);
       }
     }
-  }, [jobsData, selectedJob]);
+  }, [jobsData, selectedJobId]);
 
   const handlePageChange = (page: number) => {
     setQueryParams(prev => ({ ...prev, page }));
@@ -124,6 +138,35 @@ export default function JobFindingPage() {
   const handleSearch = () => {
     setQueryParams(prev => ({ ...prev, page: 1, search: searchValue }));
   };
+
+  const handleLevelFilterChange = (selectedLevels: string[]) => {
+    setSelectedJobLevels(selectedLevels);
+    if (selectedLevels.length > 0) {
+      setQueryParams(prev => ({
+        ...prev,
+        page: 1,
+        filterByJobLevel: selectedLevels,
+      }));
+    } else if (selectedLevels.length === 0 && queryParams.filterByJobLevel) {
+      setQueryParams(prev => ({ ...prev, page: 1, filterByJobLevel: [] }));
+    }
+  };
+
+  const handleJobTitleFilterChange = (selectedTitles: string[]) => {
+    setSelectedJobTitles(selectedTitles);
+    if (selectedTitles.length > 0) {
+      setQueryParams(prev => ({
+        ...prev,
+        page: 1,
+        search: selectedTitles.join(' ')
+      }));
+    } else if (selectedTitles.length === 0 && queryParams.search) {
+      setSearchValue('');
+      setQueryParams(prev => ({ ...prev, page: 1, search: '' }));
+    }
+  };
+
+
 
   return (
     <>
@@ -144,7 +187,7 @@ export default function JobFindingPage() {
             </Title>
             <AIButton
               icon={<ReloadOutlined />}
-              loading={isRefreshingSuggestions}
+              loading={isSuggestionsFetching}
               onClick={() => refreshSuggestions()}
             >
               Refresh
@@ -153,7 +196,7 @@ export default function JobFindingPage() {
           {isSuggestionsLoading ? (
             <Skeleton active paragraph={{ rows: 2 }} style={{ width: 800 }} />
           ) : (
-            suggestionItems.map((item, index) => (
+            suggestionItems?.map((item, index) => (
               <SuggestionItem
                 key={index}
                 content={item}
@@ -161,7 +204,7 @@ export default function JobFindingPage() {
                   setSearchValue(item);
                 }}
               />
-            ))
+            )) || []
           )}
         </Space>
         <AISearchBar
@@ -169,9 +212,26 @@ export default function JobFindingPage() {
           setSearchValue={setSearchValue}
           handleSearch={handleSearch}
         />
+        <Flex vertical gap={16} align="start" style={{ width: "100%" }}>
+          <MultiChoiceFilter
+            label="Job Level"
+            options={Array.isArray(jobLevels) ? jobLevels : []}
+            selectedValues={selectedJobLevels}
+            onChange={handleLevelFilterChange}
+            isLoading={isJobLevelsLoading}
+          />
+
+          <MultiChoiceFilter
+            label="Job Title"
+            options={Array.isArray(jobTitles) ? jobTitles : []}
+            selectedValues={selectedJobTitles}
+            onChange={handleJobTitleFilterChange}
+            isLoading={isJobTitlesLoading}
+          />
+        </Flex>
       </Flex>
 
-      <Row gutter={16} style={{ height: "100%", marginTop: 24 }}>
+      <Row gutter={16} style={{ height: "100%", marginTop: 8 }}>
         <Col
           span={9}
         >
@@ -186,7 +246,6 @@ export default function JobFindingPage() {
                       <Skeleton.Node active style={{ width: 40, height: 40, borderRadius: 4 }} />
                       <Skeleton.Node active style={{ height: 24 }} />
                     </Space>
-
                   }
                 >
                   <Skeleton active paragraph={{ rows: 4 }} />
@@ -201,8 +260,8 @@ export default function JobFindingPage() {
                     e.stopPropagation();
                     toggleFavorite(job.id);
                   }}
-                  handleSelectJob={() => setSelectedJob(job)}
-                  isSelected={selectedJob?.id === job.id}
+                  handleSelectJob={() => setSelectedJobId(job.id)}
+                  isSelected={selectedJobId === job.id}
                   isFavorite={job.isFavorite || false}
                 />
               ))
@@ -243,13 +302,25 @@ export default function JobFindingPage() {
             paddingBottom: 8,
           }}
         >
-          {selectedJob ? (
+          {isJobDetailLoading ? (
+            <Card
+              style={{ padding: '4px', borderRadius: '8px', height: '100%' }}
+              title={
+                <Space size="large" style={{ width: "100%", padding: 8 }}>
+                  <Skeleton.Node active style={{ width: 60, height: 60, borderRadius: 4 }} />
+                  <Skeleton.Node active style={{ height: 32, width: 600 }} />
+                </Space>
+              }
+            >
+              <Skeleton active paragraph={{ rows: 10 }} />
+            </Card>
+          ) : jobDetailData ? (
             <JobDetail
-              job={selectedJob}
-              isFavorite={selectedJob.isFavorite || false}
+              job={jobDetailData}
+              isFavorite={jobDetailData.isFavorite || false}
               handleToggleFavorite={(e: MouseEvent) => {
                 e.stopPropagation();
-                toggleFavorite(selectedJob.id);
+                toggleFavorite(jobDetailData.id);
               }}
             />
           ) : (
