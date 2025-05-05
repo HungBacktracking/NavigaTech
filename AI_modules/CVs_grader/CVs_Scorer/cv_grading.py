@@ -142,12 +142,12 @@ class ResumeAnalyzer:
           Candidate Resume: {resume_text}
 """
         res = self.ge_model.generate_content(gemini_input,
-                                             generation_config={{
+                                             generation_config={
                                                  "temperature": 0.2,
                                                  "top_k": 2,
                                                  "top_p": 0.9,
                                                  "max_output_tokens": 2000,
-                                             }},
+                                             },
                                              )
 
         grading = json.loads(res.text.replace("```", "").replace("json", ""))
