@@ -8,13 +8,12 @@ from sqlmodel import SQLModel
 from app.core.config import configs
 from app.model.user import User
 from app.model.job import Job
-from app.model.job_pref import JobPref
 from app.model.favorite_job import FavoriteJob
 from app.model.education import Education
 from app.model.skill import Skill
 from app.model.experience import Experience
 from app.model.project import Project
-from app.model.job_analytics import JobAnalytics
+from app.model.job_analytic import JobAnalytic
 
 cmd_kwargs = context.get_x_argument(as_dictionary=True)
 if "ENV" in cmd_kwargs:

@@ -5,32 +5,31 @@ from app.core.container import Container
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
-from app.model.user import User
-from app.schema.user_schema import UserResponse, UserUpdate
+from app.schema.user_schema import UserBasicResponse, UserUpdate, UserDetailResponse
 from app.services.user_service import UserService
 
-router = APIRouter(prefix="/user", tags=["user"], dependencies=[Depends(JWTBearer())])
+router = APIRouter(prefix="/users", tags=["User"], dependencies=[Depends(JWTBearer())])
 
 
-
-@router.get("/{user_id}", response_model=UserResponse)
+@router.get("/me", response_model=UserBasicResponse)
 @inject
-def get_user(
-    user_id: int,
-    service: UserService = Depends(Provide[Container.user_service]),
-    current_user: User = Depends(get_current_user)
+def get_me(current_user: UserBasicResponse = Depends(get_current_user)):
+    return current_user
+
+@router.get("/detail-me", response_model=UserDetailResponse)
+@inject
+def get_detail_me(
+        service: UserService = Depends(Provide[Container.user_service]),
+        current_user: UserDetailResponse = Depends(get_current_user)
 ):
-    return service.get_by_id(user_id)
+    return service.get_detail_by_id(current_user.id)
 
-
-
-@router.put("/{user_id}", response_model=UserResponse)
+@router.put("/me", response_model=UserDetailResponse)
 @inject
-def update_user(
-    user_id: int,
+def update_me(
     update_request: UserUpdate,
     service: UserService = Depends(Provide[Container.user_service]),
-    current_user: User = Depends(get_current_user)
+    current_user: UserBasicResponse = Depends(get_current_user)
 ):
-    return service.update(user_id, update_request)
+    return service.update(current_user.id, update_request)
 

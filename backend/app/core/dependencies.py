@@ -8,7 +8,7 @@ from app.core.container import Container
 from app.core.security import ALGORITHM, JWTBearer
 from app.exceptions.errors.CustomClientException import AuthError
 from app.schema.auth_schema import Payload
-from app.schema.user_schema import UserResponse
+from app.schema.user_schema import UserBasicResponse
 from app.services.user_service import UserService
 
 
@@ -16,14 +16,14 @@ from app.services.user_service import UserService
 def get_current_user(
     token: str = Depends(JWTBearer()),
     service: UserService = Depends(Provide[Container.user_service]),
-) -> UserResponse:
+) -> UserBasicResponse:
     try:
         payload = jwt.decode(token, configs.SECRET_KEY, algorithms=ALGORITHM)
         token_data = Payload(**payload)
     except (jwt.JWTError, ValidationError):
         raise AuthError(detail="Could not validate credentials")
 
-    current_user: UserResponse = service.get_by_id(token_data.id)
+    current_user: UserBasicResponse = service.get_by_id(token_data.id)
     if not current_user:
         raise AuthError(detail="User not found")
 

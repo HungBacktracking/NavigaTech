@@ -1,6 +1,8 @@
 from datetime import datetime
+from uuid import UUID
+
 from pydantic import BaseModel, EmailStr, field_validator
-from app.schema.user_schema import UserResponse
+from app.schema.user_schema import UserBasicResponse
 from app.util.regex import PASSWORD_REGEX
 
 
@@ -26,7 +28,7 @@ class SignUp(BaseModel):
 
 
 class Payload(BaseModel):
-    id: int
+    id: str
     email: str
     name: str
 
@@ -34,4 +36,4 @@ class Payload(BaseModel):
 class SignInResponse(BaseModel):
     access_token: str
     expiration: datetime
-    user_info: UserResponse
+    user_info: UserBasicResponse

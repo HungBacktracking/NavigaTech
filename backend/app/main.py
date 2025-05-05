@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.routes import routers
@@ -35,9 +36,9 @@ class AppCreator:
             )
 
         # set routes
-        @self.app.get("/")
-        def root():
-            return "service is working"
+        @self.app.get("/", include_in_schema=False)
+        def health() -> JSONResponse:
+            return JSONResponse({"message": "Server is working!"})
 
         self.app.include_router(routers, prefix=configs.API_V1_STR)
 

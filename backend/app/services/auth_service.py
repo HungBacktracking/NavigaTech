@@ -27,10 +27,11 @@ class AuthService(BaseService):
             raise AuthError(detail="Incorrect email or password")
 
         payload = Payload(
-            id=user.id,
+            id=str(user.id),
             email=user.email,
             name=user.name
         )
+
         token_lifespan = timedelta(minutes=configs.ACCESS_TOKEN_EXPIRE_MINUTES)
         access_token, expiration_datetime = create_access_token(payload.model_dump(), token_lifespan)
 
@@ -43,11 +44,10 @@ class AuthService(BaseService):
         return sign_in_result
 
     def sign_up(self, user_info: SignUp):
-        user = User(**user_info.model_dump())
-        user.password = get_password_hash(user_info.password)
+        user_info.password = get_password_hash(user_info.password)
 
         try:
-            created_user = self.user_repository.create(user)
+            created_user = self.user_repository.create(user_info)
         except IntegrityError as e:
             raise CustomError.DUPLICATE_RESOURCE.as_exception()
 
