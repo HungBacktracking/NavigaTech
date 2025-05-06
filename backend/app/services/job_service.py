@@ -1,7 +1,7 @@
 from typing import Optional, List
 from uuid import UUID
 
-from app.api.convert.job import to_favorite_job_response
+from app.convert.job import to_favorite_job_response
 from app.model.favorite_job import FavoriteJob
 from app.model.job import Job
 from app.repository.job_repository import JobRepository

@@ -59,6 +59,14 @@ class Configs(BaseSettings):
         database=ENV_DATABASE_MAPPER[ENV],
     )
 
+    # AWS
+    AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
+    AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")
+    AWS_REGION: str = os.getenv("AWS_REGION")
+    AWS_S3_BUCKET_NAME: str = os.getenv("AWS_S3_BUCKET_NAME")
+    AWS_S3_BUCKET_URL: str = os.getenv("AWS_S3_BUCKET_URL")
+
+
     # find query
     PAGE: int = 1
     PAGE_SIZE: int = 20
