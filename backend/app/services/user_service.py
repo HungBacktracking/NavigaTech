@@ -29,7 +29,13 @@ class UserService(BaseService):
         self.project_repository = project_repository
         self.education_repository = education_repository
         self.skill_repository = skill_repository
-        super().__init__(user_repository)
+        super().__init__(
+            user_repository,
+            experience_repository,
+            project_repository,
+            education_repository,
+            skill_repository
+        )
 
 
     def get_by_id(self, user_id) -> UserBasicResponse:
