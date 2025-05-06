@@ -1,14 +1,13 @@
 import boto3
 from botocore.client import Config
-from app.core.config import configs
 
 class S3Client:
-    def __init__(self):
+    def __init__(self, region_name: str, access_key_id: str, secret_key: str):
         self.client = boto3.client(
             "s3",
-            region_name=configs.aws_region,
-            aws_access_key_id=configs.aws_access_key,
-            aws_secret_access_key=configs.aws_secret_key,
+            region_name=region_name,
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_key,
             config=Config(signature_version="s3v4")
         )
 
