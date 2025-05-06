@@ -199,12 +199,18 @@ export const jobApi = {
           );
         }
         
-        // Apply job level filter
         if (params.filterByJobLevel && params.filterByJobLevel.length > 0) {
           filteredJobs = filteredJobs.filter(job => 
             job.level && params.filterByJobLevel?.includes(job.level)
           );
         }
+
+        favoriteJobIds.forEach(jobId => {
+          const jobIndex = filteredJobs.findIndex(job => job.id === jobId);
+          if (jobIndex !== -1 && filteredJobs[jobIndex]) {
+            filteredJobs[jobIndex].isFavorite = true;
+          }
+        });
 
         const total = filteredJobs.length;
         const totalPages = Math.ceil(total / params.pageSize);
@@ -261,7 +267,6 @@ export const jobApi = {
     });
   },
   
-  // New API endpoints for filter options
   getJobLevelOptions: async () => {
     return new Promise((resolve) => {
       setTimeout(() => {
@@ -278,10 +283,24 @@ export const jobApi = {
     });
   },
   
-  getJobTypeOptions: async () => {
+  getFavoriteJobs: async ({ page, pageSize } : { page: number, pageSize: number }): Promise<PaginatedResponse<Job>> => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        resolve(jobTypeOptions);
+        const favoriteJobs = mockJobs.filter(job => favoriteJobIds.includes(job.id));
+        const total = favoriteJobs.length;
+        const totalPages = Math.ceil(total / pageSize);
+        const startIndex = (page - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+
+        const paginatedJobs = favoriteJobs.slice(startIndex, endIndex);
+
+        resolve({
+          items: paginatedJobs,
+          total,
+          page,
+          pageSize,
+          totalPages
+        });
       }, 500);
     });
   },

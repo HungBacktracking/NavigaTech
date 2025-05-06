@@ -1,4 +1,4 @@
-import { MouseEvent, useEffect, useState } from "react";
+import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
@@ -11,7 +11,8 @@ import AIButton from "../../components/ai-button";
 import selectionSvg from "../../assets/selection.svg";
 import emptyStateSvg from "../../assets/empty-state.svg";
 import AISearchBar from "./components/ai-search-bar";
-import MultiChoiceFilter, { FilterOption } from "./components/multi-choice-filter";
+import MultiChoiceFilter from "./components/multi-choice-filter";
+import { jobAnalysisApi } from "../../services/job-analysis";
 
 const { Title } = Typography;
 
@@ -19,21 +20,22 @@ export default function JobFindingPage() {
   const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [searchValue, setSearchValue] = useState("");
+  const [navbarHeight, setNavbarHeight] = useState(0);
   const [queryParams, setQueryParams] = useState<JobQueryParams>({
     page: 1,
     pageSize: 10,
     search: "",
     filterByJobLevel: [],
   });
-  const [searchValue, setSearchValue] = useState("");
-  const [navbarHeight, setNavbarHeight] = useState(0);
   const [lastPaginationData, setLastPaginationData] = useState({
     page: 1,
-    pageSize: 5,
+    pageSize: 10,
     total: 0,
   });
   const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
   const [selectedJobLevels, setSelectedJobLevels] = useState<string[]>([]);
+  const [analyzingJobIds, setAnalyzingJobIds] = useState<string[]>([]);
 
   const { data: jobsData, isLoading: isJobsLoading } = useQuery({
     queryKey: ['jobs', queryParams],
@@ -86,13 +88,36 @@ export default function JobFindingPage() {
           return { ...oldData, isFavorite };
         });
       }
+
+      queryClient.invalidateQueries({ queryKey: ["favoriteJobs"] });
     },
     onError: () => {
       messageApi.error("Failed to update favorites. Please try again.");
     }
   });
 
-  useEffect(() => {
+  const { mutate: analyzeJobMutation } = useMutation({
+    mutationFn: (jobId: string) => jobAnalysisApi.createAnalysisFromJobId(jobId),
+    onMutate: (jobId) => {
+      setAnalyzingJobIds(prev => [...prev, jobId]);
+    },
+    onSuccess: (result) => {
+      if (result) {
+        messageApi.success("Job analysis completed successfully!");
+        queryClient.invalidateQueries({ queryKey: ['jobAnalyses'] });
+      } else {
+        messageApi.error("Failed to analyze job. The job may not exist.");
+      }
+    },
+    onError: () => {
+      messageApi.error("Failed to analyze job. Please try again.");
+    },
+    onSettled: (_, __, jobId) => {
+      setAnalyzingJobIds(prev => prev.filter(id => id !== jobId));
+    }
+  });
+
+  useMemo(() => {
     if (jobsData) {
       setLastPaginationData({
         page: jobsData.page,
@@ -102,7 +127,7 @@ export default function JobFindingPage() {
     }
   }, [jobsData]);
 
-  useEffect(() => {
+  useMemo(() => {
     const navbar = document.querySelector('header');
     const navbarHeightValue = navbar ? navbar.getBoundingClientRect().height + 16 : 48;
     setNavbarHeight(navbarHeightValue);
@@ -166,7 +191,10 @@ export default function JobFindingPage() {
     }
   };
 
-
+  const handleAnalyzeJob = (jobId: string) => {
+    if (!jobId) return;
+    analyzeJobMutation(jobId);
+  };
 
   return (
     <>
@@ -189,8 +217,9 @@ export default function JobFindingPage() {
               icon={<ReloadOutlined />}
               loading={isSuggestionsFetching}
               onClick={() => refreshSuggestions()}
+              disabled={isSuggestionsFetching}
             >
-              Refresh
+              {isSuggestionsFetching ? "Refresing..." : "Refresh"}
             </AIButton>
           </Flex>
           {isSuggestionsLoading ? (
@@ -214,7 +243,7 @@ export default function JobFindingPage() {
         />
         <Flex vertical gap={16} align="start" style={{ width: "100%" }}>
           <MultiChoiceFilter
-            label="Job Level"
+            label="Job Levels"
             options={Array.isArray(jobLevels) ? jobLevels : []}
             selectedValues={selectedJobLevels}
             onChange={handleLevelFilterChange}
@@ -222,7 +251,7 @@ export default function JobFindingPage() {
           />
 
           <MultiChoiceFilter
-            label="Job Title"
+            label="Job Titles"
             options={Array.isArray(jobTitles) ? jobTitles : []}
             selectedValues={selectedJobTitles}
             onChange={handleJobTitleFilterChange}
@@ -261,8 +290,10 @@ export default function JobFindingPage() {
                     toggleFavorite(job.id);
                   }}
                   handleSelectJob={() => setSelectedJobId(job.id)}
+                  handleJobAnalysisClick={handleAnalyzeJob}
                   isSelected={selectedJobId === job.id}
                   isFavorite={job.isFavorite || false}
+                  isAnalyzing={analyzingJobIds.includes(job.id)}
                 />
               ))
             )}
@@ -280,16 +311,15 @@ export default function JobFindingPage() {
               </div>
             )}
 
-            <Flex justify="center" style={{ marginTop: 16, marginBottom: 24 }}>
-              <Pagination
-                current={isJobsLoading ? lastPaginationData.page : jobsData!.page}
-                pageSize={isJobsLoading ? lastPaginationData.pageSize : jobsData!.pageSize}
-                total={isJobsLoading ? lastPaginationData.total : jobsData!.total}
-                onChange={handlePageChange}
-                showSizeChanger={false}
-                disabled={isJobsLoading}
-              />
-            </Flex>
+            <Pagination
+              align="center"
+              current={isJobsLoading ? lastPaginationData.page : jobsData!.page}
+              pageSize={isJobsLoading ? lastPaginationData.pageSize : jobsData!.pageSize}
+              total={isJobsLoading ? lastPaginationData.total : jobsData!.total}
+              onChange={handlePageChange}
+              showSizeChanger={false}
+              disabled={isJobsLoading}
+            />
           </Space>
         </Col>
 
@@ -322,6 +352,8 @@ export default function JobFindingPage() {
                 e.stopPropagation();
                 toggleFavorite(jobDetailData.id);
               }}
+              handleJobAnalysisClick={handleAnalyzeJob}
+              isAnalyzing={analyzingJobIds.includes(jobDetailData.id)}
             />
           ) : (
             <div style={{ height: '70vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>

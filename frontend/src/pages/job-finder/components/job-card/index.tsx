@@ -1,5 +1,5 @@
 import { Button, Card, Flex, Image, Space, Tag, Tooltip, Typography } from "antd";
-import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BookOutlined, BarChartOutlined } from "@ant-design/icons";
+import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BarChartOutlined } from "@ant-design/icons";
 import { Job } from "../../../../lib/types/job";
 import { blue, blueDark, gray, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
@@ -14,21 +14,21 @@ interface JobCardProps {
   isFavorite: boolean;
   handleToggleFavorite: (e: MouseEvent) => void;
   handleSelectJob: (job: Job) => void;
+  handleJobAnalysisClick: (id: string) => void;
   isSelected: boolean;
+  isAnalyzing?: boolean;
 }
 
-const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSelected = false }: JobCardProps) => {
+const JobCard = ({
+  job,
+  isFavorite,
+  handleSelectJob,
+  handleToggleFavorite,
+  handleJobAnalysisClick,
+  isSelected = false,
+  isAnalyzing = false
+}: JobCardProps) => {
   const { isMobile: isTablet } = useMobile(1024);
-
-  const handleJobAnalysisClick = (id: string) => {
-    console.log(`Job Analysis for job ID: ${id}`);
-    // TODO: Implement job analysis logic here
-  }
-
-  const handleCreateCVClick = (id: string) => {
-    console.log(`Create CV for job ID: ${id}`);
-    // TODO: Implement create CV logic here
-  }
 
   return (
     <Card
@@ -136,7 +136,7 @@ const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSel
             </Tag>
           ))}
         </Space>
-        <Flex 
+        <Flex
           horizontal={!isTablet}
           vertical={isTablet}
           gap="small"
@@ -155,22 +155,14 @@ const JobCard = ({ job, isFavorite, handleSelectJob, handleToggleFavorite, isSel
           <Space>
             <AIButton
               icon={<BarChartOutlined />}
+              loading={isAnalyzing}
               onClick={(e: MouseEvent) => {
                 e.stopPropagation();
                 handleJobAnalysisClick(job.id);
               }}
+              disabled={isAnalyzing}
             >
-              Analysis
-            </AIButton>
-
-            <AIButton
-              icon={<BookOutlined />}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                handleCreateCVClick(job.id);
-              }}
-            >
-              Create CV
+              {isAnalyzing ? "Analyzing..." : "Analysis"}
             </AIButton>
           </Space>
         </Flex>

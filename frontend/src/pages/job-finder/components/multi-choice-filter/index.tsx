@@ -145,7 +145,7 @@ const MultiChoiceFilter = ({
       </Dropdown>
 
       {selectedValues.length > 0 && (
-        <Space size="small" style={{ marginTop: '8px' }} wrap>
+        <Space wrap>
           {selectedValues.map(value => {
             const option = options.find(opt => opt.value === value);
             return option ? (

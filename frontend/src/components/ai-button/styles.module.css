@@ -41,23 +41,6 @@
   transition-duration: 0.1s;
 }
 
-.aiButton[disabled] {
-  background: #f5f5f5 !important;
-  color: rgba(0, 0, 0, 0.25) !important;
-  border-color: #d9d9d9 !important;
-  transform: none;
-  box-shadow: none;
-}
-
-.aiButton[disabled]::before {
-  opacity: 0;
-}
-
-.buttonWrapper:has(.aiButton[disabled])::before,
-.buttonWrapper:has(.aiButton[disabled])::after {
-  display: none;
-}
-
 /* Animations */
 @keyframes rotate-glow {
   0% {
