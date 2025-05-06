@@ -1,5 +1,4 @@
-import { blue } from '@ant-design/colors';
-import { Button, Space } from 'antd';
+import { Button, Space, theme } from 'antd';
 import { useState } from 'react';
 import { ArrowRight, ChatLeft } from 'react-bootstrap-icons';
 
@@ -13,6 +12,7 @@ const SuggestionItem = ({
   handleClick,
 }: SuggestionItemProps) => {
   const [isHovered, setIsHovered] = useState(false);
+  const { token } = theme.useToken();
 
   return (
     <Button
@@ -23,7 +23,7 @@ const SuggestionItem = ({
         gap: '16px',
         padding: '8px 16px',
         borderRadius: '32px',
-        backgroundColor: isHovered ? blue[0] : undefined,
+        backgroundColor: isHovered ? token.colorInfoBg : undefined,
         transition: 'all 0.3s ease',
         transform: isHovered ? 'translateY(-2px)' : undefined,
         height: 'auto',

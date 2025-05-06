@@ -1,7 +1,7 @@
-import { Button, Card, Flex, Image, Space, Tag, Tooltip, Typography } from "antd";
+import { Button, Card, Flex, Image, Space, Tag, theme, Tooltip, Typography } from "antd";
 import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BarChartOutlined } from "@ant-design/icons";
 import { Job } from "../../../../lib/types/job";
-import { blue, blueDark, gray, orange } from "@ant-design/colors";
+import { blue, blueDark, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
@@ -29,6 +29,7 @@ const JobCard = ({
   isAnalyzing = false
 }: JobCardProps) => {
   const { isMobile: isTablet } = useMobile(1024);
+  const { token } = theme.useToken();
 
   return (
     <Card
@@ -58,7 +59,7 @@ const JobCard = ({
               />
             </div>
             <Flex vertical>
-              <Title level={4} style={{ color: blue.primary, margin: 0, fontWeight: 500, textWrap: "wrap" }}>
+              <Title level={4} style={{ color: token.colorPrimary, margin: 0, fontWeight: 500, textWrap: "wrap" }}>
                 {job.title}
               </Title>
               <Text type="secondary">
@@ -66,11 +67,11 @@ const JobCard = ({
               </Text>
             </Flex>
           </Flex>
-          <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"} color={blueDark[1]}>
+          <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"} color={blueDark[3]}>
             <Button
               type="text"
               shape="circle"
-              icon={isFavorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ color: gray[3], fontSize: 20 }} />}
+              icon={isFavorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ fontSize: 20, color: token.colorIcon }} />}
               onClick={handleToggleFavorite}
               style={{ marginLeft: "auto" }}
             />
@@ -131,7 +132,7 @@ const JobCard = ({
         </Flex>
         <Space wrap>
           {job.skills.map((skill, index) => (
-            <Tag key={index} color={blue[0]} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8 }}>
+            <Tag key={index} color={token.colorInfoBg} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8 }}>
               <Text>{skill}</Text>
             </Tag>
           ))}

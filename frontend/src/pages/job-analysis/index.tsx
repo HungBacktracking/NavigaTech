@@ -1,5 +1,5 @@
 import { ChangeEvent, useMemo, useState } from 'react';
-import { Typography, Space, Input, Empty, Flex, message, Modal, Skeleton, Card, Button, Image, Pagination } from 'antd';
+import { Typography, Space, Input, Empty, Flex, message, Modal, Skeleton, Card, Button, Image, Pagination, theme } from 'antd';
 import { SearchOutlined, StarOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Splitter } from 'antd';
@@ -12,6 +12,7 @@ import JobAnalysisCard from './components/job-analysis-card';
 import MiniFavoriteJobCard from './components/mini-favorite-job-card';
 import emptyStateSvg from '../../assets/empty-state.svg';
 import { Link } from 'react-router-dom';
+import { orange } from '@ant-design/colors';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -238,7 +239,7 @@ const JobAnalysisPage = () => {
             >
               <Flex justify="space-between" align="center" style={{ marginBottom: 16 }}>
                 <Flex align="center" gap={8}>
-                  <StarOutlined style={{ color: '#faad14', fontSize: 16 }} />
+                  <StarOutlined style={{ color: orange.primary, fontSize: 16 }} />
                   <Title level={4} style={{ margin: 0 }}>Favorite Jobs</Title>
                 </Flex>
               </Flex>

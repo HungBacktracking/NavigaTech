@@ -161,7 +161,7 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
-                    <CheckCircleFilled style={{ color: green.primary, fontSize: 16 }} />
+                    <CheckCircleFilled style={{ color: token.colorSuccess, fontSize: 16 }} />
                     <Text>{item}</Text>
                   </Space>
                 )}
@@ -172,14 +172,14 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
             </Flex>
 
             <Flex vertical style={{ flex: 1 }}>
-              <Title level={4} style={{ color: red.primary, margin: 0 }}>Weaknesses</Title>
+              <Title level={4} style={{ color: token.colorErrorActive, margin: 0 }}>Weaknesses</Title>
               <List
                 itemLayout="horizontal"
                 dataSource={job.weaknesses}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
-                    <CloseCircleFilled style={{ color: red.primary, fontSize: 16 }} />
+                    <CloseCircleFilled style={{ color: token.colorError, fontSize: 16 }} />
                     <Text>{item}</Text>
                   </Space>
                 )}
@@ -309,8 +309,8 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
         </Space>
         <Space wrap>
           {job.skills.map((skill, index) => (
-            <Tag key={index} color={blue[0]} style={{ padding: '2px 8px', fontSize: 12, borderRadius: 8, borderColor: blue[2] }}>
-              <Text style={{ color: blue[6] }}>{skill}</Text>
+            <Tag key={index} color={token.colorInfoBg} style={{ padding: '2px 8px', fontSize: 12, borderRadius: 8, borderColor: token.colorInfoBorder }}>
+              <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
             </Tag>
           ))}
         </Space>

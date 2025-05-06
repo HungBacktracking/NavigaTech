@@ -58,7 +58,7 @@ const AISearchBar = ({ searchValue, setSearchValue, handleSearch }: AISearchBarP
         >
           <Stars
             style={{
-              color: purple[4],
+              color: purple[5],
               fontSize: 16,
             }}
           />
