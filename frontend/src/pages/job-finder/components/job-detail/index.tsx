@@ -16,7 +16,6 @@ import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../l
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
 import ReactMarkdown from 'react-markdown';
-import styles from './styles.module.css';
 import { MouseEvent } from "react";
 
 const { Text, Title } = Typography;
@@ -25,15 +24,12 @@ interface JobDetailProps {
   job: DetailJob;
   isFavorite: boolean;
   handleToggleFavorite?: (e: MouseEvent) => void;
+  handleJobAnalysisClick?: (id: string) => void;
+  isAnalyzing?: boolean;
 }
 
-const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) => {
+const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisClick, isAnalyzing = false }: JobDetailProps) => {
   const { isMobile: isTablet } = useMobile(1024);
-
-  const handleJobAnalysisClick = (id: string) => {
-    console.log(`Job Analysis for job ID: ${id}`);
-    // TODO: Implement job analysis logic here
-  };
 
   const handleCreateCVClick = (id: string) => {
     console.log(`Create CV for job ID: ${id}`);
@@ -79,7 +75,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
                 <Image
                   src={job.company.logo}
                   alt={`${job.company.name} logo`}
-                  fallback="https://placehold.co/100x100?text=Logo"
+                  fallback={`https://placehold.co/100x100?text=${job.company.name[0]}`}
                   style={{
                     width: 60,
                     height: 60,
@@ -136,12 +132,16 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
             <Space>
               <AIButton
                 icon={<BarChartOutlined />}
+                loading={isAnalyzing}
+                disabled={isAnalyzing}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
-                  handleJobAnalysisClick(job.id);
+                  if (handleJobAnalysisClick) {
+                    handleJobAnalysisClick(job.id);
+                  }
                 }}
               >
-                Job Analysis
+                {isAnalyzing ? "Analyzing..." : "Job Analysis"}
               </AIButton>
 
               <AIButton
@@ -182,8 +182,8 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
 
           <Space wrap style={{ width: '100%' }}>
             {job.skills.map((skill, index) => (
-              <Tag key={index} color={blue[0]} style={{ padding: "4px 12px", borderRadius: 8 }}>
-                <Text>{skill}</Text>
+              <Tag key={index} color={blue[0]} style={{ padding: "4px 12px", borderRadius: 8, borderColor: blue[2] }}>
+                <Text style={{ color: blue[6] }}>{skill}</Text>
               </Tag>
             ))}
           </Space>
@@ -192,7 +192,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
         <Space direction="vertical" size="middle">
           <div>
             <Title level={3} style={{ margin: 0 }}>Description</Title>
-            <div className={styles['markdown-content']}>
+            <div className="markdown-content">
               {renderContent(job.jobDescription)}
             </div>
           </div>
@@ -200,7 +200,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
           {job.jobRequirements && (
             <div>
               <Title level={3} style={{ margin: 0 }}>Requirements</Title>
-              <div className={styles['markdown-content']}>
+              <div className="markdown-content">
                 {renderContent(job.jobRequirements)}
               </div>
             </div>
@@ -209,7 +209,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
           {job.benefit && (
             <div>
               <Title level={3} style={{ margin: 0 }}>Benefits</Title>
-              <div className={styles['markdown-content']}>
+              <div className="markdown-content">
                 {renderContent(job.benefit)}
               </div>
             </div>
@@ -218,7 +218,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite }: JobDetailProps) =>
           {job.company.description && (
             <div>
               <Title level={3} style={{ margin: 0 }}>About Company</Title>
-              <div className={styles['markdown-content']} style={{ lineHeight: 1.6 }}>
+              <div className="markdown-content" style={{ lineHeight: 1.6 }}>
                 {renderContent(job.company.description)}
               </div>
             </div>

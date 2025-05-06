@@ -3,7 +3,6 @@ import styles from './styles.module.css';
 import { CSSProperties } from 'react';
 
 interface FullscreenLoaderProps {
-  tip?: string;
   size?: 'small' | 'default' | 'large';
   fullscreen?: boolean;
   backdrop?: boolean;
@@ -11,7 +10,6 @@ interface FullscreenLoaderProps {
 }
 
 const FullscreenLoader = ({
-  tip = 'Loading...',
   size = 'large',
   fullscreen = true,
   backdrop = false,
@@ -43,7 +41,6 @@ const FullscreenLoader = ({
       style={containerStyles}
     >
       <Spin
-        tip={tip}
         size={size}
         className={styles.spinner}
       />

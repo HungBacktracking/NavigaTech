@@ -29,6 +29,7 @@ export interface DetailJob {
   benefit?: string;
   isExpired?: boolean;
   isFavorite?: boolean;
+  isAnalyzed?: boolean;
 }
 
 export interface Company {
@@ -38,9 +39,32 @@ export interface Company {
   description?: string;
 }
 
+export interface JobAnalysis extends Job {
+  matchScore: number;
+  isCreatedCV: boolean;
+  weaknesses: string[];
+  strengths: string[];
+  analyzedAt: Date;
+}
+
+export interface JobAnalysisDetail extends JobAnalysis {
+  generalFeedback: string;
+  roleFeedback: string;
+  skillsFeedback: string;
+  workExperienceFeedback: string;
+  educationFeedback: string;
+  languageFeedback: string;
+}
+
 export interface JobQueryParams {
   page: number;
   pageSize: number;
   search?: string;
   filterByJobLevel?: string[];
+}
+
+export interface JobAnalysisQueryParams {
+  page: number;
+  pageSize: number;
+  search?: string;
 }
