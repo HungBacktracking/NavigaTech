@@ -6,8 +6,12 @@ class RepositoryProtocol(Protocol):
 
 
 class BaseService:
-    def __init__(self, repository: RepositoryProtocol) -> None:
-        self._repository = repository
+    def __init__(self, *repositories: RepositoryProtocol) -> None:
+        self._repositories = repositories
 
     def close_scoped_session(self):
-        self._repository.close_scoped_session()
+        for repo in self._repositories:
+            try:
+                repo.close_scoped_session()
+            except AttributeError:
+                pass

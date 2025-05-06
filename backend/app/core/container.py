@@ -12,6 +12,7 @@ from app.repository.project_repository import ProjectRepository
 from app.repository.skill_repository import SkillRepository
 from app.services import AuthService, UserService
 from app.services.job_service import JobService
+from app.services.resume_service import ResumeService
 from app.services.s3_service import S3Service
 
 
@@ -61,4 +62,9 @@ class Container(containers.DeclarativeContainer):
         file_repository=user_file_repository,
         s3_client=s3_client,
         bucket_name=configs.AWS_S3_BUCKET_NAME
+    )
+    resume_service = providers.Factory(
+        ResumeService,
+        file_repo=user_file_repository,
+        user_repo=user_repository
     )

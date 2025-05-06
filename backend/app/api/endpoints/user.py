@@ -7,6 +7,7 @@ from app.core.middleware import inject
 from app.core.security import JWTBearer
 from app.schema.s3_schema import UploadResponse, DownloadResponse
 from app.schema.user_schema import UserBasicResponse, UserUpdate, UserDetailResponse
+from app.services.resume_service import ResumeService
 from app.services.s3_service import S3Service
 from app.services.user_service import UserService
 
@@ -52,4 +53,12 @@ def download_resume(
     current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.get_download_url(current_user.id, file_type)
+
+@router.post("/me/process-resume")
+@inject
+def process_resume(
+    service: ResumeService = Depends(Provide[Container.resume_service]),
+    current_user: UserBasicResponse = Depends(get_current_user)
+):
+    return service.process_resume(current_user.id)
 
