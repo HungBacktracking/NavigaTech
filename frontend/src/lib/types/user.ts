@@ -1,5 +1,6 @@
 export interface IUser {
   email: string;
+  cvUploaded?: boolean;
 }
 
 export type UserLoginDto = {

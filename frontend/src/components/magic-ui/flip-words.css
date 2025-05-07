@@ -1,0 +1,28 @@
+.flip-words-container {
+  display: inline-block;
+  position: relative;
+  text-align: left;
+  color: rgba(0, 0, 0, 0.85);
+  padding: 0 8px;
+  z-index: 10;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .flip-words-container {
+    color: rgba(255, 255, 255, 0.85);
+  }
+}
+
+.flip-words-word {
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.flip-words-letter {
+  display: inline-block;
+}
+
+.flip-words-space {
+  display: inline-block;
+}

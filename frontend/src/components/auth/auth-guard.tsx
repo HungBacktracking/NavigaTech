@@ -1,22 +1,28 @@
 import { useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/auth/auth-context';
 import FullscreenLoader from '../fullscreen-loader';
 
 const AuthGuard = () => {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      window.location.href = '/auth';
+    if (!isLoading) {
+      if (!isAuthenticated) {
+        navigate('/auth', { replace: true });
+      } else if (user && !user.cvUploaded && location.pathname !== '/auth/upload-cv') {
+        navigate('/auth/upload-cv', { replace: true });
+      }
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isLoading, user, navigate, location.pathname]);
 
-  return isLoading || !isAuthenticated ? (
-    <FullscreenLoader />
-  ) : (
-    <Outlet />
-  );
+  if (isLoading) {
+    return <FullscreenLoader />;
+  }
+
+  return isAuthenticated ? <Outlet /> : <FullscreenLoader />;
 };
 
 export default AuthGuard;
