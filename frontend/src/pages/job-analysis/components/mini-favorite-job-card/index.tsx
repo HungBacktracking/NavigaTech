@@ -1,7 +1,7 @@
 import { Card, Typography, Button, Flex, Popconfirm } from 'antd';
 import { StarFilled, BarChartOutlined } from '@ant-design/icons';
 import { MouseEvent } from 'react';
-import { yellow } from '@ant-design/colors';
+import { orange } from '@ant-design/colors';
 import AIButton from '../../../../components/ai-button';
 
 const { Text, Title } = Typography;
@@ -30,7 +30,7 @@ const MiniFavoriteJobCard = ({ jobName, companyName, isAnalyzing, handleAnalyze,
           </Title>
           <Button
             type="text"
-            icon={<StarFilled style={{ color: yellow[5] }} />}
+            icon={<StarFilled style={{ color: orange.primary }} />}
             onClick={handleToggleFavorite}
             size="small"
           />

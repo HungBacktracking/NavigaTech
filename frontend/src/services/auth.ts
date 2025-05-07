@@ -10,6 +10,7 @@ export const authApi = {
           refresh_token: "mock_refresh_token",
           user: {
             email: userCrendentials.email,
+            cvUploaded: true
           },
         });
       }, 100);
@@ -21,6 +22,7 @@ export const authApi = {
       setTimeout(() => {
         resolve({
           email: userData.email,
+          cvUploaded: false
         });
       }, 100);
     });
@@ -31,9 +33,18 @@ export const authApi = {
       setTimeout(() => {
         resolve({
           email: "mock_email@gmail.com",
+          cvUploaded: localStorage.getItem("cv_uploaded") === "true"
         });
       }, 100);
     });
   },
   
+  uploadCV: async (file: File): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        localStorage.setItem("cv_uploaded", "true");
+        resolve(true);
+      }, 4000);
+    });
+  }
 };

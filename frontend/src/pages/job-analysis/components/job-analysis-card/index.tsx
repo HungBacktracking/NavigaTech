@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Image, Space, Tag, Typography, Progress, Popconfirm } from "antd";
+import { Button, Card, Flex, Image, Space, Tag, Typography, Progress, Popconfirm, theme } from "antd";
 import {
   EnvironmentOutlined, ClockCircleOutlined, AuditOutlined,
   BookOutlined, DeleteOutlined,
@@ -34,6 +34,7 @@ const JobAnalysisCard = ({
   handleViewDetail,
 }: JobAnalysisCardProps) => {
   const { isMobile: isTablet } = useMobile(1024);
+  const { token } = theme.useToken();
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 75) return green.primary;
@@ -84,7 +85,7 @@ const JobAnalysisCard = ({
             target="_blank"
             onClick={(e: MouseEvent) => e.stopPropagation()}
             style={{
-              color: blue[5],
+              color: token.colorPrimary,
               fontWeight: 600,
             }}
           >
@@ -140,8 +141,8 @@ const JobAnalysisCard = ({
             </Space>
             <Space wrap>
               {jobAnalysis.skills.map((skill, index) => (
-                <Tag key={index} color={blue[0]} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8, borderColor: blue[2] }}>
-                  <Text style={{ color: blue[6] }}>{skill}</Text>
+                <Tag key={index} color={token.colorInfoBg} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8, borderColor: token.colorInfoBorder }}>
+                  <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
                 </Tag>
               ))}
             </Space>
@@ -169,13 +170,13 @@ const JobAnalysisCard = ({
           wrap="wrap"
         >
           <Flex align="center" gap="small" style={{ flex: 1 }}>
-            <CheckCircleFilled style={{ color: green.primary }} />
+            <CheckCircleFilled style={{ color: token.colorSuccess }} />
             <Text>
               {jobAnalysis.strengths[0]}
             </Text>
           </Flex>
           <Flex align="center" gap="small" style={{ flex: 1 }}>
-            <CloseCircleFilled style={{ color: red.primary }} />
+            <CloseCircleFilled style={{ color: token.colorError }} />
             <Text>
               {jobAnalysis.weaknesses[0]}
             </Text>
@@ -190,12 +191,12 @@ const JobAnalysisCard = ({
         >
           <Space>
             <Tag
-              color={jobAnalysis.isCreatedCV ? green[0] : red[0]}
+              color={jobAnalysis.isCreatedCV ? token.colorSuccessBg : token.colorErrorBg}
               style={{
                 borderRadius: 16,
                 padding: "4px 12px",
-                borderColor: jobAnalysis.isCreatedCV ? green[4] : red[4],
-                color: jobAnalysis.isCreatedCV ? green[6] : red[6],
+                borderColor: jobAnalysis.isCreatedCV ? token.colorSuccessBorder : token.colorErrorBorder,
+                color: jobAnalysis.isCreatedCV ? token.colorSuccessActive : token.colorErrorActive,
               }}
             >
               {jobAnalysis.isCreatedCV ? "CV Created" : "No CV Created"}

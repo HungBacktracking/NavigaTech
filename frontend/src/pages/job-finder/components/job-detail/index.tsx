@@ -1,4 +1,4 @@
-import { Button, Card, Flex, Image, Space, Tag, Tooltip, Typography } from "antd";
+import { Button, Card, Flex, Image, Space, Tag, theme, Tooltip, Typography } from "antd";
 import {
   EnvironmentOutlined,
   ClockCircleOutlined,
@@ -11,7 +11,7 @@ import {
   DollarOutlined,
 } from "@ant-design/icons";
 import { DetailJob } from "../../../../lib/types/job";
-import { blue, blueDark, gray, orange } from "@ant-design/colors";
+import { blueDark, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
@@ -30,6 +30,7 @@ interface JobDetailProps {
 
 const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisClick, isAnalyzing = false }: JobDetailProps) => {
   const { isMobile: isTablet } = useMobile(1024);
+  const { token } = theme.useToken();
 
   const handleCreateCVClick = (id: string) => {
     console.log(`Create CV for job ID: ${id}`);
@@ -93,11 +94,11 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
               </Flex>
             </Flex>
             <Flex vertical align="center" justify="end">
-              <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"} color={blueDark[1]}>
+              <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"} color={blueDark[3]}>
                 <Button
                   type="text"
                   shape="circle"
-                  icon={isFavorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ color: gray[3], fontSize: 20 }} />}
+                  icon={isFavorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ fontSize: 20, color: token.colorIcon }} />}
                   onClick={handleToggleFavorite}
                 />
               </Tooltip>
@@ -118,7 +119,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
               type="text"
               icon={<GlobalOutlined />}
               style={{
-                color: blue.primary,
+                color: token.colorPrimary,
                 fontWeight: 600,
               }}
               onClick={(e: React.MouseEvent) => {
@@ -182,8 +183,8 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
 
           <Space wrap style={{ width: '100%' }}>
             {job.skills.map((skill, index) => (
-              <Tag key={index} color={blue[0]} style={{ padding: "4px 12px", borderRadius: 8, borderColor: blue[2] }}>
-                <Text style={{ color: blue[6] }}>{skill}</Text>
+              <Tag key={index} color={token.colorInfoBg} style={{ padding: "4px 12px", borderRadius: 8, borderColor: token.colorInfoBorder }}>
+                <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
               </Tag>
             ))}
           </Space>

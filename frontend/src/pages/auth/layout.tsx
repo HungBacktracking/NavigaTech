@@ -5,8 +5,8 @@ const { Content } = Layout;
 
 const AuthLayout = () => {
   return (
-    <Layout>
-      <Content>
+    <Layout style={{ height: '100vh' }}>
+      <Content style={{ width: '100%' }}>
         <Outlet />
       </Content>
     </Layout>

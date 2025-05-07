@@ -1,4 +1,4 @@
-import { Dropdown, Button, Space, Tag, Typography, Flex, Spin } from 'antd';
+import { Dropdown, Button, Space, Tag, Typography, Flex, Spin, theme } from 'antd';
 import { DownOutlined, CloseOutlined, CheckOutlined } from '@ant-design/icons';
 import { useState } from 'react';
 
@@ -26,6 +26,7 @@ const MultiChoiceFilter = ({
 }: MultiChoiceFilterProps) => {
   const [tempSelectedValues, setTempSelectedValues] = useState<string[]>(selectedValues);
   const [open, setOpen] = useState(false);
+  const { token } = theme.useToken();
 
   const handleToggleOption = (value: string) => {
     setTempSelectedValues(prev =>
@@ -125,9 +126,9 @@ const MultiChoiceFilter = ({
             borderRadius: '16px',
 
             ...(selectedValues.length > 0 ? {
-              backgroundColor: '#e6f7ff',
-              borderColor: '#91d5ff',
-              color: '#1890ff'
+              backgroundColor: token.colorInfoBg,
+              borderColor: token.colorInfoBorder,
+              color: token.colorInfoActive,
             } : {})
           }}
           onClick={(e: MouseEvent) => e.stopPropagation()}
@@ -156,12 +157,12 @@ const MultiChoiceFilter = ({
                   const newValues = selectedValues.filter(v => v !== value);
                   onChange(newValues);
                 }}
-                closeIcon={<CloseOutlined style={{ paddingLeft: 4, color: 'white' }} />}
+                closeIcon={<CloseOutlined style={{ paddingLeft: 4, color: token.colorTextLightSolid }} />}
                 style={{
                   borderRadius: '16px',
                   padding: '4px 16px',
-                  backgroundColor: '#1677FF',
-                  color: 'white',
+                  backgroundColor: token.colorPrimary,
+                  color: token.colorTextLightSolid,
                 }}
               >
                 {option.label}
