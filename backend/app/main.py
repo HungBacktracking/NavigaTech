@@ -4,7 +4,8 @@ from starlette.middleware.cors import CORSMiddleware
 
 from app.api.routes import routers
 from app.core.config import configs
-from app.core.container import Container
+from app.core.containers.chatbot_container import ChatbotContainer
+from app.core.containers.container import Container
 from app.exceptions.exception_handlers import register_exception_handlers
 from app.util.class_object import singleton
 
@@ -22,6 +23,9 @@ class AppCreator:
 
         # set db and container
         self.container = Container()
+        self.chatbot_container = ChatbotContainer()
+        # self.container.init_resources()
+        # self.chatbot_container.init_resources()
         self.db = self.container.db()
         self.db.create_database()
 

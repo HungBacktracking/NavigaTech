@@ -4,7 +4,7 @@ from uuid import UUID
 from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends
 
-from app.core.container import Container
+from app.core.containers.container import Container
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
@@ -23,6 +23,14 @@ def search(
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.search_job(request, current_user.id)
+
+@router.get("/recommendations", response_model=List[JobResponse])
+@inject
+def get_recommendations(
+        service: JobService = Depends(Provide[Container.job_service]),
+        current_user: UserDetailResponse = Depends(get_current_user)
+):
+    return service.get_job_recommendation(current_user.id)
 
 @router.get("/favorite", response_model=List[JobFavoriteResponse])
 @inject

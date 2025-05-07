@@ -1,15 +1,19 @@
+
+
 from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends
 
-from app.core.container import Container
+from app.core.containers.container import Container
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
+from app.exceptions.custom_error import CustomError
 from app.schema.s3_schema import UploadResponse, DownloadResponse
 from app.schema.user_schema import UserBasicResponse, UserUpdate, UserDetailResponse
 from app.services.resume_service import ResumeService
 from app.services.s3_service import S3Service
 from app.services.user_service import UserService
+from fastapi import APIRouter, Response, HTTPException
 
 router = APIRouter(prefix="/users", tags=["User"], dependencies=[Depends(JWTBearer())])
 
@@ -54,11 +58,12 @@ def download_resume(
 ):
     return service.get_download_url(current_user.id, file_type)
 
-@router.post("/me/process-resume")
+@router.post("/me/process-resume", response_model=UserDetailResponse)
 @inject
 def process_resume(
     service: ResumeService = Depends(Provide[Container.resume_service]),
     current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.process_resume(current_user.id)
+
 

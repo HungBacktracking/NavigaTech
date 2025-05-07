@@ -59,6 +59,29 @@ class Configs(BaseSettings):
         database=ENV_DATABASE_MAPPER[ENV],
     )
 
+    # redis
+    # REDIS_HOST: str = os.getenv("REDIS_HOST")
+    # REDIS_PORT: str = os.getenv("REDIS_PORT")
+    # REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD")
+
+    # Qdrant
+    QDRANT_URL: str = os.getenv("QDRANT_URL")
+    QDRANT_API_TOKEN: str = os.getenv("QDRANT_API_TOKEN")
+    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "default_collection")
+
+    # LLM + Embeddings
+    GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
+    GEMINI_TOKEN: str = os.getenv("GEMINI_TOKEN")
+    MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "512"))
+    TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.7"))
+    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+
+    TOP_K: int = int(os.getenv("TOP_K", "5"))
+    TOKEN_LIMIT: int = int(os.getenv("TOKEN_LIMIT", "2048"))
+
+    COHERE_API_TOKEN: str = os.getenv("COHERE_API_TOKEN")
+
+
     # AWS
     AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")

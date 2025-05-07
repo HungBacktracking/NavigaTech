@@ -1,5 +1,7 @@
 from datetime import date
 from typing import Optional
+from uuid import UUID
+
 from pydantic import BaseModel
 from app.schema.base_schema import ModelBaseInfo
 
@@ -8,6 +10,7 @@ from app.schema.base_schema import ModelBaseInfo
 class BaseExperience(BaseModel):
     company_name: str
     title: str
+    location: Optional[str] = None
     employment_type: Optional[str] = None
     description: Optional[str] = None
     achievement: Optional[str] = None
@@ -20,4 +23,5 @@ class BaseExperience(BaseModel):
 
 class ExperienceResponse(ModelBaseInfo, BaseExperience): ...
 
-class ExperienceRequest(ModelBaseInfo, BaseExperience): ...
+class ExperienceRequest(BaseExperience):
+    user_id: UUID

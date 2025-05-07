@@ -17,7 +17,7 @@ class User(BaseModel, table=True):
     linkedin_url: str = Field(default=None, nullable=True)
     github_url: str = Field(default=None, nullable=True)
     avatar_url: str = Field(default=None, nullable=True)
-    resume_url: str = Field(default=None, nullable=True)
+    # resume_url: str = Field(default=None, nullable=True)
     introduction: str = Field(default=None, sa_column=Column(Text, nullable=True))
 
     created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now()))
