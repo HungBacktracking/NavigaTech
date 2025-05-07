@@ -24,6 +24,14 @@ def search(
 ):
     return service.search_job(request, current_user.id)
 
+@router.get("/recommendations", response_model=List[JobResponse])
+@inject
+def get_recommendations(
+        service: JobService = Depends(Provide[Container.job_service]),
+        current_user: UserDetailResponse = Depends(get_current_user)
+):
+    return service.get_job_recommendation(current_user.id)
+
 @router.get("/favorite", response_model=List[JobFavoriteResponse])
 @inject
 def get_favorite_jobs(

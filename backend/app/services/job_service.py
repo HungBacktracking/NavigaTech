@@ -56,6 +56,12 @@ class JobService(BaseService):
             for job, fav, analytic in rows
         ]
 
+
+
+
+    def get_job_recommendation(self, user_id: UUID) -> List[JobResponse]:
+        pass
+
     def analyze_job(self, job_id: UUID, user_id: UUID):
         pass
 
