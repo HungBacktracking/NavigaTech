@@ -4,7 +4,7 @@ from jose import jwt
 from pydantic import ValidationError
 
 from app.core.config import configs
-from app.core.container import Container
+from app.core.containers.container import Container
 from app.core.security import ALGORITHM, JWTBearer
 from app.exceptions.errors.CustomClientException import AuthError
 from app.schema.auth_schema import Payload

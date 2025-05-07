@@ -1,4 +1,5 @@
 from datetime import datetime, date
+from typing import Optional
 from uuid import UUID
 from sqlmodel import Column, Field, func, Boolean, Text, Date, DateTime, Double
 from app.model.base_model import BaseModel
@@ -9,12 +10,12 @@ class Education(BaseModel, table=True):
     major: str = Field()
     school_name: str = Field()
     degree_type: str = Field()
-    gpa: float = Field(default=None, sa_column=Column(Double, nullable=True))
+    gpa: Optional[float] = Field(default=None, sa_column=Column(Double, nullable=True))
     is_current: bool = Field(default=False, sa_column=Column(Boolean, nullable=False))
-    description: str = Field(default=None, sa_column=Column(Text, nullable=True))
-    start_date: date = Field(default=None, sa_column=Column(Date, nullable=True))
-    end_date: date = Field(default=None, sa_column=Column(Date, nullable=True))
+    description: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
+    start_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))
+    end_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))
 
-    created_at: datetime = Field(sa_column=Column(DateTime(timezone=True), default=func.now()))
-    updated_at: datetime = Field(sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))
-    deleted_at: datetime = Field(sa_column=Column(DateTime(timezone=True), nullable=True))
+    created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now()))
+    updated_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))
+    deleted_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), nullable=True))

@@ -11,7 +11,7 @@ from app.schema.education_schema import EducationResponse
 from app.schema.experience_schema import ExperienceResponse
 from app.schema.project_schema import ProjectResponse
 from app.schema.skill_schema import SkillResponse
-from app.schema.user_schema import UserDetailResponse, UserBasicResponse
+from app.schema.user_schema import UserDetailResponse, UserBasicResponse, UserUpdate
 from app.services.base_service import BaseService
 
 

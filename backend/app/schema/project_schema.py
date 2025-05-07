@@ -19,5 +19,5 @@ class BaseProject(BaseModel):
 
 class ProjectResponse(ModelBaseInfo, BaseProject): ...
 
-class ProjectRequest(ModelBaseInfo, BaseProject):
+class ProjectRequest(BaseProject):
     user_id: UUID

@@ -1,19 +1,15 @@
-from datetime import datetime, date
+from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, Field, func, Text, DateTime, Date
+from sqlmodel import Column, DateTime, Field, func, Text, Date
 from app.model.base_model import BaseModel
 
 
-
-class Project(BaseModel, table=True):
+class Award(BaseModel, table=True):
     user_id: UUID = Field(foreign_key="user.id")
-    project_name: str = Field()
-    role: Optional[str] = Field(default=None, nullable=True)
+    name: str = Field()
     description: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
-    achievement: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
-    start_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))
-    end_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))
+    award_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))
 
     created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now()))
     updated_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))

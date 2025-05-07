@@ -4,7 +4,7 @@ from uuid import UUID
 from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends
 
-from app.core.container import Container
+from app.core.containers.container import Container
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer

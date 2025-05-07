@@ -1,8 +1,7 @@
 from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends
 
-from app.core.container import Container
-from app.core.dependencies import get_current_user
+from app.core.containers.container import Container
 from app.core.middleware import inject
 from app.schema.auth_schema import SignIn, SignInResponse, SignUp
 from app.schema.user_schema import UserBasicResponse

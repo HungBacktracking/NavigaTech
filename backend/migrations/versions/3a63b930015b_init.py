@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 4fa9146d9afc
+Revision ID: 3a63b930015b
 Revises: 
-Create Date: 2025-05-07 04:45:25.911344
+Create Date: 2025-05-08 01:45:54.387775
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = '4fa9146d9afc'
+revision = '3a63b930015b'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -53,13 +53,24 @@ def upgrade():
     sa.Column('linkedin_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('github_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('avatar_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('resume_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('introduction', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
+    )
+    op.create_table('award',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('description', sa.Text(), nullable=True),
+    sa.Column('award_date', sa.Date(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('education',
     sa.Column('id', sa.Uuid(), nullable=False),
@@ -83,6 +94,7 @@ def upgrade():
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('company_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('title', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('location', sa.Text(), nullable=True),
     sa.Column('employment_type', sa.Text(), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('achievement', sa.Text(), nullable=True),
@@ -100,7 +112,7 @@ def upgrade():
     sa.Column('job_id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
     sa.Column('is_analyze', sa.Boolean(), nullable=False),
-    sa.Column('resume_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('is_generated_resume', sa.Boolean(), nullable=False),
     sa.Column('is_favorite', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
@@ -122,7 +134,7 @@ def upgrade():
     sa.Column('education_feedback', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['job_id'], ['job.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id', 'job_id', 'user_id')
@@ -138,7 +150,7 @@ def upgrade():
     sa.Column('end_date', sa.Date(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
-    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
@@ -175,6 +187,7 @@ def downgrade():
     op.drop_table('favoritejob')
     op.drop_table('experience')
     op.drop_table('education')
+    op.drop_table('award')
     op.drop_table('user')
     op.drop_table('job')
     # ### end Alembic commands ###

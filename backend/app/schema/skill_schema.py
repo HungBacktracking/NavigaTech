@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from pydantic import BaseModel
 from app.schema.base_schema import ModelBaseInfo
 
@@ -11,4 +13,5 @@ class BaseSkill(BaseModel):
 
 class SkillResponse(ModelBaseInfo, BaseSkill): ...
 
-class SkillRequest(ModelBaseInfo, BaseSkill): ...
+class SkillRequest(BaseSkill):
+    user_id: UUID
