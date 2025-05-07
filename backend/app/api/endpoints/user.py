@@ -42,7 +42,7 @@ def update_me(
 
 @router.post("/me/upload", response_model=UploadResponse)
 @inject
-def upload_resume(
+def upload_file(
     file_type: str,
     service: S3Service = Depends(Provide[Container.s3_service]),
     current_user: UserBasicResponse = Depends(get_current_user)
@@ -51,7 +51,7 @@ def upload_resume(
 
 @router.get("/me/download", response_model=DownloadResponse)
 @inject
-def download_resume(
+def download_file(
     file_type: str,
     service: S3Service = Depends(Provide[Container.s3_service]),
     current_user: UserBasicResponse = Depends(get_current_user)

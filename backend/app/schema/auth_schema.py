@@ -12,7 +12,6 @@ class SignIn(BaseModel):
 
 
 class SignUp(BaseModel):
-    name: str
     email: EmailStr
     password: str
 
