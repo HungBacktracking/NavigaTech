@@ -65,17 +65,25 @@ class JobDataIngestor:
     def build_documents(self):
         for _, row in self.df.iterrows():
             meta = {
-                "id": row["id"],
-                "level": row["mapped_level"],
-                "title": row["title"],
+                "job_id": row["id"],
+                "job_url": row["job_url"],
+                "logo_url": row["company_logo"],
                 "company": row["company"],
-                "link": row["job_url"],
-                "job_type": row["mapped_job_type"],
-                "location": row["mapped_location"],
-                "text": row["merge_input"],
-                "keyword": row["search_keyword"],
+                "job_type": row["job_type"],
+                "job_level": row["job_level"],
+                "job_title": row["title"],
+                "date_posted": row["date_posted"],
+                "job_description": row["description"],
                 "salary": row["salary"],
-                "description": row["description"]
+                "job_requirement": row["responsibilities"],
+                "skills": row["qualifications & skills"],
+                "benefit": row["benefit"],
+
+
+                "text": row["merge_input"],
+                "qdrant_location": row["mapped_location"],
+                "qdrant_level": row["mapped_level"],
+                "qdrant_job_type": row["mapped_job_type"],
             }
 
             dense_doc = models.Document(
@@ -106,9 +114,9 @@ class JobDataIngestor:
         self.upload_to_qdrant()
 
 
-if __name__ == "__main__":
-    json_path = r"C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech\AI_modules\data\rag_data\sample.json"
-    env_path = r"C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech\AI_modules\.env"
+# if __name__ == "__main__":
+#     json_path = r"C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech\AI_modules\data\rag_data\sample.json"
+#     env_path = r"C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech\AI_modules\.env"
 
-    ingestor = JobDataIngestor(json_path, env_path, collection_name="test")
-    asyncio.run(ingestor.run())
+#     ingestor = JobDataIngestor(json_path, env_path, collection_name="test")
+#     asyncio.run(ingestor.run())
