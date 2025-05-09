@@ -1,5 +1,5 @@
 import { useState, KeyboardEvent, ChangeEvent, useMemo } from 'react';
-import { Button, Input, Typography, Divider, Empty, theme, Flex, List, Spin, Dropdown } from 'antd';
+import { Button, Input, Typography, Divider, Empty, theme, Flex, List, Spin, Dropdown, Modal } from 'antd';
 import { PlusOutlined, CloseOutlined, MenuUnfoldOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
@@ -60,6 +60,7 @@ const ChatSidebar = ({ conversations, isLoading, collapsed, onToggle, selectedCo
   const { token } = theme.useToken();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [modal, contextHolder] = Modal.useModal();
   const [searchQuery, setSearchQuery] = useState('');
   const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -132,6 +133,7 @@ const ChatSidebar = ({ conversations, isLoading, collapsed, onToggle, selectedCo
 
   return (
     <>
+      {contextHolder}
       <Button
         type="primary"
         size="large"
@@ -173,6 +175,7 @@ const ChatSidebar = ({ conversations, isLoading, collapsed, onToggle, selectedCo
             backgroundColor: token.colorBgContainer,
             boxShadow: '2px 0 8px rgba(0, 0, 0, 0.05)',
             borderRadius: '16px',
+            padding: '16px 0 32px 0',
           }}
           className="scrollbar-custom"
         >
@@ -300,10 +303,17 @@ const ChatSidebar = ({ conversations, isLoading, collapsed, onToggle, selectedCo
                                       danger: true,
                                       onClick: (e) => {
                                         e.domEvent.stopPropagation();
-                                        const confirmDelete = window.confirm('Are you sure you want to delete this conversation?');
-                                        if (confirmDelete) {
-                                          deleteConversationMutation.mutate(conversation.id);
-                                        }
+                                        modal.confirm({
+                                          title: 'Delete conversation',
+                                          content: (
+                                            <Text>
+                                              Are you sure you want to delete this conversation: <span style={{ fontWeight: 600 }}>{conversation.title}</span>?
+                                            </Text>
+                                          ),
+                                          okText: 'Yes',
+                                          cancelText: 'No',
+                                          onOk: () => deleteConversationMutation.mutate(conversation.id)
+                                        });
                                       },
                                     },
                                   ],
