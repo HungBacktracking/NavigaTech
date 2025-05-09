@@ -54,7 +54,7 @@ const NavBar = () => {
   }, [isMobile]);
 
   useEffect(() => {
-    const path = location.pathname.substring(1) || 'home';
+    const path = location.pathname.split('/')[1];
     const matchedItem = menuItems.find(item => item.key === path);
     setSelectedKey(matchedItem?.key || 'home');
   }, [location.pathname]);
