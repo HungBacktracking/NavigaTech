@@ -1,7 +1,7 @@
 import { useState, KeyboardEvent, ChangeEvent, useMemo } from 'react';
 import { Button, Input, Typography, Divider, Empty, theme, Flex, List, Spin, Dropdown, Modal } from 'antd';
 import { PlusOutlined, CloseOutlined, MenuUnfoldOutlined, EditOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { aiAssistantApi } from '../../../../services/ai-assistant';
@@ -312,7 +312,7 @@ const ChatSidebar = ({ conversations, isLoading, collapsed, onToggle, selectedCo
                                           ),
                                           okText: 'Yes',
                                           cancelText: 'No',
-                                          onOk: () => deleteConversationMutation.mutate(conversation.id)
+                                          onOk: () => deleteConversationMutation.mutate(conversation.id),
                                         });
                                       },
                                     },

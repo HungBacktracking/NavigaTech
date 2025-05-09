@@ -1,4 +1,4 @@
-import { Layout, Flex } from 'antd';
+import { Layout } from 'antd';
 import { Suspense } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import NavBar from '../components/navbar';

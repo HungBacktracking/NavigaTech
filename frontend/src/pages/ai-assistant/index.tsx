@@ -12,7 +12,9 @@ import { aiAssistantApi } from '../../services/ai-assistant';
 import BouncingLoader from '../../components/bouncing-loader';
 
 const AIAssistant = () => {
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi, contextHolder] = message.useMessage({
+    top: 50,
+  });
   const { conversationId } = useParams<{ conversationId: string }>();
   const navigate = useNavigate();
   const queryClient = useQueryClient();

@@ -13,12 +13,15 @@ import emptyStateSvg from "../../assets/empty-state.svg";
 import AISearchBar from "./components/ai-search-bar";
 import MultiChoiceFilter from "./components/multi-choice-filter";
 import { jobAnalysisApi } from "../../services/job-analysis";
-
 const { Title } = Typography;
 
 export default function JobFindingPage() {
   const queryClient = useQueryClient();
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi, contextHolder] = message.useMessage({
+    top: 50,
+    duration: 2,
+    maxCount: 3,
+  });
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [navbarHeight, setNavbarHeight] = useState(0);
