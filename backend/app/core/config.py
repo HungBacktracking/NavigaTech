@@ -70,6 +70,7 @@ class Configs(BaseSettings):
     QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "default_collection")
 
     # LLM + Embeddings
+    HF_TOKEN: str = os.getenv("HF_TOKEN")
     GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
     GEMINI_TOKEN: str = os.getenv("GEMINI_TOKEN")
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "512"))

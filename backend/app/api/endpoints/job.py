@@ -40,7 +40,16 @@ def get_favorite_jobs(
 ):
     return service.get_user_favorite_jobs_with_analytics(current_user.id)
 
-@router.post("/{job_id}/analyze", response_model=List[JobFavoriteResponse])
+@router.post("/{job_id}/scroring")
+@inject
+def score_job(
+        job_id: UUID,
+        service: JobService = Depends(Provide[Container.job_service]),
+        current_user: UserDetailResponse = Depends(get_current_user)
+):
+    return service.score_job(job_id, current_user.id)
+
+@router.post("/{job_id}/analyze")
 @inject
 def analyze_job(
         job_id: UUID,
