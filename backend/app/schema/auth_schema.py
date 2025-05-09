@@ -29,7 +29,6 @@ class SignUp(BaseModel):
 class Payload(BaseModel):
     id: str
     email: str
-    name: str
 
 
 class SignInResponse(BaseModel):

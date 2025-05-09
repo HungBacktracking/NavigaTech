@@ -67,7 +67,7 @@ class Configs(BaseSettings):
     # Qdrant
     QDRANT_URL: str = os.getenv("QDRANT_URL")
     QDRANT_API_TOKEN: str = os.getenv("QDRANT_API_TOKEN")
-    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "default_collection")
+    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "job_description")
 
     # LLM + Embeddings
     HF_TOKEN: str = os.getenv("HF_TOKEN")
