@@ -28,8 +28,7 @@ class AuthService(BaseService):
 
         payload = Payload(
             id=str(user.id),
-            email=user.email,
-            name=user.name
+            email=user.email
         )
 
         token_lifespan = timedelta(minutes=configs.ACCESS_TOKEN_EXPIRE_MINUTES)

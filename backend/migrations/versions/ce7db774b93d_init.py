@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 3a63b930015b
+Revision ID: ce7db774b93d
 Revises: 
-Create Date: 2025-05-08 01:45:54.387775
+Create Date: 2025-05-09 11:14:14.198542
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = '3a63b930015b'
+revision = 'ce7db774b93d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -24,18 +24,18 @@ def upgrade():
     sa.Column('job_url', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('logo_url', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('job_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('job_level', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('job_type', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('company_name', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('company_type', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('company_address', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('company_description', sa.Text(), nullable=True),
-    sa.Column('job_type', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('skills', sa.ARRAY(sa.String()), nullable=True),
+    sa.Column('skills', sa.Text(), nullable=True),
     sa.Column('location', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('date_posted', sa.Date(), nullable=True),
     sa.Column('job_description', sa.Text(), nullable=True),
     sa.Column('job_requirement', sa.Text(), nullable=True),
     sa.Column('benefit', sa.Text(), nullable=True),
-    sa.Column('is_expired', sa.Boolean(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
@@ -52,7 +52,6 @@ def upgrade():
     sa.Column('education', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('linkedin_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('github_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
-    sa.Column('avatar_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('introduction', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
