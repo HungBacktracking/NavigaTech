@@ -6,6 +6,7 @@ from app.schema.job_analytic_schema import JobAnalyticResponse
 
 
 class BaseJob(BaseModel):
+    from_site: str
     job_url: str
     logo_url: str
     job_name: str
