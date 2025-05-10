@@ -1,7 +1,7 @@
 from dependency_injector import containers, providers
 
-from app.pdfparser.cv_information_extractor import ResumeParser
-from app.pdfparser.pdf_parser import ResumePdfParser
+from app.resume_building.cv_information_extractor import ResumeParser
+from app.resume_building.pdf_parser import ResumePdfParser
 from app.core.config import configs
 from app.core.database import Database
 from app.core.s3_client import S3Client

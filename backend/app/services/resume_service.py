@@ -4,7 +4,7 @@ from app.core.s3_client import S3Client
 from app.exceptions.custom_error import CustomError
 from app.model.user import User
 from app.model.user_file import UserFile
-from app.pdfparser.pdf_parser import ResumePdfParser
+from app.resume_building.pdf_parser import ResumePdfParser
 from app.repository.award_repository import AwardRepository
 from app.repository.education_repository import EducationRepository
 from app.repository.experience_repository import ExperienceRepository

@@ -11,7 +11,7 @@ class BaseEducation(BaseModel):
     major: str
     school_name: str
     degree_type: str
-    gpa: Optional[float]
+    gpa: Optional[str]
     is_current: bool = False
     description: Optional[str] = None
     start_date: Optional[date] = None
