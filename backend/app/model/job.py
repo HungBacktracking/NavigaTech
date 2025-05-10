@@ -4,6 +4,7 @@ from sqlmodel import Column, Field, Text, String, ARRAY, DateTime, func
 from app.model.base_model import BaseModel
 
 class Job(BaseModel, table=True):
+    from_site: str = Field()
     job_url: str = Field()
     logo_url: str = Field()
     job_name: str = Field()

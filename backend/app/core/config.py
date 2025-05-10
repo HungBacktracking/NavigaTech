@@ -45,8 +45,8 @@ class Configs(BaseSettings):
     DB_USER: str = os.getenv("DB_USER")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD")
     DB_HOST: str = os.getenv("DB_HOST")
-    DB_PORT: str = os.getenv("DB_PORT", "3306")
-    DB_ENGINE: str = DB_ENGINE_MAPPER.get(DB, "postgresql")
+    DB_PORT: str = os.getenv("DB_PORT", "5432")
+    DB_ENGINE: str = os.getenv("DB_ENGINE", "postgresql")
 
     DATABASE_URI_FORMAT: str = "{db_engine}://{user}:{password}@{host}:{port}/{database}"
 
@@ -56,7 +56,7 @@ class Configs(BaseSettings):
         password=DB_PASSWORD,
         host=DB_HOST,
         port=DB_PORT,
-        database=ENV_DATABASE_MAPPER[ENV],
+        database=ENV_DATABASE_MAPPER[ENV]
     )
 
     # redis
