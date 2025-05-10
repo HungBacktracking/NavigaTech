@@ -1,7 +1,7 @@
 from pdfminer.high_level import extract_text
 
-from app.pdfparser.cv_information_extractor import ResumeParser
-from app.pdfparser.profile_urls_extractor import PDFUrlExtractor
+from app.resume_building.cv_information_extractor import ResumeParser
+from app.resume_building.profile_urls_extractor import PDFUrlExtractor
 
 
 class ResumePdfParser:

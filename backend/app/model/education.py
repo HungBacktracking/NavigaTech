@@ -10,7 +10,7 @@ class Education(BaseModel, table=True):
     major: str = Field()
     school_name: str = Field()
     degree_type: str = Field()
-    gpa: Optional[float] = Field(default=None, sa_column=Column(Double, nullable=True))
+    gpa: Optional[str] = Field(default=None, nullable=True)
     is_current: bool = Field(default=False, sa_column=Column(Boolean, nullable=False))
     description: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
     start_date: Optional[date] = Field(default=None, sa_column=Column(Date, nullable=True))

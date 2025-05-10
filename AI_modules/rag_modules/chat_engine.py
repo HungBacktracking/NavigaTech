@@ -41,8 +41,7 @@ class MultiPipelineChatbot:
         collection_name: str = 'job_collection',
         top_k: int = 15,
         temperature: float = 0.6,
-        max_tokens: int = 3500,
-
+        max_tokens: int = 3500
     ):
         # Load environment variables
         load_dotenv(env_path)
