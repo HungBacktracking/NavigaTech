@@ -54,12 +54,13 @@ body {
   border-radius: 4px;
 }
 
+.markdown-content {
+  font-size: 1rem;
+  line-height: 1.6;
+}
 
-Markdown content styling .markdown-content {
-  color: rgba(0, 0, 0, 0.85);
-  font-size: 14px;
-  max-width: 100%;
-  overflow-wrap: break-word;
+.markdown-content p {
+  margin-bottom: 16px;
 }
 
 .markdown-content h1,
@@ -70,44 +71,20 @@ Markdown content styling .markdown-content {
 .markdown-content h6 {
   margin-top: 24px;
   margin-bottom: 16px;
-  font-weight: 600;
-}
-
-.markdown-content h1 {
-  font-size: 2em;
-}
-
-.markdown-content h2 {
-  font-size: 1.5em;
-}
-
-.markdown-content h3 {
-  font-size: 1.25em;
-}
-
-.markdown-content h4 {
-  font-size: 1em;
-}
-
-.markdown-content p {
-  margin-top: 0;
-  margin-bottom: 16px;
 }
 
 .markdown-content ul,
 .markdown-content ol {
-  margin-top: 0;
+  padding-left: 24px;
   margin-bottom: 16px;
-  padding-left: 2em;
 }
 
-.markdown-content ul li,
-.markdown-content ol li {
+.markdown-content li {
   margin-bottom: 8px;
 }
 
 .markdown-content a {
-  color: #1890ff;
+  color: #1677ff;
   text-decoration: none;
 }
 
@@ -119,7 +96,7 @@ Markdown content styling .markdown-content {
   margin: 16px 0;
   padding: 0 16px;
   color: rgba(0, 0, 0, 0.65);
-  border-left: 4px solid #eee;
+  border-left: 4px solid #d9d9d9;
 }
 
 .markdown-content code {
@@ -137,7 +114,7 @@ Markdown content styling .markdown-content {
   overflow: auto;
   font-size: 85%;
   line-height: 1.45;
-  background-color: #f6f8fa;
+  background-color: rgba(0, 0, 0, 0.04);
   border-radius: 3px;
   margin-bottom: 16px;
 }

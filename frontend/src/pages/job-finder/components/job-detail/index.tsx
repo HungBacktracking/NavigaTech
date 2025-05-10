@@ -39,7 +39,11 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
 
   const renderContent = (content: string) => {
     return (
-      <ReactMarkdown>{content}</ReactMarkdown>
+      <div className="markdown-content">
+        <ReactMarkdown>
+          {content}
+        </ReactMarkdown>
+      </div>
     );
   };
 

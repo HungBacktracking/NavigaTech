@@ -19,7 +19,9 @@ const { Search } = Input;
 
 const JobAnalysisPage = () => {
   const queryClient = useQueryClient();
-  const [messageApi, contextHolder] = message.useMessage();
+  const [messageApi, contextHolder] = message.useMessage({
+    top: 50,
+  });
   const [searchValue, setSearchValue] = useState('');
   const [selectedJob, setSelectedJob] = useState<JobAnalysis | null>(null);
   const [analysesQueryParams, setAnalysesQueryParams] = useState<JobAnalysisQueryParams>({

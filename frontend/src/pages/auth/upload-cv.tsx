@@ -212,20 +212,7 @@ const UploadCVPage = () => {
               transition={{ duration: 0.5 }}
               style={{ textAlign: 'center', padding: '24px 0' }}
             >
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1],
-                  rotate: [0, 360]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-                style={{ marginBottom: 24 }}
-              >
-                <Spin indicator={<LoadingOutlined style={{ fontSize: 64, color: token.colorPrimary }} spin />} />
-              </motion.div>
+              <Spin indicator={<LoadingOutlined style={{ fontSize: 64, color: token.colorPrimary }} spin />} />
               <Title level={3}>Processing Your CV</Title>
               <Paragraph>
                 We are analyzing your skills, experiences, and qualifications to match you with the best job opportunities.
@@ -254,18 +241,7 @@ const UploadCVPage = () => {
               transition={{ duration: 0.5 }}
               style={{ textAlign: 'center', padding: '24px 0' }}
             >
-              <motion.div
-                animate={{
-                  scale: [1, 1.2, 1]
-                }}
-                transition={{
-                  duration: 1,
-                  repeat: 0,
-                  ease: "easeOut"
-                }}
-              >
-                <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 24 }} />
-              </motion.div>
+              <CheckCircleOutlined style={{ fontSize: 64, color: '#52c41a', marginBottom: 24 }} />
               <Title level={3}>CV Uploaded Successfully!</Title>
               <Paragraph>
                 Redirecting you to the login page in a moment...

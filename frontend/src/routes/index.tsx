@@ -24,7 +24,10 @@ const AppRouter = () => {
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="home" element={<JobFinderPage />} />
           <Route path="job-analysis" element={<JobAnalysisPage />} />
-          <Route path="ai-assistant" element={<AIAssistantPage />} />
+          <Route path="ai-assistant">
+            <Route index element={<AIAssistantPage />} />
+            <Route path=":conversationId" element={<AIAssistantPage />} />
+          </Route>
         </Route>
       </Route>
 
