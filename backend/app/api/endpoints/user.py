@@ -1,19 +1,16 @@
-
-
 from dependency_injector.wiring import Provide
-from fastapi import APIRouter, Depends
+from fastapi import Depends
 
 from app.core.containers.container import Container
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
-from app.exceptions.custom_error import CustomError
 from app.schema.s3_schema import UploadResponse, DownloadResponse
 from app.schema.user_schema import UserBasicResponse, UserUpdate, UserDetailResponse
 from app.services.resume_service import ResumeService
 from app.services.s3_service import S3Service
 from app.services.user_service import UserService
-from fastapi import APIRouter, Response, HTTPException
+from fastapi import APIRouter
 
 router = APIRouter(prefix="/users", tags=["User"], dependencies=[Depends(JWTBearer())])
 

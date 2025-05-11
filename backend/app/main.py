@@ -1,11 +1,12 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from starlette.middleware.cors import CORSMiddleware
 
 from app.api.routes import routers
 from app.core.config import configs
-from app.core.containers.chatbot_container import ChatbotContainer
-from app.core.containers.container import Container
+from app.core.containers.application_container import ApplicationContainer
 from app.exceptions.exception_handlers import register_exception_handlers
 from app.util.class_object import singleton
 
@@ -22,12 +23,10 @@ class AppCreator:
         register_exception_handlers(self.app)
 
         # set db and container
-        self.container = Container()
-        self.chatbot_container = ChatbotContainer()
-        # self.container.init_resources()
-        # self.chatbot_container.init_resources()
-        self.db = self.container.db()
-        self.db.create_database()
+        self.container = ApplicationContainer()
+
+        self.db = self.container.database().db
+        self.mongo = self.container.database().mongo_db
 
         # set cors
         if configs.BACKEND_CORS_ORIGINS:
@@ -45,6 +44,16 @@ class AppCreator:
             return JSONResponse({"message": "Server is working!"})
 
         self.app.include_router(routers, prefix=configs.API_V1_STR)
+
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            # Startup
+            await self.container.init_resources()
+
+            await self.db.create_database()
+            await self.mongo.init_mongo()
+
+            yield
 
 
 app_creator = AppCreator()
