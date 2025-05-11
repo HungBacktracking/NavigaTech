@@ -65,7 +65,7 @@ class ChatbotService:
             timestamp=ts,
         )
 
-    async def get_messages(self, user_id: str, session_id: str, limit: int) -> list[MessageResponse]:
+    async def get_messages(self, user_id: str, session_id: str) -> list[MessageResponse]:
         self.verify_user(user_id)
         session = await self.chatbot_repo.sessions.find_one({
             "_id": ObjectId(session_id),
@@ -74,7 +74,7 @@ class ChatbotService:
         if not session:
             raise CustomError.NOT_FOUND.as_exception()
 
-        docs = await self.chatbot_repo.get_messages(session_id, limit)
+        docs = await self.chatbot_repo.get_messages(session_id)
 
         return [
             MessageResponse(
