@@ -14,11 +14,22 @@ from app.util.class_object import singleton
 @singleton
 class AppCreator:
     def __init__(self):
+        @asynccontextmanager
+        async def lifespan(app: FastAPI):
+            # Startup
+            await self.container.init_resources()
+            await self.db.create_database()
+            await self.mongo.init_mongo()
+            yield
+            # (nếu cần) Shutdown
+            await self.container.shutdown_resources()
+
         # set app default
         self.app = FastAPI(
             title=configs.PROJECT_NAME,
             openapi_url=f"{configs.API}/openapi.json",
-            version="0.0.1"
+            version="0.0.1",
+            lifespan=lifespan,
         )
         register_exception_handlers(self.app)
 
@@ -45,15 +56,6 @@ class AppCreator:
 
         self.app.include_router(routers, prefix=configs.API_V1_STR)
 
-        @asynccontextmanager
-        async def lifespan(app: FastAPI):
-            # Startup
-            await self.container.init_resources()
-
-            await self.db.create_database()
-            await self.mongo.init_mongo()
-
-            yield
 
 
 app_creator = AppCreator()
