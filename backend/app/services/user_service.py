@@ -17,12 +17,12 @@ from app.services.base_service import BaseService
 
 class UserService(BaseService):
     def __init__(
-            self,
-            user_repository: UserRepository,
-            experience_repository: ExperienceRepository,
-            project_repository: ProjectRepository,
-            education_repository: EducationRepository,
-            skill_repository: SkillRepository
+        self,
+        user_repository: UserRepository,
+        experience_repository: ExperienceRepository,
+        project_repository: ProjectRepository,
+        education_repository: EducationRepository,
+        skill_repository: SkillRepository
     ):
         self.user_repository = user_repository
         self.experience_repository = experience_repository
