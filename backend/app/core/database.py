@@ -18,14 +18,23 @@ class BaseModel:
 
 
 class Database:
-    def __init__(self, db_url: str) -> None:
+    def __init__(self, db_url: str, replica_db_url) -> None:
         self._engine = create_engine(db_url, echo=True)
         self._session_factory = orm.scoped_session(
             orm.sessionmaker(
                 autocommit=False,
                 autoflush=False,
-                bind=self._engine,
-            ),
+                bind=self._engine
+            )
+        )
+
+        self.replica_engine = create_engine(replica_db_url, echo=True)
+        self.replica_session_factory = orm.scoped_session(
+            orm.sessionmaker(
+                autocommit=False,
+                autoflush=False,
+                bind=self.replica_engine
+            )
         )
 
     def create_database(self) -> None:
@@ -34,6 +43,17 @@ class Database:
     @contextmanager
     def session(self) -> Iterator[Session]:
         session: Session = self._session_factory()
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @contextmanager
+    def replica_session(self) -> Iterator[Session]:
+        session: Session = self.replica_session_factory()
         try:
             yield session
         except Exception:
