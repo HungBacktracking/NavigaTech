@@ -4,7 +4,7 @@ from uuid import UUID
 from dependency_injector.wiring import Provide
 from fastapi import APIRouter, Depends
 
-from app.core.containers.container import Container
+from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
@@ -19,7 +19,7 @@ router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer
 @inject
 def search(
         request: JobSearchRequest,
-        service: JobService = Depends(Provide[Container.job_service]),
+        service: JobService = Depends(Provide[ApplicationContainer.services.provided.job_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.search_job(request, current_user.id)
@@ -27,7 +27,7 @@ def search(
 @router.get("/recommendations")
 @inject
 def get_recommendations(
-        service: JobService = Depends(Provide[Container.job_service]),
+        service: JobService = Depends(Provide[ApplicationContainer.services.provided.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
     return service.get_job_recommendation(current_user.id)
@@ -35,7 +35,7 @@ def get_recommendations(
 @router.get("/favorite", response_model=List[JobFavoriteResponse])
 @inject
 def get_favorite_jobs(
-        service: JobService = Depends(Provide[Container.job_service]),
+        service: JobService = Depends(Provide[ApplicationContainer.services.provided.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
     return service.get_user_favorite_jobs_with_analytics(current_user.id)
@@ -44,7 +44,7 @@ def get_favorite_jobs(
 @inject
 def score_job(
         job_id: UUID,
-        service: JobService = Depends(Provide[Container.job_service]),
+        service: JobService = Depends(Provide[ApplicationContainer.services.provided.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
     return service.score_job(job_id, current_user.id)
@@ -53,7 +53,7 @@ def score_job(
 @inject
 def analyze_job(
         job_id: UUID,
-        service: JobService = Depends(Provide[Container.job_service]),
+        service: JobService = Depends(Provide[ApplicationContainer.services.provided.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
     return service.analyze_job(job_id, current_user.id)
@@ -62,7 +62,7 @@ def analyze_job(
 @inject
 def get_resume_job(
         job_id: UUID,
-        service: JobService = Depends(Provide[Container.job_service]),
+        service: JobService = Depends(Provide[ApplicationContainer.services.provided.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
     return service.generate_resume(job_id, current_user.id)

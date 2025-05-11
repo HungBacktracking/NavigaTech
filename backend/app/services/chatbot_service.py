@@ -1,14 +1,23 @@
 from uuid import UUID
 from bson import ObjectId
 
+from app.chatbot.chat_engine import ChatEngine
 from app.exceptions.custom_error import CustomError
+from app.repository import UserRepository
+from app.repository.chatbot_repository import ChatbotRepository
 from app.schema.chat_schema import SessionResponse, MessageResponse
 
 
 class ChatbotService:
-    def __init__(self, user_repository, chatbot_repository):
+    def __init__(
+        self,
+        user_repository: UserRepository,
+        chatbot_repository: ChatbotRepository,
+        chat_engine: ChatEngine
+    ):
         self.chatbot_repo = chatbot_repository
         self.user_repo = user_repository
+        self.chat_engine = chat_engine
 
     async def verify_user(self, user_id: str):
         user = await self.user_repo.find_by_id(UUID(user_id))
