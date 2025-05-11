@@ -1,6 +1,6 @@
 import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image } from "antd";
+import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image, theme } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import JobCard from "./components/job-card";
 import { jobApi } from "../../services/job-finder";
@@ -16,6 +16,7 @@ import { jobAnalysisApi } from "../../services/job-analysis";
 const { Title } = Typography;
 
 export default function JobFindingPage() {
+  const { token } = theme.useToken();
   const queryClient = useQueryClient();
   const [messageApi, contextHolder] = message.useMessage({
     top: 50,
@@ -39,10 +40,13 @@ export default function JobFindingPage() {
   const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
   const [selectedJobLevels, setSelectedJobLevels] = useState<string[]>([]);
   const [analyzingJobIds, setAnalyzingJobIds] = useState<string[]>([]);
+  const [isRecommendationMode, setIsRecommendationMode] = useState(false);
 
   const { data: jobsData, isLoading: isJobsLoading } = useQuery({
-    queryKey: ['jobs', queryParams],
-    queryFn: () => jobApi.getJobs(queryParams),
+    queryKey: ['jobs', queryParams, isRecommendationMode],
+    queryFn: () => isRecommendationMode
+      ? jobApi.getRecommendedJobs(queryParams)
+      : jobApi.getJobs(queryParams),
   });
 
   const { data: jobDetailData, isLoading: isJobDetailLoading } = useQuery({
@@ -199,6 +203,12 @@ export default function JobFindingPage() {
     analyzeJobMutation(jobId);
   };
 
+  const handleViewModeChange = (checked: boolean) => {
+    setIsRecommendationMode(checked);
+    setQueryParams(prev => ({ ...prev, page: 1 }));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       {contextHolder}
@@ -260,14 +270,82 @@ export default function JobFindingPage() {
             onChange={handleJobTitleFilterChange}
             isLoading={isJobTitlesLoading}
           />
+
+          <Flex
+            justify="space-between"
+            align="center"
+          >
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <div
+                style={{
+                  background: token.colorBgContainer,
+                  borderRadius: '32px',
+                  boxShadow: '0 2px 4px rgba(0, 0, 0, 0.1)',
+                  display: 'flex',
+                  position: 'relative',
+                  gap: 8,
+                }}
+              >
+                <div
+                  style={{
+                    position: 'absolute',
+                    height: '100%',
+                    background: token.colorPrimary,
+                    borderRadius: '32px',
+                    transition: 'all 0.3s ease',
+                    transform: isRecommendationMode ? 'translateX(calc(50% - 32px))' : 'translateX(0)',
+                    width: isRecommendationMode ? '76%' : '24%',
+                    zIndex: 0,
+                  }}
+                />
+                <div
+                  onClick={() => handleViewModeChange(false)}
+                  style={{
+                    padding: '8px 16px',
+                    textAlign: 'center',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    color: isRecommendationMode ? token.colorText : token.colorTextLightSolid,
+                    zIndex: 1,
+                    position: 'relative',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  All
+                </div>
+                <div
+                  onClick={() => handleViewModeChange(true)}
+                  style={{
+                    padding: '8px 16px',
+                    textAlign: 'center',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    color: isRecommendationMode ? token.colorTextLightSolid : token.colorText,
+                    zIndex: 1,
+                    position: 'relative',
+                    transition: 'color 0.3s ease',
+                  }}
+                >
+                  Recommendations
+                </div>
+              </div>
+            </div>
+          </Flex>
+
+          <div style={{ padding: '0 16px' }}>
+            <Typography.Text strong>
+              {isJobsLoading
+                ? <Skeleton.Node active style={{ width: 100, height: 16 }} />
+                : `${jobsData?.total || 0} ${isRecommendationMode ? 'recommended' : ''} jobs found`}
+            </Typography.Text>
+          </div>
         </Flex>
       </Flex>
 
       <Row gutter={16} style={{ height: "100%", marginTop: 8 }}>
-        <Col
-          span={9}
-        >
+        <Col span={9} >
           <Space direction="vertical" size={12} style={{ width: "100%", borderRadius: 8 }}>
+            
             {isJobsLoading ? (
               Array(5).fill(0).map((_, index) => (
                 <Card
