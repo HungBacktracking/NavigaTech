@@ -40,6 +40,24 @@ def get_favorite_jobs(
 ):
     return service.get_user_favorite_jobs_with_analytics(current_user.id)
 
+@router.post("/{job_id}/favorite")
+@inject
+def add_favorite_job(
+        job_id: UUID,
+        service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+        current_user: UserBasicResponse = Depends(get_current_user)
+):
+    return service.add_to_favorite(job_id, current_user.id)
+
+@router.post("/{job_id}/delete-favorite")
+@inject
+def remove_favorite_job(
+        job_id: UUID,
+        service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+        current_user: UserBasicResponse = Depends(get_current_user)
+):
+    return service.remove_from_favorite(job_id, current_user.id)
+
 @router.post("/{job_id}/scroring")
 @inject
 def score_job(
