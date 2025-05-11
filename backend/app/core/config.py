@@ -59,6 +59,9 @@ class Configs(BaseSettings):
         database=ENV_DATABASE_MAPPER[ENV]
     )
 
+    MONGO_DB_URI: str = os.getenv("MONGO_DB_URI")
+    MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME")
+
     # redis
     # REDIS_HOST: str = os.getenv("REDIS_HOST")
     # REDIS_PORT: str = os.getenv("REDIS_PORT")
