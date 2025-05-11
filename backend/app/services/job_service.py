@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, List
 from uuid import UUID
 
@@ -8,14 +9,20 @@ from app.job_report.cv_grading import ResumeScorer
 from app.model.favorite_job import FavoriteJob
 from app.model.job import Job
 from app.recommendation.job_recommendation import JobRecommendation
+from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_repository import JobRepository
-from app.schema.job_schema import JobSearchRequest, JobFavoriteResponse, JobResponse
+from app.schema.job_schema import JobSearchRequest, JobFavoriteResponse, JobResponse, FavoriteJobRequest
 from app.services.base_service import BaseService
 
 
 class JobService(BaseService):
-    def __init__(self, job_repository: JobRepository):
+    def __init__(
+        self,
+        job_repository: JobRepository,
+        favorite_job_repository: FavoriteJobRepository
+    ):
         self.job_repository = job_repository
+        self.favorite_job_repository = favorite_job_repository
         super().__init__(job_repository)
         self.scorer: ResumeScorer = ResumeScorer()
         self.reporter: ResumeReport = ResumeReport()
@@ -318,6 +325,43 @@ class JobService(BaseService):
         """
 
         return self.scorer.final_score(resume_text, jd_text)
+
+    def add_to_favorite(self, job_id: uuid, user_id: uuid):
+        job: Job = self.job_repository.find_by_id(job_id)
+        if not job:
+            raise CustomError.NOT_FOUND.as_exception()
+
+        request = FavoriteJobRequest(
+            job_id=job_id,
+            user_id=user_id,
+            is_favorite=True
+        )
+
+        fav_job = self.favorite_job_repository.find_by_user_id(user_id)
+        if fav_job:
+            self.favorite_job_repository.update(fav_job.id, request)
+        else:
+            self.favorite_job_repository.create(request)
+
+        return self.get_user_favorite_jobs_with_analytics(user_id)
+
+    def remove_from_favorite(self, job_id: uuid, user_id: uuid):
+        job: Job = self.job_repository.find_by_id(job_id)
+        if not job:
+            raise CustomError.NOT_FOUND.as_exception()
+
+        fav_job = self.favorite_job_repository.find_by_user_id(user_id)
+        if fav_job:
+            request = FavoriteJobRequest(
+                job_id=job_id,
+                user_id=user_id,
+                is_favorite=False
+            )
+            self.favorite_job_repository.update(fav_job.id, request)
+        else:
+            raise CustomError.NOT_FOUND.as_exception()
+
+        return self.get_user_favorite_jobs_with_analytics(user_id)
 
 
 

@@ -31,6 +31,13 @@ class BaseJob(BaseModel):
 
 class JobResponse(ModelBaseInfo, BaseJob): ...
 
+class FavoriteJobRequest(BaseModel):
+    job_id: str
+    user_id: str
+    is_analyze: Optional[bool] = None
+    is_generated_resume: Optional[bool] = None
+    is_favorite: bool
+
 class JobFavoriteResponse(ModelBaseInfo, BaseJob):
     job_analytics: Optional[JobAnalyticResponse] = None
 
