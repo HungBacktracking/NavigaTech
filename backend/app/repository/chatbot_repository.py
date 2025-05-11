@@ -1,23 +1,17 @@
-from contextlib import AbstractContextManager
 import datetime
-from datetime import datetime
-from typing import Callable
-from uuid import UUID
-from sqlmodel import Session, select
-from app.model.education import Education
-from app.repository.base_repository import BaseRepository
+from datetime import datetime, timezone
 from bson import ObjectId
 
 
 class ChatbotRepository:
-    def __init__(self, mongo_client):
-        self.mongo_client = mongo_client
-        self.sessions = mongo_client.sessions
-        self.messages = mongo_client.messages
+    def __init__(self, mongo_db):
+        self.mongo_db = mongo_db
+        self.sessions = mongo_db["sessions"]
+        self.messages = mongo_db["messages"]
 
 
     async def create_session(self, user_id: str, title: str):
-        now = datetime.now(datetime.UTC)
+        now = datetime.now(timezone.utc)
         doc = {
             "user_id": user_id,
             "title": title,
@@ -34,10 +28,10 @@ class ChatbotRepository:
             {"user_id": user_id}
         ).sort("updated_at", -1)
 
-        return [doc async for doc in cursor]
+        return await cursor.to_list(length=None)
 
     async def post_message(self, session_id: str, role: str, content: str):
-        now = datetime.now(datetime.UTC)
+        now = datetime.now(timezone.utc)
         msg = {
             "session_id": ObjectId(session_id),
             "role": role,

@@ -4,6 +4,7 @@ from jose import jwt
 from pydantic import ValidationError
 
 from app.core.config import configs
+from app.core.containers.application_container import ApplicationContainer
 from app.core.containers.container import Container
 from app.core.security import ALGORITHM, JWTBearer
 from app.exceptions.errors.CustomClientException import AuthError
@@ -15,7 +16,7 @@ from app.services.user_service import UserService
 @inject
 def get_current_user(
     token: str = Depends(JWTBearer()),
-    service: UserService = Depends(Provide[Container.user_service]),
+    service: UserService = Depends(Provide[ApplicationContainer.services.user_service]),
 ) -> UserBasicResponse:
     try:
         payload = jwt.decode(token, configs.SECRET_KEY, algorithms=ALGORITHM)

@@ -37,7 +37,7 @@ class ServiceContainer(containers.DeclarativeContainer):
         edu_repo=repos.education_repository,
         skill_repo=repos.skill_repository,
         award_repo=repos.award_repository,
-        user_service=repos.user_service,
+        user_service=user_service,
         file_repo=repos.user_file_repository,
         user_repo=repos.user_repository,
         s3_client=s3_client,
@@ -46,7 +46,7 @@ class ServiceContainer(containers.DeclarativeContainer):
     )
     chatbot_service = providers.Factory(
         ChatbotService,
-        chat_engine=chat_engine,
-        chatbot_repo=repos.chatbot_repository,
-        user_repo=repos.user_repository
+        # chat_engine=chat_engine,
+        chatbot_repository=repos.chatbot_repository,
+        user_repository=repos.user_repository
     )

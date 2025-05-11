@@ -13,19 +13,19 @@ class ChatbotService:
         self,
         user_repository: UserRepository,
         chatbot_repository: ChatbotRepository,
-        chat_engine: ChatEngine
+        # chat_engine: ChatEngine
     ):
         self.chatbot_repo = chatbot_repository
         self.user_repo = user_repository
-        self.chat_engine = chat_engine
+        # self.chat_engine = chat_engine
 
-    async def verify_user(self, user_id: str):
-        user = await self.user_repo.find_by_id(UUID(user_id))
+    def verify_user(self, user_id: str):
+        user = self.user_repo.find_by_id(UUID(user_id))
         if not user:
             raise CustomError.NOT_FOUND.as_exception()
 
     async def create_session(self, user_id: str, title: str) -> SessionResponse:
-        await self.verify_user(user_id)
+        self.verify_user(user_id)
         sid = await self.chatbot_repo.create_session(user_id, title)
 
         return SessionResponse(
@@ -34,19 +34,19 @@ class ChatbotService:
         )
 
     async def list_sessions(self, user_id: str) -> list[SessionResponse]:
-        await self.verify_user(user_id)
+        self.verify_user(user_id)
         docs = await self.chatbot_repo.list_sessions(user_id)
 
         return [
             SessionResponse(
-                id=doc["_id"],
+                id=str(doc["_id"]),
                 title=doc["title"]
             )
             for doc in docs
         ]
 
     async def post_message(self, user_id: str, session_id: str, role: str, content: str) -> MessageResponse:
-        await self.verify_user(user_id)
+        self.verify_user(user_id)
 
         session = await self.chatbot_repo.sessions.find_one({
             "_id": ObjectId(session_id)},
@@ -66,7 +66,7 @@ class ChatbotService:
         )
 
     async def get_messages(self, user_id: str, session_id: str, limit: int) -> list[MessageResponse]:
-        await self.verify_user(user_id)
+        self.verify_user(user_id)
         session = await self.chatbot_repo.sessions.find_one({
             "_id": ObjectId(session_id),
             "user_id": user_id
@@ -78,10 +78,10 @@ class ChatbotService:
 
         return [
             MessageResponse(
-                id=doc["_id"],
+                id=str(doc["_id"]),
                 role=doc["role"],
                 content=doc["content"],
-                timestamp=docs["timestamp"]
+                timestamp=doc["timestamp"]
             )
             for doc in docs
         ]

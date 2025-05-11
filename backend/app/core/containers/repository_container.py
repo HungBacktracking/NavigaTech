@@ -25,4 +25,4 @@ class RepositoryContainer(containers.DeclarativeContainer):
     award_repository = providers.Factory(AwardRepository, session_factory=db.provided.session)
     job_repository = providers.Factory(JobRepository, session_factory=db.provided.session)
     user_file_repository = providers.Factory(UserFileRepository, session_factory=db.provided.session)
-    chatbot_repository = providers.Factory(ChatbotRepository, mongo_client=mongo_db.provided.client)
+    chatbot_repository = providers.Factory(ChatbotRepository, mongo_db=mongo_db.provided.db)
