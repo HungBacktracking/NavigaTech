@@ -53,6 +53,15 @@ class S3Service(BaseService):
 
         return DownloadResponse(download_url=url)
 
+    def get_by_key(self, key: str):
+        try:
+            obj = self.s3.client.get_object(Bucket=self.bucket, Key=key)
+            file = obj['Body'].read()
+            return file
+        except Exception as e:
+            raise CustomError.INTERNAL_SERVER_ERROR.as_exception()
+
+
 
 
 

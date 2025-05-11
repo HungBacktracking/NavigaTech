@@ -24,3 +24,6 @@ class S3Client:
             Params={"Bucket": bucket, "Key": key},
             ExpiresIn=expires_in
         )
+
+    def get_by_key(self, bucket: str, key: str):
+        return self.client.get_object(Bucket=bucket, Key=key)
