@@ -4,7 +4,6 @@ from fastapi.responses import StreamingResponse
 
 from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
-# from app.core.middleware import inject
 from app.core.security import JWTBearer
 from app.schema.chat_schema import SessionResponse, SessionCreate, MessageResponse, MessageCreate
 from app.schema.user_schema import UserBasicResponse
