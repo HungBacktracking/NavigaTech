@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 
+from app.core.database_mongo import MongoDB
 from app.resume_building.cv_information_extractor import ResumeParser
 from app.resume_building.pdf_parser import ResumePdfParser
 from app.core.config import configs

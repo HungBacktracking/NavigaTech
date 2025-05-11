@@ -13,6 +13,7 @@ from qdrant_client import QdrantClient, AsyncQdrantClient
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core.storage.chat_store import SimpleChatStore
 
+from app.core.database_mongo import MongoDB
 from app.services.chatbot_service import ChatbotService
 
 
@@ -22,6 +23,8 @@ class ChatbotContainer(containers.DeclarativeContainer):
             "app.api.endpoints.chat"
         ]
     )
+
+    mongo_db = providers.Singleton(MongoDB, mongo_url=configs.MONGO_DB_URI, db_name=configs.MONGO_DB_NAME)
 
     # LLM + Embedding
     llm = providers.Singleton(
