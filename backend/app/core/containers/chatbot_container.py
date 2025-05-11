@@ -3,10 +3,10 @@ from dependency_injector import containers, providers
 from app.chatbot.chat_engine import ChatEngine
 from app.chatbot.prompt import RAGPrompt
 from app.chatbot.small_talk_checker import SmallTalkChecker
-from app.core.config import configs
 from llama_index.core import VectorStoreIndex
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core.storage.chat_store import SimpleChatStore
+
 
 
 class ChatbotContainer(containers.DeclarativeContainer):
@@ -18,7 +18,7 @@ class ChatbotContainer(containers.DeclarativeContainer):
     qdrant_client = database.qdrant_client
     async_qdrant_client = database.async_qdrant_client
 
-    llm = AI.llm_model
+    llm = AI.llm_huggingface
     embed_model = AI.embed_model
 
     vector_store = providers.Singleton(
@@ -56,8 +56,8 @@ class ChatbotContainer(containers.DeclarativeContainer):
         chat_store=chat_store,
         small_talk_checker=small_talk_checker,
         rag_prompt=rag_prompt,
-        token_limit=configs.TOKEN_LIMIT,
-        top_k=configs.TOP_K,
-        temperature=configs.TEMPERATURE,
-        max_tokens=configs.MAX_TOKENS
+        token_limit=config.TOKEN_LIMIT,
+        top_k=config.TOP_K,
+        temperature=config.TEMPERATURE,
+        max_tokens=config.MAX_TOKENS
     )
