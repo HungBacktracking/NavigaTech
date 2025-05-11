@@ -2,17 +2,109 @@ services:
   db:
     image: postgis/postgis:17-3.5
     restart: always
+    expose:
+      - 5432
     environment:
-      POSTGRES_USER: local
-      POSTGRES_PASSWORD: local
-      POSTGRES_DB: local
+      POSTGRESQL_USERNAME: local
+      POSTGRESQL_PASSWORD: local
+      POSTGRESQL_DATABASE: local
+      POSTGRESQL_REPLICATION_MODE: master
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_password
     networks:
       - api_net
     command: postgres -N 500
-    ports:
-      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql@17/data
+
+  db_replica:
+    image: postgis/postgis:17-3.5
+    restart: always
+    expose:
+      - 5432
+    depends_on:
+      - db
+    environment:
+      POSTGRESQL_REPLICATION_MODE: slave
+      POSTGRESQL_REPLICATION_USER: repl_user
+      POSTGRESQL_REPLICATION_PASSWORD: repl_password
+      POSTGRESQL_MASTER_HOST: db
+      POSTGRESQL_USERNAME: postgres
+      POSTGRESQL_PASSWORD: postgres
+      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+    networks:
+      - api_net
+    command: postgres -N 500
+    volumes:
+      - db_data_replica:/var/lib/postgresql@17/data
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    mem_limit: 2g  # Adjust the memory limit as needed
+    networks:
+      - default
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - api_net
+
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    networks:
+      - api_net
+
+  kafka:
+    image: bitnami/kafka:latest
+    ports:
+      - 9092:9092
+      - 9093:9093
+    environment:
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://127.0.0.1:9092
+      - KAFKA_CFG_ZOOKEEPER_CONNECT=zookeeper:2181
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CLIENT:PLAINTEXT
+      - KAFKA_CFG_LISTENERS=CLIENT://:9092
+      - KAFKA_CFG_ADVERTISED_LISTENERS=CLIENT://kafka:9092
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=CLIENT
+    depends_on:
+      - zookeeper
+    networks:
+      - api_net
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    ports:
+      - 8080:8080
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    networks:
+      - api_net
+
 
 
 networks:
@@ -21,3 +113,4 @@ networks:
 
 volumes:
   db_data:
+  db_data_replica:

@@ -18,7 +18,7 @@ class AppCreator:
         self.app = FastAPI(
             title=configs.PROJECT_NAME,
             openapi_url=f"{configs.API}/openapi.json",
-            version="0.0.1",
+            version="0.0.1"
         )
         register_exception_handlers(self.app)
 
