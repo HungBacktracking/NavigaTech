@@ -16,6 +16,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
             "app.api.endpoints.user",
             "app.api.endpoints.job",
             "app.api.endpoints.chat",
+            "app.api.endpoints.resume",
             "app.core.dependencies",
         ]
     )
