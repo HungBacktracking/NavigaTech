@@ -43,11 +43,10 @@ async def post_message(
 @inject
 async def get_messages(
     session_id: str,
-    limit: int = 20,
     service: ChatbotService = Depends(Provide[ApplicationContainer.services.chatbot_service]),
     current_user: UserBasicResponse = Depends(get_current_user),
 ):
-    return await service.get_messages(str(current_user.id), session_id, limit)
+    return await service.get_messages(str(current_user.id), session_id)
 
 
 

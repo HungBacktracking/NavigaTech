@@ -47,10 +47,10 @@ class ChatbotRepository:
 
         return str(res.inserted_id), role, content, now
 
-    async def get_messages(self, session_id: str, limit: int):
+    async def get_messages(self, session_id: str):
         cursor = self.messages.find(
             {"session_id": ObjectId(session_id)}
-        ).sort("timestamp", -1).limit(limit)
+        ).sort("timestamp", -1)
         docs = [doc async for doc in cursor]
 
         return list(reversed(docs))
