@@ -16,6 +16,7 @@
     "antd": "^5.25.0",
     "axios": "^1.8.3",
     "bootstrap-icons": "^1.11.3",
+    "dayjs": "^1.11.13",
     "framer-motion": "^12.9.2",
     "react": "^19.0.0",
     "react-bootstrap-icons": "^1.11.5",

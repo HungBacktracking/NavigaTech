@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Typography, Tabs, Flex, theme } from 'antd';
-import LoginForm from './login-form';
-import RegisterForm from './register-form';
+import LoginForm from './components/auth-forms/login-form';
+import RegisterForm from './components/auth-forms/register-form';
 import { TypewriterEffect } from '../../components/magic-ui/typewriter-effect';
 import { FlipWords } from '../../components/magic-ui/flip-words';
 import { motion } from 'framer-motion';

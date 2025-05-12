@@ -56,7 +56,7 @@ const NavBar = () => {
   useEffect(() => {
     const path = location.pathname.split('/')[1];
     const matchedItem = menuItems.find(item => item.key === path);
-    setSelectedKey(matchedItem?.key || 'home');
+    setSelectedKey(matchedItem?.key || '');
   }, [location.pathname]);
 
   const handleMenuClick = (key: string) => {

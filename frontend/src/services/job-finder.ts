@@ -230,6 +230,63 @@ export const jobApi = {
     });
   },
 
+  getRecommendedJobs: async (params: JobQueryParams): Promise<PaginatedResponse<Job>> => {
+    return new Promise<PaginatedResponse<Job>>((resolve) => {
+      setTimeout(() => {
+        let filteredJobs = [...mockJobs];
+        
+        // Simulate "recommended" jobs by selecting those with certain skills or higher levels
+        filteredJobs = filteredJobs.filter(job => {
+          // Consider jobs that are senior, lead positions, or have popular skills
+          const isHigherLevel = ['Intern', 'Entry level'].includes(job.level || '');
+          const hasPopularSkills = job.skills?.some(skill => 
+            ['React', 'TypeScript', 'Python', 'Machine Learning', 'AWS', 'Cloud'].includes(skill)
+          );
+          
+          return isHigherLevel || hasPopularSkills;
+        });
+        
+        // Apply the same search and filters as the regular getJobs method
+        if (params.search) {
+          const searchLower = params.search.toLowerCase();
+          filteredJobs = filteredJobs.filter(job => 
+            job.title.toLowerCase().includes(searchLower) || 
+            job.companyName.toLowerCase().includes(searchLower) ||
+            job.location.toLowerCase().includes(searchLower)
+          );
+        }
+        
+        if (params.filterByJobLevel && params.filterByJobLevel.length > 0) {
+          filteredJobs = filteredJobs.filter(job => 
+            job.level && params.filterByJobLevel?.includes(job.level)
+          );
+        }
+
+        favoriteJobIds.forEach(jobId => {
+          const jobIndex = filteredJobs.findIndex(job => job.id === jobId);
+          if (jobIndex !== -1 && filteredJobs[jobIndex]) {
+            filteredJobs[jobIndex].isFavorite = true;
+          }
+        });
+
+        const total = filteredJobs.length;
+        const totalPages = Math.ceil(total / params.pageSize);
+        const startIndex = (params.page - 1) * params.pageSize;
+        const endIndex = startIndex + params.pageSize;
+
+        const paginatedJobs = filteredJobs.slice(startIndex, endIndex);
+
+        resolve({
+          items: paginatedJobs,
+          total,
+          page: params.page,
+          pageSize: params.pageSize,
+          totalPages
+        });
+      }, 1000);
+    });
+  },
+
   getDetailJob: async (jobId: string): Promise<DetailJob> => {
     return new Promise<DetailJob>((resolve, reject) => {
       setTimeout(() => {

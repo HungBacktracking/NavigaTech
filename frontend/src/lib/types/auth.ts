@@ -1,7 +1,7 @@
-import { IUser } from "./user";
+import { User } from "./user";
 
 export interface IAuthLoginResponse {
   access_token: string;
-  refresh_token: string;
-  user: IUser;
+  expiration_date: string;
+  user: User;
 }

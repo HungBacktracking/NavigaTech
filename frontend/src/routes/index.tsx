@@ -10,6 +10,7 @@ const AIAssistantPage = lazy(() => import('../pages/ai-assistant'));
 const AuthPage = lazy(() => import('../pages/auth/index'));
 const UploadCVPage = lazy(() => import('../pages/auth/upload-cv'));
 const NotFoundPage = lazy(() => import('../pages/interrupts/not-found-page'));
+const MyProfilePage = lazy(() => import('../pages/profile'));
 
 const AppRouter = () => {
   return (
@@ -28,6 +29,7 @@ const AppRouter = () => {
             <Route index element={<AIAssistantPage />} />
             <Route path=":conversationId" element={<AIAssistantPage />} />
           </Route>
+          <Route path="my-profile" element={<MyProfilePage />} />
         </Route>
       </Route>
 

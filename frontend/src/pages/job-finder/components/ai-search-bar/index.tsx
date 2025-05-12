@@ -66,7 +66,7 @@ const AISearchBar = ({ searchValue, setSearchValue, handleSearch }: AISearchBarP
         <Input.TextArea
           placeholder="I am looking for..."
           allowClear
-          bordered={false}
+          variant="borderless"
           size="large"
           value={searchValue}
           onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setSearchValue(e.target.value)}

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Form, Input, Button, message, Typography, Checkbox } from 'antd';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
-import { authApi } from '../../services/auth';
+import { authApi } from '../../../../services/auth';
 
 const { Link } = Typography;
 
