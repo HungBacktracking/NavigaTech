@@ -29,6 +29,16 @@ async def create_session(
 ):
     return await service.create_session(str(current_user.id), data.title)
 
+@router.post("/sessions/{session_id}/generate-response")
+@inject
+async def generate_response(
+    session_id: str,
+    data: MessageCreate,
+    service: ChatbotService = Depends(Provide[ApplicationContainer.services.chatbot_service]),
+    current_user: UserBasicResponse = Depends(get_current_user)
+):
+    return await service.generate_message(session_id, data.content, str(current_user.id))
+
 @router.post("/sessions/{session_id}/messages", response_model=MessageResponse)
 @inject
 async def post_message(

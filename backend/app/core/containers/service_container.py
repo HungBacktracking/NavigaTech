@@ -54,5 +54,6 @@ class ServiceContainer(containers.DeclarativeContainer):
         ChatbotService,
         # chat_engine=chat_engine,
         chatbot_repository=repos.chatbot_repository,
-        user_repository=repos.user_repository
+        user_repository=repos.user_repository,
+        user_service=user_service
     )

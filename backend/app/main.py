@@ -22,7 +22,7 @@ class AppCreator:
             await self.mongo.init_mongo()
             yield
             # Shutdown
-            await self.container.shutdown_resources()
+            self.container.shutdown_resources()
 
         # set app default
         self.app = FastAPI(
