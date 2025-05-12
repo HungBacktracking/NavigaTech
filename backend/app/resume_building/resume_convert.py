@@ -1,10 +1,9 @@
 import json
-
 from app.schema.user_schema import UserDetailResponse
 
 
 class ResumeConverter:
-    def __init__(self, data: UserDetailResponse):
+    def __init__(self, data):
         self.data = data
 
     def remove_duplicate_experiences_by_company(self):
@@ -59,6 +58,11 @@ class ResumeConverter:
                                        f"GPA: {edu.get('gpa', 'N/A')}\n"
                                        for edu in self.data.get("educations", [])]) if self.data.get("educations") else "No education information listed."
 
+        awards_details = "\n".join([f"Award Name: {aw.get('name', 'N/A')}\n"
+                                    f"Description: {aw.get('description', 'N/A')}\n"
+                                    f"Date: {aw.get('award_date', 'N/A')}\n"
+                                    for aw in self.data.get("awards", [])]) if self.data.get("awards") else "No award information listed."
+
         full_resume_text = f"""
             Full Name: {full_name}
             Email: {email}
@@ -78,17 +82,20 @@ class ResumeConverter:
             
             Work Experience:
             {experiences}
+             
+            Awards: 
+            {awards_details} 
         """
+
         return full_resume_text.strip()
 
     @classmethod
-    def process_json(cls, json_file):
+    def process(cls, data):
         """
         Process the JSON file to generate the resume text.
         """
         # Load and process the data
-        json_data = json.loads(json_file)
-        resume = cls(json_data)
+        resume = cls(data)
 
         # Remove duplicate experiences and build the resume text
         resume.remove_duplicate_experiences_by_company()
