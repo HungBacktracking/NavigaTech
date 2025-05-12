@@ -54,8 +54,8 @@ class ResumeAnalyzer:
           You are an expert technical recruiter and career advisor. You will assess a candidate's fit for a role based on a Job Description and their Resume.
           
           **IMPORTANT: NO HALLUCINATIONS**
-          - All **strengths**, **weaknesses**, **keywords_missing**, and any referenced skills or experiences must be verbatim present or missing in the `{resume_text}` through exact (case-insensitive) substring matching. Do **not** infer, paraphrase, or assume synonyms. If a term is not found exactly in the resume text, do not list it.
-          - Give high detail **strengths**, **weaknesses** and **improvement_advice**.
+          - All **strengths**, **weaknesses** and any referenced skills or experiences must be verbatim present or missing in the `{resume_text}` through exact (case-insensitive) substring matching. Do **not** infer, paraphrase, or assume synonyms. If a term is not found exactly in the resume text, do not list it.
+          - Give high detail **strengths**, **weaknesses**.
           
           **SCORING GUIDELINES:**
           - **Strict scoring rubric:** award full points only for explicit requirements; deduct 50% of a component score for any missing critical skill or experience.
@@ -78,11 +78,7 @@ class ResumeAnalyzer:
           - “LLM” (if not in JD)
           
         
-          
-          ### Rule for Missing or Weak Areas:
-          - you need always to point out missing and weak areas if found. You also need to provide high value detail advices to improve that missing and weak skills.
-          
-          
+    
           ### Example 
           **Expected Output:**
           ```json
@@ -93,17 +89,14 @@ class ResumeAnalyzer:
               "No TypeScript skills.",
               "Limited SPA architecture understanding."
             ],
-            "keywords_missing": ["React", "TypeScript", "SPA", "Redux"],
             "strengths": [
               "3 years of HTML/CSS/JavaScript development.",
               "Solid Git & GitHub workflow experience."
-            ],
-            "improvement_advice": [
-              "Build a sample React/TypeScript SPA and host it on GitHub Pages.",
-              "Complete an online React + Redux tutorial and add it as a project.",
-              "Highlight responsive design examples with breakpoints in your resume."
             ]
           }}
+          ```
+          **Expected Output:**
+          ```json
           {{
             "overall_match": {{
               "overall": 0.84,
@@ -115,27 +108,15 @@ class ResumeAnalyzer:
               "Limited exposure to CI/CD pipeline tools such as Jenkins or CircleCI.",
               "No mention of writing technical documentation or API specs."
             ],
-            "keywords_missing": [
-              "Kubernetes",
-              "CI/CD",
-              "Jenkins",
-              "CircleCI",
-              "API documentation"
-            ],
             "strengths": [
               "Strong proficiency in Python, matching backend development requirements.",
               "Hands-on experience building and deploying REST APIs with Flask and FastAPI.",
               "Worked extensively with PostgreSQL and MongoDB for scalable data storage.",
               "Familiar with Docker-based development environments.",
               "Experience with cloud deployment using AWS EC2 and S3 aligns with job needs."
-            ],
-            "improvement_advice": [
-              "Gain familiarity with Kubernetes by containerizing a multi-service app.",
-              "Set up a personal CI/CD pipeline using GitHub Actions or Jenkins and document it.",
-              "Practice writing clear technical documentation and API specs for your existing projects.",
-              "Explore deeper integration of container orchestration into your deployment process."
             ]
           }}
+          ```
           Now do the task with given data:
 
           Job Description: {jd_text}
