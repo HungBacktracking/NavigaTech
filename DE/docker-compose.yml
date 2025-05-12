@@ -1,28 +1,19 @@
+version: '3.8'
+
 x-airflow-common:
   &airflow-common
   image: apache/airflow:2.7.3-python3.10
-  build:
-    context: .
-    dockerfile: Dockerfile
-  depends_on:
-    - postgres
-    - redis
   environment:
     - AIRFLOW__CORE__EXECUTOR=LocalExecutor
     - AIRFLOW__CORE__FERNET_KEY=oiDOlLgcmrDIvlFeq9reMaTzMSaaF18xax53rpK-Y4c=
-    - AIRFLOW__CORE__LOGGING_LEVEL=DEBUG
     - AIRFLOW__CORE__LOAD_EXAMPLES=False
-    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow_blockchain
+    - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:postgres@postgres:5432/airflow_job
     - AIRFLOW__WEBSERVER__SECRET_KEY=your_super_secret_key
   volumes:
     - ./dags:/opt/airflow/dags
     - ./data:/opt/airflow/data  
     - ./utils:/opt/airflow/utils
     - ./requirements.txt:/opt/airflow/requirements.txt
-  logging:
-    options:
-      max-size: 10m
-      max-file: "2"
 
 services:
   postgres:
@@ -30,24 +21,16 @@ services:
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: airflow_blockchain
+      POSTGRES_DB: airflow_job
     ports:
       - "5432:5432"
-
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379"
-    logging:
-      options:
-        max-size: 10m
-        max-file: "3"
 
   airflow-init:
     <<: *airflow-common
     command: >
-      bash -c "pip install -r /opt/airflow/requirements.txt && airflow db init && airflow db upgrade && airflow users create --username admin --firstname admin --lastname admin --role Admin --email airflow@airflow.com --password admin"
-    restart: "no"
+      bash -c "airflow db init && airflow db upgrade && airflow users create --username admin --firstname admin --lastname admin --role Admin --email airflow@airflow.com --password admin"
+    depends_on:
+      - postgres
 
   webserver:
     <<: *airflow-common
@@ -55,8 +38,12 @@ services:
     ports:
       - "8080:8080"
     restart: always
+    depends_on:
+      - airflow-init
 
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
     restart: always
+    depends_on:
+      - airflow-init

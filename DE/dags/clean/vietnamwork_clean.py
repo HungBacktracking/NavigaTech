@@ -1,42 +1,75 @@
 import json
 import re
 import os
+import io
 from datetime import datetime, timedelta
+import boto3
+from dotenv import load_dotenv
 
+# Load environment variables (for AWS credentials and bucket name)
+load_dotenv("/opt/airflow/utils/.env")
 
 timestamp = datetime.now().strftime("%Y%m%d")
-# Đọc danh sách các job từ file JSON
-with open(f"/opt/airflow/data/raw/vietnamworks_jobs_{timestamp}.json", "r", encoding="utf-8") as f:
-    jobs = json.load(f)
 
-# Hàm loại bỏ ký tự đặc biệt (chỉ giữ lại chữ, số và dấu cách)
+# Initialize S3 client
+s3 = boto3.client(
+    's3',
+    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+    region_name=os.getenv("AWS_REGION")
+)
+
+bucket_name = os.getenv("AWS_S3_BUCKET")
+input_key = f"raw/vietnamworks_jobs_{timestamp}.json"
+output_key = f"clean1/vietnamworks_jobs_cleaned_{timestamp}.json"
+
+# --- Download JSON file from S3 ---
+print(f"Downloading s3://{bucket_name}/{input_key}...")
+input_obj = s3.get_object(Bucket=bucket_name, Key=input_key)
+jobs = json.load(input_obj['Body'])
+
+# --- Helper functions ---
 def remove_special_chars(text):
-    # Giữ lại chữ cái, số và khoảng trắng
+    """Remove special characters (keep letters, numbers, spaces)."""
     return re.sub(r'[^a-zA-Z0-9À-ỹà-ỹ\s]', '', text)
 
-# Hàm xử lý từng job
+def jd_to_markdown(jd_raw):
+    """Convert job description to simple markdown (bold + bullet points)."""
+    jd = jd_raw.replace("\\n", "\n").strip()
+
+    # Add bold section titles
+    jd = re.sub(r"(Job Description)", r"\n**\1**", jd, flags=re.I)
+    jd = re.sub(r"(Job Requirements)", r"\n**\1**", jd, flags=re.I)
+    jd = re.sub(r"(Benefit & Perks)", r"\n**\1**", jd, flags=re.I)
+
+    # Replace bullet symbols
+    jd = re.sub(r"•\t?", "- ", jd)
+
+    # Collapse extra newlines
+    jd = re.sub(r"\n{3,}", "\n\n", jd)
+
+    return jd.strip()
+
 def clean_job(job):
-    # Làm sạch văn bản
-    desc = job.get("Mô tả công việc", "")
-    reqs = job.get("Yêu cầu công việc", "")
-    jd = job.get("jd", "")
+    """Clean and normalize a single job entry."""
+    desc = job.get("Job Description", "")
+    reqs = job.get("Job Requirements", "")
+    job["Job Description"] = re.sub(r'\s+', ' ', remove_special_chars(desc)).strip()
+    job["Job Requirements"] = re.sub(r'\s+', ' ', remove_special_chars(reqs)).strip()
 
-    # Bỏ ký tự đặc biệt và chuẩn hóa khoảng trắng
-    job["Mô tả công việc"] = re.sub(r'\s+', ' ', remove_special_chars(desc)).strip()
-    job["Yêu cầu công việc"] = re.sub(r'\s+', ' ', remove_special_chars(reqs)).strip()
-    job["jd"] = re.sub(r'\s+', ' ', remove_special_chars(jd)).strip()
+    # Convert JD to markdown
+    job["jd"] = jd_to_markdown(job.get("jd", ""))
 
-    # Xử lý lương
-    salary_text = job.get("Lương", "").lower()
+    # Process salary
+    salary_text = job.get("Salary", "").lower()
     salary_numbers = re.findall(r'\d[\d,]*', salary_text)
 
     if salary_numbers:
         salaries = [int(s.replace(',', '')) for s in salary_numbers]
-
-        if "tới" in salary_text or "up to" in salary_text:
+        if "up to" in salary_text or "tới" in salary_text:
             job["min_salary"] = None
             job["max_salary"] = salaries[0]
-        elif "từ" in salary_text or "from" in salary_text:
+        elif "from" in salary_text or "từ" in salary_text:
             job["min_salary"] = salaries[0]
             job["max_salary"] = None
         elif len(salaries) == 1:
@@ -47,23 +80,30 @@ def clean_job(job):
     else:
         job["min_salary"] = job["max_salary"] = None
 
-    # Xử lý ngày hết hạn
-    expire_text = job.get("Ngày hết hạn", "")
+    # Process expiration date
+    expire_text = job.get("Expiration Date", "")
     match = re.search(r'(\d+)', expire_text)
     if match:
         days = int(match.group(1))
         expire_date = datetime.now() + timedelta(days=days)
-        job["Ngày hết hạn"] = expire_date.strftime("%Y-%m-%d")
+        job["Expiration Date"] = expire_date.strftime("%Y-%m-%d")
     else:
-        job["Ngày hết hạn"] = None
+        job["Expiration Date"] = None
 
     return job
 
-# Áp dụng xử lý cho toàn bộ danh sách
-cleaned_jobs = [clean_job(job) for job in jobs]
+def main():
+    # --- Apply cleaning to all jobs ---
+    cleaned_jobs = [clean_job(job) for job in jobs]
 
-output_path = f"/opt/airflow/data/clean1/vietnamworks_jobs_cleaned_{timestamp}.json"
-os.makedirs(os.path.dirname(output_path), exist_ok=True)
-# Ghi lại danh sách đã clean vào file mới
-with open(output_path, "w", encoding="utf-8") as f:
-    json.dump(cleaned_jobs, f, ensure_ascii=False, indent=2)
+    # --- Write cleaned data to JSON in-memory ---
+    output_buffer = io.BytesIO()
+    json_bytes = json.dumps(cleaned_jobs, ensure_ascii=False, indent=2).encode('utf-8')
+    output_buffer.write(json_bytes)
+    output_buffer.seek(0)
+
+    # --- Upload cleaned JSON back to S3 ---
+    print(f"Uploading cleaned data to s3://{bucket_name}/{output_key}...")
+    s3.upload_fileobj(output_buffer, bucket_name, output_key)
+
+    print(f"✅ Cleaning and upload completed: s3://{bucket_name}/{output_key}")

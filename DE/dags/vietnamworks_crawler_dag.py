@@ -1,11 +1,20 @@
 from airflow import DAG
 from airflow.operators.bash import BashOperator
+from airflow.operators.python import ExternalPythonOperator
 from datetime import datetime, timedelta
+from clean import linkedin_indeed_clean, vietnamworks_clean
+from crawl import vietnamworks_crawler, linkedin_indeed_crawler
+from load import load_to_qdrant
+from merge import merge_job
+import os
+import sys
+
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 default_args = {
     'start_date': datetime(2023, 1, 1),
     'retries': 1,
-    'retry_delay': timedelta(seconds=30),  # giảm delay giữa các lần retry
+    'retry_delay': timedelta(seconds=30),
 }
 
 with DAG('job_data_pipeline_bash',
@@ -13,34 +22,47 @@ with DAG('job_data_pipeline_bash',
          schedule_interval=None,
          catchup=False) as dag:
 
-    # Crawl
-    crawl_linkedin = BashOperator(
+    venv_python = "/opt/venvs/venv/bin/python"
+
+    crawl_linkedin = ExternalPythonOperator(
         task_id='crawl_linkedin_indeed',
-        bash_command='python3 /opt/airflow/dags/crawl/crawl_linkedin_indeed.py'
+        python=venv_python,
+        python_callable=linkedin_indeed_crawler.main
     )
 
-    crawl_vietnamworks = BashOperator(
+    crawl_vietnamworks = ExternalPythonOperator(
         task_id='crawl_vietnamworks',
-        bash_command='python3 /opt/airflow/dags/crawl/vietnamworks_crawler.py'
+        python=venv_python,
+        python_callable=vietnamworks_crawler.crawl_vietnamworks_jobs
     )
 
-    # Clean
-    clean_linkedin = BashOperator(
+    clean_linkedin = ExternalPythonOperator(
         task_id='clean_linkedin_indeed',
-        bash_command='python3 /opt/airflow/dags/clean/linkedin_indeed_clean.py'
+        python=venv_python,
+        python_callable=linkedin_indeed_clean.main
     )
 
-    clean_vietnamworks = BashOperator(
+    clean_vietnamworks = ExternalPythonOperator(
         task_id='clean_vietnamworks',
-        bash_command='python3 /opt/airflow/dags/clean/vietnamwork_clean.py'
+        python=venv_python,
+        python_callable=vietnamworks_clean.main
     )
 
-    # Merge
-    merge = BashOperator(
+    merge = ExternalPythonOperator(
         task_id='merge_jobs',
-        bash_command='python3 /opt/airflow/dags/merge/merge_job.py'
+        python=venv_python,
+        python_callable=merge_job.main
     )
-    
+
+
+
+    load_to_qdrant = ExternalPythonOperator(
+        task_id='load_to_qdrant',
+        python=venv_python,
+        python_callable=load_to_qdrant.main
+    )
+
     crawl_linkedin >> clean_linkedin
     crawl_vietnamworks >> clean_vietnamworks
     [clean_linkedin, clean_vietnamworks] >> merge
+    merge >> load_to_qdrant
