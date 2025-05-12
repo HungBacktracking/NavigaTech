@@ -14,7 +14,7 @@ class ChatbotContainer(containers.DeclarativeContainer):
     database = providers.DependenciesContainer()
     AI = providers.DependenciesContainer()
 
-    # Lightweight dependencies with clear access
+    # Lightweight dependencies
     qdrant_client = database.qdrant_client
     async_qdrant_client = database.async_qdrant_client
     llm = AI.llm_huggingface
@@ -39,7 +39,7 @@ class ChatbotContainer(containers.DeclarativeContainer):
         use_async=True,
     )
     
-    # Retriever with explicit configuration
+    # Retriever
     retriever = providers.Singleton(
         index.provided.as_retriever,
         similarity_top_k=10,
