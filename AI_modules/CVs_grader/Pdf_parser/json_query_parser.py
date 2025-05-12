@@ -59,7 +59,13 @@ class ResumeConstructor:
                                        f"Degree: {edu.get('degree_type', 'N/A')}\n"
                                        f"GPA: {edu.get('gpa', 'N/A')}\n"
                                        for edu in self.data.get("educations", [])]) if self.data.get("educations") else "No education information listed."
+        
+        awards_details = "\n".join([f"Award Name: {aw.get('name', 'N/A')}\n"
+                                    f"Description: {aw.get('description', 'N/A')}\n"
+                                    f"Date: {aw.get('award_date', 'N/A')}\n"
+                                    for aw in self.data.get("awards", [])]) if self.data.get("awards") else "No award information listed."
 
+        
         full_resume_text = f"""
 Full Name: {full_name}
 Email: {email}
@@ -79,6 +85,9 @@ Project Experience:
 
 Work Experience:
 {experiences}
+
+Awards:
+{awards_details}
 """
         return full_resume_text.strip()
 
