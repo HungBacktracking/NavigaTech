@@ -12,6 +12,7 @@ class BaseUser(BaseModel):
     email: EmailStr
     name: Optional[str] = None
     avatar_url: Optional[str] = None
+    uploaded_resume: bool = False
 
     class Config:
         from_attributes = True
@@ -45,6 +46,7 @@ class UserUpdate(BaseModel):
     github_url: Optional[str] = None
     avatar_url: Optional[str] = None
     introduction: Optional[str] = None
+    uploaded_resume: Optional[bool] = None
 
 
 

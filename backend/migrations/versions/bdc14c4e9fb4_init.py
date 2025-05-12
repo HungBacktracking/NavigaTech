@@ -1,8 +1,8 @@
 """init
 
-Revision ID: e295dbc76af0
+Revision ID: bdc14c4e9fb4
 Revises: 
-Create Date: 2025-05-11 11:15:24.133611
+Create Date: 2025-05-12 14:43:48.500495
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = 'e295dbc76af0'
+revision = 'bdc14c4e9fb4'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -53,6 +53,7 @@ def upgrade():
     sa.Column('education', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('linkedin_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
     sa.Column('github_url', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('uploaded_resume', sa.Boolean(), nullable=False),
     sa.Column('introduction', sa.Text(), nullable=True),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
