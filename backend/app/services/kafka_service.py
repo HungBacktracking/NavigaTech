@@ -10,7 +10,7 @@ from kafka.errors import KafkaError, NoBrokersAvailable
 from fastapi import WebSocket
 
 class KafkaService:
-    def __init__(self, bootstrap_servers='kafka:9092'):
+    def __init__(self, bootstrap_servers='localhost:9092'):
         self.bootstrap_servers = bootstrap_servers
         self.producer = None
         self.active_connections: Dict[str, WebSocket] = {}

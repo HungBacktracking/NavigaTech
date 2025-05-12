@@ -35,4 +35,4 @@ class JobTaskService:
         task = self.job_task_repository.get_task_by_job_and_type(job_id, user_id, task_type.value)
         if task:
             return JobTaskResponse.model_validate(task)
-        return None 
+        return None

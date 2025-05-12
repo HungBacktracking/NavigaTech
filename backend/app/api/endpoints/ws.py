@@ -1,15 +1,16 @@
 from uuid import UUID
 
-from dependency_injector.wiring import Provide
+from dependency_injector.wiring import Provide, inject
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 
 from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_ws_user
 from app.services.kafka_service import KafkaService
 
-router = APIRouter(tags=["WebSockets"])
+router = APIRouter(prefix="/ws", tags=["WebSockets"])
 
-@router.websocket("/ws/notifications/{user_id}")
+@router.websocket("/notifications/{user_id}")
+@inject
 async def websocket_endpoint(
     websocket: WebSocket,
     user_id: UUID,

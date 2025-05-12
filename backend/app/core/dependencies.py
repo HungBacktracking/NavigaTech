@@ -36,8 +36,8 @@ def get_current_user(
     return current_user
 
 
-@inject
-def get_ws_user(
+
+async def get_ws_user(
     websocket: WebSocket,
     service: UserService = Depends(Provide[ApplicationContainer.services.user_service])
 ) -> Optional[UserBasicResponse]:
