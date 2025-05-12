@@ -7,14 +7,15 @@ from app.repository.base_repository import BaseRepository
 
 
 class ExperienceRepository(BaseRepository):
-    def __init__(self, session_factory: Callable[..., AbstractContextManager[Session]]):
-        self.session_factory = session_factory
-        self.model = Experience
-        super().__init__(session_factory, Experience)
-
+    def __init__(
+        self, 
+        session_factory: Callable[..., AbstractContextManager[Session]],
+        replica_session_factory: Callable[..., AbstractContextManager[Session]] = None
+    ):
+        super().__init__(session_factory, Experience, replica_session_factory)
 
     def find_by_user_id(self, user_id: UUID) -> list[Experience]:
-        with self.session_factory() as session:
+        with self.replica_session_factory() as session:
             statement = (
                 select(Experience)
                 .where(Experience.user_id == user_id)

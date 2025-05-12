@@ -12,14 +12,15 @@ from app.schema.job_schema import JobSearchRequest
 
 
 class JobRepository(BaseRepository):
-    def __init__(self, session_factory: Callable[..., AbstractContextManager[Session]]):
-        self.session_factory = session_factory
-        self.model = Job
-        super().__init__(session_factory, Job)
-
+    def __init__(
+        self, 
+        session_factory: Callable[..., AbstractContextManager[Session]],
+        replica_session_factory: Callable[..., AbstractContextManager[Session]] = None
+    ):
+        super().__init__(session_factory, Job, replica_session_factory)
 
     def search_job(self, request: JobSearchRequest, user_id: UUID) -> List[Tuple[Job, Optional[FavoriteJob]]]:
-        with self.session_factory() as session:
+        with self.replica_session_factory() as session:
             select_statement = (
                 select(Job)
                 .outerjoin(
@@ -36,7 +37,7 @@ class JobRepository(BaseRepository):
             return list(session.exec(select_statement).all())
 
     def find_favorite_job_with_analytics(self, user_id: UUID) -> List[Tuple[Job, FavoriteJob, Optional[JobAnalytic]]]:
-        with self.session_factory() as session:
+        with self.replica_session_factory() as session:
             statement = (
                 select(Job, FavoriteJob, JobAnalytic)
                 .join(

@@ -7,13 +7,15 @@ from app.repository.base_repository import BaseRepository
 
 
 class ProjectRepository(BaseRepository):
-    def __init__(self, session_factory: Callable[..., AbstractContextManager[Session]]):
-        self.session_factory = session_factory
-        self.model = Project
-        super().__init__(session_factory, Project)
+    def __init__(
+        self, 
+        session_factory: Callable[..., AbstractContextManager[Session]],
+        replica_session_factory: Callable[..., AbstractContextManager[Session]] = None
+    ):
+        super().__init__(session_factory, Project, replica_session_factory)
 
     def find_by_user_id(self, user_id: UUID) -> list[Project]:
-        with self.session_factory() as session:
+        with self.replica_session_factory() as session:
             statement = (
                 select(Project)
                 .where(Project.user_id == user_id)

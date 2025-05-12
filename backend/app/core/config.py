@@ -58,6 +58,22 @@ class Configs(BaseSettings):
         port=DB_PORT,
         database=ENV_DATABASE_MAPPER[ENV]
     )
+    
+    # replica database
+    REPLICA_DB_USER: str = os.getenv("REPLICA_DB_USER", DB_USER)
+    REPLICA_DB_PASSWORD: str = os.getenv("REPLICA_DB_PASSWORD", DB_PASSWORD)
+    REPLICA_DB_HOST: str = os.getenv("REPLICA_DB_HOST")
+    REPLICA_DB_PORT: str = os.getenv("REPLICA_DB_PORT", "5432")
+    REPLICA_DB_ENGINE: str = os.getenv("REPLICA_DB_ENGINE", DB_ENGINE)
+    
+    REPLICA_DATABASE_URI: str = "{db_engine}://{user}:{password}@{host}:{port}/{database}".format(
+        db_engine=REPLICA_DB_ENGINE,
+        user=REPLICA_DB_USER,
+        password=REPLICA_DB_PASSWORD,
+        host=REPLICA_DB_HOST if REPLICA_DB_HOST else DB_HOST,
+        port=REPLICA_DB_PORT,
+        database=ENV_DATABASE_MAPPER[ENV]
+    )
 
     MONGO_DB_URI: str = os.getenv("MONGO_DB_URI")
     MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME")

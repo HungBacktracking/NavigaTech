@@ -10,9 +10,15 @@ T = TypeVar("T", bound=BaseModel)
 
 
 class BaseRepository:
-    def __init__(self, session_factory: Callable[..., AbstractContextManager[Session]], model: Type[T]) -> None:
+    def __init__(
+        self, 
+        session_factory: Callable[..., AbstractContextManager[Session]], 
+        model: Type[T],
+        replica_session_factory: Callable[..., AbstractContextManager[Session]] = None
+    ) -> None:
         self.session_factory = session_factory
         self.model = model
+        self.replica_session_factory = replica_session_factory or session_factory
 
     def create(self, create_request: T):
         with self.session_factory() as session:
@@ -25,7 +31,7 @@ class BaseRepository:
             return model_db
 
     def find_by_id(self, model_id: UUID):
-        with self.session_factory() as session:
+        with self.replica_session_factory() as session:
             model = session.get(self.model, model_id)
 
             return model

@@ -11,7 +11,11 @@ class DatabaseContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
 
     # Database
-    db = providers.Singleton(Database, db_url=config.DATABASE_URI)
+    db = providers.Singleton(
+        Database, 
+        db_url=config.DATABASE_URI,
+        replica_db_url=config.REPLICA_DATABASE_URI
+    )
     mongo_db = providers.Singleton(MongoDB, mongo_url=config.MONGO_DB_URI, db_name=config.MONGO_DB_NAME)
 
     # S3 Client
