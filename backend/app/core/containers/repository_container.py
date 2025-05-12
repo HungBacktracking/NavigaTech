@@ -9,6 +9,7 @@ from app.repository.job_repository import JobRepository
 from app.repository.project_repository import ProjectRepository
 from app.repository.skill_repository import SkillRepository
 from app.repository.user_file_repository import UserFileRepository
+from app.repository.elasticsearch_repository import ElasticsearchRepository
 
 
 
@@ -17,6 +18,7 @@ class RepositoryContainer(containers.DeclarativeContainer):
     db = database.db
     mongo_db = database.mongo_db
     s3 = database.s3_client
+    elasticsearch_client = database.elasticsearch_client
 
     user_repository = providers.Factory(
         UserRepository, 
@@ -48,11 +50,6 @@ class RepositoryContainer(containers.DeclarativeContainer):
         session_factory=db.provided.session,
         replica_session_factory=db.provided.replica_session
     )
-    job_repository = providers.Factory(
-        JobRepository, 
-        session_factory=db.provided.session,
-        replica_session_factory=db.provided.replica_session
-    )
     user_file_repository = providers.Factory(
         UserFileRepository, 
         session_factory=db.provided.session,
@@ -64,3 +61,15 @@ class RepositoryContainer(containers.DeclarativeContainer):
         replica_session_factory=db.provided.replica_session
     )
     chatbot_repository = providers.Factory(ChatbotRepository, mongo_db=mongo_db.provided.db)
+
+
+    elasticsearch_repository = providers.Singleton(
+        ElasticsearchRepository,
+        es_client=elasticsearch_client
+    )
+
+    job_repository = providers.Factory(
+        JobRepository, 
+        session_factory=db.provided.session,
+        replica_session_factory=db.provided.replica_session
+    )

@@ -1,4 +1,6 @@
 from dependency_injector import containers, providers
+from elasticsearch import Elasticsearch
+
 from app.core.config import configs
 from qdrant_client import QdrantClient, AsyncQdrantClient
 from app.core.database import Database
@@ -17,6 +19,8 @@ class DatabaseContainer(containers.DeclarativeContainer):
         replica_db_url=config.REPLICA_DATABASE_URI
     )
     mongo_db = providers.Singleton(MongoDB, mongo_url=config.MONGO_DB_URI, db_name=config.MONGO_DB_NAME)
+
+    elasticsearch_client = Elasticsearch(str(config.ELASTICSEARCH_URL))
 
     # S3 Client
     s3_client = providers.Singleton(

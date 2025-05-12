@@ -88,6 +88,9 @@ class Configs(BaseSettings):
     QDRANT_API_TOKEN: str = os.getenv("QDRANT_API_TOKEN")
     QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "job_description")
 
+    # Elasticsearch
+    ELASTICSEARCH_URL: str = os.getenv("ELASTICSEARCH_URL", "http://elasticsearch:9200")
+
     # LLM + Embeddings
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")

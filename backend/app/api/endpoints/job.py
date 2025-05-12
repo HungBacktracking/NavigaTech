@@ -2,7 +2,7 @@ from typing import List
 from uuid import UUID
 
 from dependency_injector.wiring import Provide
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 
 from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
@@ -15,18 +15,19 @@ from app.services.job_service import JobService
 router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer())])
 
 
-@router.get("/search", response_model=List[JobResponse])
+@router.post("/search", response_model=List[JobResponse])
 @inject
-def search(
-        request: JobSearchRequest,
-        service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
-        current_user: UserBasicResponse = Depends(get_current_user)
+async def search_job(
+    request: JobSearchRequest,
+    job_service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+    current_user: UserBasicResponse = Depends(get_current_user),
 ):
-    return service.search_job(request, current_user.id)
+    return job_service.full_text_search_job(request, current_user.id)
+
 
 @router.get("/recommendations")
 @inject
-def get_recommendations(
+async def get_recommendations(
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
@@ -34,7 +35,7 @@ def get_recommendations(
 
 @router.get("/favorite", response_model=List[JobFavoriteResponse])
 @inject
-def get_favorite_jobs(
+async def get_favorite_jobs(
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
@@ -42,7 +43,7 @@ def get_favorite_jobs(
 
 @router.post("/{job_id}/favorite")
 @inject
-def add_favorite_job(
+async def add_favorite_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
@@ -51,7 +52,7 @@ def add_favorite_job(
 
 @router.post("/{job_id}/delete-favorite")
 @inject
-def remove_favorite_job(
+async def remove_favorite_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
@@ -60,27 +61,41 @@ def remove_favorite_job(
 
 @router.post("/{job_id}/scroring")
 @inject
-def score_job(
+async def score_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
-        current_user: UserDetailResponse = Depends(get_current_user)
+        current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.score_job(job_id, current_user.id)
 
 @router.post("/{job_id}/analyze")
 @inject
-def analyze_job(
+async def analyze_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
-        current_user: UserDetailResponse = Depends(get_current_user)
+        current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.analyze_job(job_id, current_user.id)
 
 @router.post("/{job_id}/resume", response_model=JobResponse)
 @inject
-def get_resume_job(
+async def get_resume_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
-        current_user: UserDetailResponse = Depends(get_current_user)
+        current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.generate_resume(job_id, current_user.id)
+
+
+
+@router.post("/elasticsearch/sync")
+@inject
+async def sync_jobs_to_elasticsearch(
+    background_tasks: BackgroundTasks,
+    job_service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+    current_user: UserBasicResponse = Depends(get_current_user)
+):
+    background_tasks.add_task(job_service.index_all_jobs)
+
+    return {"message": "Job synchronization started in background"}
+

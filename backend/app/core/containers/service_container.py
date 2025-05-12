@@ -30,6 +30,7 @@ class ServiceContainer(containers.DeclarativeContainer):
         JobService,
         job_repository=repos.job_repository,
         favorite_job_repository=repos.favorite_job_repository,
+        elasticsearch_repository=repos.elasticsearch_repository,
         user_service=user_service,
         resume_converter=resume_converter,
         resume_report=job_report.resume_report,
