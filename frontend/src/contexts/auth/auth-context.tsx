@@ -1,12 +1,12 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { IUser } from '../../lib/types/user';
+import { User } from '../../lib/types/user';
 import { getToken } from '../../lib/helpers/auth-tokens';
 import { authApi } from '../../services/auth';
 
 export interface IAuthContext {
   isAuthenticated: boolean;
-  user?: IUser;
+  user?: User;
   reset: () => void;
   isLoading: boolean;
 }
@@ -14,16 +14,16 @@ export interface IAuthContext {
 export const AuthContext = createContext<IAuthContext | undefined>(undefined);
 
 export const useAuthProvider = (): IAuthContext => {
-  const [user, setUser] = useState<IUser>();
+  const [user, setUser] = useState<User>();
   const isAuthenticatedBefore = !!getToken();
   const [isAuthenticated, setIsAuthenticated] = useState(isAuthenticatedBefore);
 
-  const { isLoading, data } = useQuery<IUser, Error>({
+  const { isLoading, data } = useQuery<User, Error>({
     queryKey: ['auth/current-user'],
     queryFn: authApi.getCurrentUser,
     enabled: isAuthenticatedBefore,
   });
-  
+
   useEffect(() => {
     if (data) {
       setUser(data);

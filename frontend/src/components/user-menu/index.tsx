@@ -11,17 +11,17 @@ const UserMenu = () => {
 
   const items: MenuProps['items'] = [
     {
-      key: 'my-cv',
+      key: 'my-profile',
       icon: <ProfileOutlined />,
-      label: 'My CV',
-      onClick: () => navigate('/my-cv'),
+      label: 'My Profile',
+      onClick: () => navigate('/my-profile'),
     },
-    {
-      key: 'my-favorites',
-      icon: <StarOutlined />,
-      label: 'My Favorites',
-      onClick: () => navigate('/favorites'),
-    },
+    // {
+    //   key: 'my-favorites',
+    //   icon: <StarOutlined />,
+    //   label: 'My Favorites',
+    //   onClick: () => navigate('/favorites'),
+    // },
     {
       key: 'logout',
       icon: <LogoutOutlined />,

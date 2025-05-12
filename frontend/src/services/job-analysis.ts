@@ -140,6 +140,7 @@ const generalFeedbackSamples = [
   `## Profile Evaluation\n\nYour profile shows a **strong match** with this position. Your experience and skill set align well with the job requirements, making you a competitive candidate for this role.\n\n**Key strengths:**\n- Extensive experience in similar roles\n- Strong technical background in required areas\n- Demonstrated success in comparable projects\n\nContinue emphasizing these aspects in your application materials.`
 ];
 
+
 const roleFeedbackSamples = [
   `## Role Fit Analysis\n\nYour previous roles have prepared you well for this position. Your experience as a developer shows a **clear progression** that aligns with the career trajectory for this role. However, there's room to better demonstrate your leadership capabilities.\n\n**Recommendations:**\n- Highlight team leadership experiences\n- Quantify the impact of your technical decisions\n- Emphasize cross-functional collaboration instances`,
   

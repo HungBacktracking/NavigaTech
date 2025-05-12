@@ -103,7 +103,7 @@ const AIAssistant = () => {
   });
 
   const { mutate: regenerateResponse } = useMutation({
-    mutationFn: ({ messageId, conversationId } : { messageId: string, conversationId: string }) => {
+    mutationFn: ({ messageId, conversationId }: { messageId: string, conversationId: string }) => {
       queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
         if (!oldData) return oldData;
 

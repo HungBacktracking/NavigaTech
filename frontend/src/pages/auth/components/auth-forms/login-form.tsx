@@ -2,8 +2,8 @@ import { useState } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { Form, Input, Button, message, Checkbox, Flex, Typography } from 'antd';
 import { UserOutlined, LockOutlined } from '@ant-design/icons';
-import { authApi } from '../../services/auth';
-import { setToken, setRefreshToken } from '../../lib/helpers/auth-tokens';
+import { authApi } from '../../../../services/auth';
+import { setToken } from '../../../../lib/helpers/auth-tokens';
 
 const { Link } = Typography;
 
@@ -29,7 +29,7 @@ const LoginForm = () => {
         password: data.password
       });
       setToken(response.access_token);
-      setRefreshToken(response.refresh_token);
+      // setRefreshToken(response.refresh_token);
       message.success('Login successful!');
       window.location.href = '/home';
     } catch (error) {

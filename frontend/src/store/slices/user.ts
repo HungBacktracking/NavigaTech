@@ -1,13 +1,13 @@
 import type { StateCreator } from 'zustand';
 import { immer } from 'zustand/middleware/immer';
-import { IUser } from '../../lib/types/user';
+import { User } from '../../lib/types/user';
 
 type UserSliceState = {
-  user?: IUser;
+  user?: User;
 };
 
 type UserSliceAction = {
-  setUser: (user?: IUser) => void;
+  setUser: (user?: User) => void;
 };
 
 export type UserSlice = UserSliceState & UserSliceAction;
@@ -19,7 +19,7 @@ const initialState: UserSliceState = {
 export const createUserSlice: StateCreator<UserSliceState & UserSliceAction, [], [['zustand/immer', never]]> = immer(
   (set) => ({
     ...initialState,
-    setUser: (user?: IUser) => {
+    setUser: (user?: User) => {
       set((state) => {
         state.user = user;
       });
