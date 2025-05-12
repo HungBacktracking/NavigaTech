@@ -23,7 +23,7 @@ class JobService(BaseService):
     ):
         self.job_repository = job_repository
         self.favorite_job_repository = favorite_job_repository
-        super().__init__(job_repository)
+        super().__init__(job_repository, favorite_job_repository)
         self.scorer: ResumeScorer = ResumeScorer()
         self.reporter: ResumeReport = ResumeReport()
         self.recommendation = JobRecommendation("job_description")

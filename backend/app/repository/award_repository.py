@@ -19,7 +19,7 @@ class AwardRepository(BaseRepository):
             statement = (
                 select(Award)
                 .where(Award.user_id == user_id)
-                .order_by(Award.date.desc())
+                .order_by(Award.award_date.desc())
             )
 
             return list(session.scalars(statement).all())

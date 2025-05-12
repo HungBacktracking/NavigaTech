@@ -1,5 +1,7 @@
 from typing import Optional, List
 from pydantic import BaseModel, EmailStr, field_validator
+
+from app.schema.award_schema import AwardResponse
 from app.schema.base_schema import ModelBaseInfo
 from app.schema.education_schema import EducationResponse
 from app.schema.experience_schema import ExperienceResponse
@@ -32,6 +34,7 @@ class UserDetailResponse(ModelBaseInfo, BaseUser):
     experiences: List[ExperienceResponse] = []
     educations: List[EducationResponse] = []
     skills: List[SkillResponse] = []
+    awards: List[AwardResponse] = []
 
 
 

@@ -20,7 +20,8 @@ class ServiceContainer(containers.DeclarativeContainer):
         skill_repository=repos.skill_repository,
         project_repository=repos.project_repository,
         experience_repository=repos.experience_repository,
-        education_repository=repos.education_repository
+        education_repository=repos.education_repository,
+        award_repository=repos.award_repository
     )
     job_service = providers.Factory(JobService, job_repository=repos.job_repository)
     s3_service = providers.Factory(
