@@ -8,8 +8,9 @@ from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 
 
 def create_llm_model(api_key: str, model_name: str = "gemini-2.0-flash"):
-    genai_config = {"api_key": api_key}
-    return genai.GenerativeModel(model_name, **genai_config)
+    genai.configure(api_key=api_key)
+
+    return genai.GenerativeModel(model_name)
 
 
 class AIContainer(containers.DeclarativeContainer):

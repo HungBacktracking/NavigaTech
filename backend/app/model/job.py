@@ -1,7 +1,10 @@
 from datetime import datetime, date
-from typing import List, Optional
-from sqlmodel import Column, Field, Text, String, ARRAY, DateTime, func
+from typing import List, Optional, TYPE_CHECKING
+from sqlmodel import Column, Field, Text, String, ARRAY, DateTime, func, Relationship
 from app.model.base_model import BaseModel
+
+if TYPE_CHECKING:
+    from app.model.job_task import JobTask
 
 class Job(BaseModel, table=True):
     from_site: str = Field()

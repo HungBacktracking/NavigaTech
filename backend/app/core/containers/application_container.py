@@ -18,6 +18,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
             "app.api.endpoints.auth",
             "app.api.endpoints.user",
             "app.api.endpoints.job",
+            "app.api.endpoints.job_task",
+            "app.api.endpoints.ws",
             "app.api.endpoints.chat",
             "app.api.endpoints.resume",
             "app.core.dependencies",
@@ -77,3 +79,14 @@ class ApplicationContainer(containers.DeclarativeContainer):
         job_report=job_report,
         recommendation=recommendation.job_recommendation
     )
+    
+    # Start the job worker when the container is initialized
+    def init_resources(self):
+        super().init_resources()
+        # Start the job worker for background processing
+        self.services().job_worker().start()
+        
+    def shutdown_resources(self):
+        # Stop the job worker
+        self.services().job_worker().stop()
+        super().shutdown_resources()

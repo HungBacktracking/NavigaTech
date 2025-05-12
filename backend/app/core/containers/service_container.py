@@ -2,6 +2,9 @@ from dependency_injector import containers, providers
 from app.services import AuthService, UserService
 from app.services.chatbot_service import ChatbotService
 from app.services.job_service import JobService
+from app.services.job_task_service import JobTaskService
+from app.services.job_worker import JobWorker
+from app.services.kafka_service import KafkaService
 from app.services.resume_service import ResumeService
 from app.services.s3_service import S3Service
 
@@ -15,6 +18,12 @@ class ServiceContainer(containers.DeclarativeContainer):
     resume_converter = providers.Dependency()
     job_report = providers.DependenciesContainer()
     recommendation = providers.Dependency()
+
+    # Kafka service for message processing
+    kafka_service = providers.Singleton(
+        KafkaService,
+        bootstrap_servers=config.KAFKA_BOOTSTRAP_SERVERS
+    )
 
     auth_service = providers.Factory(AuthService, user_repository=repos.user_repository)
     user_service = providers.Factory(
@@ -37,6 +46,21 @@ class ServiceContainer(containers.DeclarativeContainer):
         resume_scorer=job_report.resume_scorer,
         job_recommendation=recommendation
     )
+    
+    # Job task service
+    job_task_service = providers.Factory(
+        JobTaskService,
+        job_task_repository=repos.job_task_repository
+    )
+    
+    # Job worker for background processing
+    job_worker = providers.Singleton(
+        JobWorker,
+        job_service=job_service,
+        job_task_service=job_task_service,
+        kafka_service=kafka_service
+    )
+    
     s3_service = providers.Factory(
         S3Service,
         file_repository=repos.user_file_repository,

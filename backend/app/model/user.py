@@ -1,10 +1,12 @@
 from datetime import datetime
-from typing import Optional
+from typing import Optional, List, TYPE_CHECKING
 
-from sqlmodel import Column, DateTime, Field, func
+from sqlmodel import Column, DateTime, Field, func, Relationship
 from app.model.base_model import BaseModel
 from sqlalchemy import Text
 
+if TYPE_CHECKING:
+    from app.model.job_task import JobTask
 
 class User(BaseModel, table=True):
     email: str = Field(unique=True)

@@ -118,6 +118,9 @@ class Configs(BaseSettings):
     PAGE_SIZE: int = 20
     ORDERING: str = "-id"
 
+    # Kafka settings
+    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
+
     class Config:
         case_sensitive = True
 

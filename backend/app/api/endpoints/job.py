@@ -8,9 +8,12 @@ from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
+from app.model.job_task import TaskType
 from app.schema.job_schema import JobSearchRequest, JobResponse, JobFavoriteResponse
+from app.schema.job_task_schema import JobTaskResponse, JobTaskStartRequest
 from app.schema.user_schema import UserBasicResponse, UserDetailResponse
 from app.services.job_service import JobService
+from app.services.kafka_service import KafkaService
 
 router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer())])
 
@@ -27,7 +30,7 @@ def search_job(
 
 @router.get("/recommendations")
 @inject
-async def get_recommendations(
+def get_recommendations(
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
@@ -35,7 +38,7 @@ async def get_recommendations(
 
 @router.get("/favorite", response_model=List[JobFavoriteResponse])
 @inject
-async def get_favorite_jobs(
+def get_favorite_jobs(
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
@@ -43,7 +46,7 @@ async def get_favorite_jobs(
 
 @router.post("/{job_id}/favorite")
 @inject
-async def add_favorite_job(
+def add_favorite_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
@@ -52,40 +55,53 @@ async def add_favorite_job(
 
 @router.post("/{job_id}/delete-favorite")
 @inject
-async def remove_favorite_job(
+def remove_favorite_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.remove_from_favorite(job_id, current_user.id)
 
-@router.post("/{job_id}/scroring")
+@router.post("/{job_id}/scoring")
 @inject
-async def score_job(
+def score_job(
         job_id: UUID,
-        service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+        kafka_service: KafkaService = Depends(Provide[ApplicationContainer.services.kafka_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
-    return service.score_job(job_id, current_user.id)
+    # Send task to Kafka for background processing
+    kafka_service.create_job_task(
+        job_id=job_id,
+        user_id=current_user.id,
+        task_type=TaskType.JOB_SCORE.value
+    )
+    
+    return {"message": "Job scoring started in background", "job_id": str(job_id)}
 
 @router.post("/{job_id}/analyze")
 @inject
-async def analyze_job(
+def analyze_job(
         job_id: UUID,
-        service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+        kafka_service: KafkaService = Depends(Provide[ApplicationContainer.services.kafka_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
-    return service.analyze_job(job_id, current_user.id)
+    # Send task to Kafka for background processing
+    kafka_service.create_job_task(
+        job_id=job_id,
+        user_id=current_user.id,
+        task_type=TaskType.JOB_ANALYZE.value
+    )
+    
+    return {"message": "Job analysis started in background", "job_id": str(job_id)}
 
 @router.post("/{job_id}/resume", response_model=JobResponse)
 @inject
-async def get_resume_job(
+def get_resume_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.generate_resume(job_id, current_user.id)
-
 
 
 @router.post("/elasticsearch/sync")

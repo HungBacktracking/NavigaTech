@@ -16,6 +16,7 @@ from app.model.project import Project
 from app.model.job_analytic import JobAnalytic
 from app.model.user_file import UserFile
 from app.model.award import Award
+from app.model.job_task import JobTask
 
 cmd_kwargs = context.get_x_argument(as_dictionary=True)
 if "ENV" in cmd_kwargs:

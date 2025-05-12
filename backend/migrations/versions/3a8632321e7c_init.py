@@ -1,8 +1,8 @@
 """init
 
-Revision ID: bdc14c4e9fb4
+Revision ID: 3a8632321e7c
 Revises: 
-Create Date: 2025-05-12 14:43:48.500495
+Create Date: 2025-05-13 04:35:53.185072
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = 'bdc14c4e9fb4'
+revision = '3a8632321e7c'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -122,6 +122,20 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id', 'job_id', 'user_id')
     )
+    op.create_table('job_tasks',
+    sa.Column('id', sa.Uuid(), nullable=False),
+    sa.Column('job_id', sa.Uuid(), nullable=False),
+    sa.Column('user_id', sa.Uuid(), nullable=False),
+    sa.Column('task_type', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
+    sa.Column('result', sa.JSON(), nullable=True),
+    sa.Column('error_message', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
+    sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
+    sa.ForeignKeyConstraint(['job_id'], ['job.id'], ),
+    sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     op.create_table('jobanalytic',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('job_id', sa.Uuid(), nullable=False),
@@ -185,6 +199,7 @@ def downgrade():
     op.drop_table('skill')
     op.drop_table('project')
     op.drop_table('jobanalytic')
+    op.drop_table('job_tasks')
     op.drop_table('favoritejob')
     op.drop_table('experience')
     op.drop_table('education')
