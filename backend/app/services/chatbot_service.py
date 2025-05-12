@@ -6,9 +6,10 @@ from app.exceptions.custom_error import CustomError
 from app.repository import UserRepository
 from app.repository.chatbot_repository import ChatbotRepository
 from app.schema.chat_schema import SessionResponse, MessageResponse
+from app.services.base_service import BaseService
 
 
-class ChatbotService:
+class ChatbotService(BaseService):
     def __init__(
         self,
         user_repository: UserRepository,
@@ -18,6 +19,7 @@ class ChatbotService:
         self.chatbot_repo = chatbot_repository
         self.user_repo = user_repository
         # self.chat_engine = chat_engine
+        super().__init__(user_repository)
 
     def verify_user(self, user_id: str):
         user = self.user_repo.find_by_id(UUID(user_id))

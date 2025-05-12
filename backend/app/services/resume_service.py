@@ -51,7 +51,15 @@ class ResumeService(BaseService):
         self.s3 = s3_client
         self.resume_pdf_parser = resume_pdf_parser
         self.bucket = bucket_name
-        super().__init__(file_repo, user_repo)
+        super().__init__(
+            file_repo,
+            user_repo,
+            exp_repo,
+            project_repo,
+            edu_repo,
+            skill_repo,
+            award_repo
+        )
 
 
     @staticmethod
