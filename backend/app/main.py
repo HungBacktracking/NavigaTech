@@ -17,11 +17,11 @@ class AppCreator:
         @asynccontextmanager
         async def lifespan(app: FastAPI):
             # Startup
-            await self.container.init_resources()
-            await self.db.create_database()
+            self.container.init_resources()
+            # self.db.create_database()
             await self.mongo.init_mongo()
             yield
-            # (nếu cần) Shutdown
+            # Shutdown
             await self.container.shutdown_resources()
 
         # set app default
@@ -36,8 +36,8 @@ class AppCreator:
         # set db and container
         self.container = ApplicationContainer()
 
-        self.db = self.container.database().db
-        self.mongo = self.container.database().mongo_db
+        self.db = self.container.database().db()
+        self.mongo = self.container.database().mongo_db()
 
         # set cors
         if configs.BACKEND_CORS_ORIGINS:
