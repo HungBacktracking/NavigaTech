@@ -17,7 +17,7 @@ router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer
 
 @router.post("/search", response_model=List[JobResponse])
 @inject
-async def search_job(
+def search_job(
     request: JobSearchRequest,
     job_service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
     current_user: UserBasicResponse = Depends(get_current_user),
@@ -90,7 +90,7 @@ async def get_resume_job(
 
 @router.post("/elasticsearch/sync")
 @inject
-async def sync_jobs_to_elasticsearch(
+def sync_jobs_to_elasticsearch(
     background_tasks: BackgroundTasks,
     job_service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
     current_user: UserBasicResponse = Depends(get_current_user)

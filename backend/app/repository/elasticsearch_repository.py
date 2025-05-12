@@ -46,7 +46,6 @@ class ElasticsearchRepository:
         }
         
         # Add search conditions based on request parameters
-
         query["bool"]["must"].append({
             "multi_match": {
                 "query": request.query,
@@ -55,22 +54,24 @@ class ElasticsearchRepository:
             }
         })
 
+
         if request.roles:
-            query["bool"]["must"].append({
-                "multi_match": {
-                    "query": request.roles,
-                    "fields": ["job_name^3", "job_description^2", "job_requirement"],
-                }
-            })
+            for role in request.roles:
+                query["bool"]["must"].append({
+                    "multi_match": {
+                        "query": role,
+                        "fields": ["job_name^3", "job_description^2", "job_requirement"],
+                    }
+                })
 
         if request.levels:
-            query["bool"]["must"].append({
-                "multi_match": {
-                    "query": request.levels,
-                    "fields": ["job_name^3", "job_level^3", "job_description^2", "job_requirement"],
-                }
-            })
-
+            for level in request.levels:
+                query["bool"]["must"].append({
+                    "multi_match": {
+                        "query": level,  # Individual string now
+                        "fields": ["job_name^3", "job_level^3", "job_description^2", "job_requirement"],
+                    }
+                })
         
         # Execute search
         response = self.es_client.search(
