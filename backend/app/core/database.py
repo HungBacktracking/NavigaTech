@@ -18,7 +18,7 @@ class BaseModel:
 
 
 class Database:
-    def __init__(self, db_url: str, replica_db_url) -> None:
+    def __init__(self, db_url: str) -> None:
         self._engine = create_engine(db_url, echo=True)
         self._session_factory = orm.scoped_session(
             orm.sessionmaker(
@@ -28,14 +28,14 @@ class Database:
             )
         )
 
-        self.replica_engine = create_engine(replica_db_url, echo=True)
-        self.replica_session_factory = orm.scoped_session(
-            orm.sessionmaker(
-                autocommit=False,
-                autoflush=False,
-                bind=self.replica_engine
-            )
-        )
+        # self.replica_engine = create_engine(replica_db_url, echo=True)
+        # self.replica_session_factory = orm.scoped_session(
+        #     orm.sessionmaker(
+        #         autocommit=False,
+        #         autoflush=False,
+        #         bind=self.replica_engine
+        #     )
+        # )
 
     def create_database(self) -> None:
         BaseModel.metadata.create_all(self._engine)
@@ -51,13 +51,13 @@ class Database:
         finally:
             session.close()
 
-    @contextmanager
-    def replica_session(self) -> Iterator[Session]:
-        session: Session = self.replica_session_factory()
-        try:
-            yield session
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
+    # @contextmanager
+    # def replica_session(self) -> Iterator[Session]:
+    #     session: Session = self.replica_session_factory()
+    #     try:
+    #         yield session
+    #     except Exception:
+    #         session.rollback()
+    #         raise
+    #     finally:
+    #         session.close()

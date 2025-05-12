@@ -2,41 +2,55 @@ services:
   db:
     image: postgis/postgis:17-3.5
     restart: always
-    expose:
-      - 5432
     environment:
-      POSTGRESQL_USERNAME: local
-      POSTGRESQL_PASSWORD: local
-      POSTGRESQL_DATABASE: local
-      POSTGRESQL_REPLICATION_MODE: master
-      POSTGRESQL_REPLICATION_USER: repl_user
-      POSTGRESQL_REPLICATION_PASSWORD: repl_password
+      POSTGRES_USER: local
+      POSTGRES_PASSWORD: local
+      POSTGRES_DB: local
     networks:
       - api_net
     command: postgres -N 500
+    ports:
+      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql@17/data
-
-  db_replica:
-    image: postgis/postgis:17-3.5
-    restart: always
-    expose:
-      - 5432
-    depends_on:
-      - db
-    environment:
-      POSTGRESQL_REPLICATION_MODE: slave
-      POSTGRESQL_REPLICATION_USER: repl_user
-      POSTGRESQL_REPLICATION_PASSWORD: repl_password
-      POSTGRESQL_MASTER_HOST: db
-      POSTGRESQL_USERNAME: postgres
-      POSTGRESQL_PASSWORD: postgres
-      POSTGRESQL_MASTER_PORT_NUMBER: 5432
-    networks:
-      - api_net
-    command: postgres -N 500
-    volumes:
-      - db_data_replica:/var/lib/postgresql@17/data
+#  db:
+#    image: postgis/postgis:17-3.5
+#    restart: always
+#    expose:
+#      - 5432
+#    environment:
+#      POSTGRESQL_USERNAME: local
+#      POSTGRESQL_PASSWORD: local
+#      POSTGRESQL_DATABASE: local
+#      POSTGRESQL_REPLICATION_MODE: master
+#      POSTGRESQL_REPLICATION_USER: repl_user
+#      POSTGRESQL_REPLICATION_PASSWORD: repl_password
+#    networks:
+#      - api_net
+#    command: postgres -N 500
+#    volumes:
+#      - db_data:/var/lib/postgresql@17/data
+#
+#  db_replica:
+#    image: postgis/postgis:17-3.5
+#    restart: always
+#    expose:
+#      - 5432
+#    depends_on:
+#      - db
+#    environment:
+#      POSTGRESQL_REPLICATION_MODE: slave
+#      POSTGRESQL_REPLICATION_USER: repl_user
+#      POSTGRESQL_REPLICATION_PASSWORD: repl_password
+#      POSTGRESQL_MASTER_HOST: db
+#      POSTGRESQL_USERNAME: postgres
+#      POSTGRESQL_PASSWORD: postgres
+#      POSTGRESQL_MASTER_PORT_NUMBER: 5432
+#    networks:
+#      - api_net
+#    command: postgres -N 500
+#    volumes:
+#      - db_data_replica:/var/lib/postgresql@17/data
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
