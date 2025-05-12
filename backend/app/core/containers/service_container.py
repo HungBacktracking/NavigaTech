@@ -12,6 +12,9 @@ class ServiceContainer(containers.DeclarativeContainer):
     s3_client = providers.Dependency()
     resume_pdf_parser = providers.Dependency()
     chat_engine = providers.Dependency()
+    resume_converter = providers.Dependency()
+    job_report = providers.DependenciesContainer()
+    recommendation = providers.Dependency()
 
     auth_service = providers.Factory(AuthService, user_repository=repos.user_repository)
     user_service = providers.Factory(
@@ -27,7 +30,11 @@ class ServiceContainer(containers.DeclarativeContainer):
         JobService,
         job_repository=repos.job_repository,
         favorite_job_repository=repos.favorite_job_repository,
-        user_service=user_service
+        user_service=user_service,
+        resume_converter=resume_converter,
+        resume_report=job_report.resume_report,
+        resume_scorer=job_report.resume_scorer,
+        job_recommendation=recommendation
     )
     s3_service = providers.Factory(
         S3Service,
@@ -37,7 +44,6 @@ class ServiceContainer(containers.DeclarativeContainer):
     )
     resume_service = providers.Factory(
         ResumeService,
-
         exp_repo=repos.experience_repository,
         project_repo=repos.project_repository,
         edu_repo=repos.education_repository,
@@ -52,8 +58,8 @@ class ServiceContainer(containers.DeclarativeContainer):
     )
     chatbot_service = providers.Factory(
         ChatbotService,
-        # chat_engine=chat_engine,
         chatbot_repository=repos.chatbot_repository,
         user_repository=repos.user_repository,
-        user_service=user_service
+        user_service=user_service,
+        chat_engine=chat_engine
     )

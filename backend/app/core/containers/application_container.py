@@ -5,6 +5,9 @@ from app.core.containers.database_container import DatabaseContainer
 from app.core.containers.ai_container import AIContainer
 from app.core.containers.repository_container import RepositoryContainer
 from app.core.containers.resume_parser_container import ResumeParserContainer
+from app.core.containers.job_report_container import JobReportContainer
+from app.core.containers.resume_converter_container import ResumeConverterContainer
+from app.core.containers.recommendation_container import RecommendationContainer
 from app.core.containers.service_container import ServiceContainer
 
 
@@ -38,6 +41,18 @@ class ApplicationContainer(containers.DeclarativeContainer):
         ResumeParserContainer,
         AI=AI
     )
+    
+    resume_converter = providers.Container(
+        ResumeConverterContainer
+    )
+    
+    job_report = providers.Container(
+        JobReportContainer
+    )
+    
+    recommendation = providers.Container(
+        RecommendationContainer
+    )
 
     chatbot = providers.Container(
         ChatbotContainer,
@@ -57,5 +72,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
         repos=repositories,
         s3_client=database.s3_client,
         resume_pdf_parser=resume_parser.resume_pdf_parser,
-        chat_engine=chatbot.chat_engine
+        chat_engine=chatbot.chat_engine,
+        resume_converter=resume_converter.resume_converter,
+        job_report=job_report,
+        recommendation=recommendation.job_recommendation
     )

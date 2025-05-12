@@ -6,9 +6,11 @@ from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 
 
 
+# Modified to avoid setting global state
 def create_llm_model(api_key: str, model_name: str = "gemini-2.0-flash"):
-    genai.configure(api_key=api_key)
-    return genai.GenerativeModel(model_name)
+    # Configure only for this instance instead of globally
+    genai_config = {"api_key": api_key}
+    return genai.GenerativeModel(model_name, **genai_config)
 
 
 class AIContainer(containers.DeclarativeContainer):

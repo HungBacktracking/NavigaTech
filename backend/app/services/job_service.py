@@ -23,16 +23,20 @@ class JobService(BaseService):
         self,
         job_repository: JobRepository,
         favorite_job_repository: FavoriteJobRepository,
-        user_service: UserService
+        user_service: UserService,
+        resume_converter: ResumeConverter,
+        resume_report: ResumeReport,
+        resume_scorer: ResumeScorer,
+        job_recommendation: JobRecommendation
     ):
         self.job_repository = job_repository
         self.favorite_job_repository = favorite_job_repository
         self.user_service = user_service
+        self.resume_converter = resume_converter
+        self.reporter = resume_report
+        self.scorer = resume_scorer
+        self.recommendation = job_recommendation
         super().__init__(job_repository, favorite_job_repository)
-        self.scorer: ResumeScorer = ResumeScorer()
-        self.reporter: ResumeReport = ResumeReport()
-        self.recommendation = JobRecommendation("job_description")
-        self.resume_converter = ResumeConverter(data={})
 
     def search_job(self, request: JobSearchRequest, user_id: UUID) -> list[JobResponse]:
         rows: List[tuple[Job, Optional[FavoriteJob]]] = (
@@ -75,9 +79,6 @@ class JobService(BaseService):
             to_favorite_job_response(job, fav, analytic)
             for job, fav, analytic in rows
         ]
-
-
-
 
     def get_job_recommendation(self, user_id: UUID):
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)

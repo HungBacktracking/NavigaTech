@@ -14,13 +14,14 @@ class ChatbotContainer(containers.DeclarativeContainer):
     database = providers.DependenciesContainer()
     AI = providers.DependenciesContainer()
 
-    mongo_db = database.mongo_db
+    # Lightweight dependencies with clear access
     qdrant_client = database.qdrant_client
     async_qdrant_client = database.async_qdrant_client
-
     llm = AI.llm_huggingface
     embed_model = AI.embed_model
+    cohere_reranker = AI.cohere_reranker
 
+    # Vector store components
     vector_store = providers.Singleton(
         QdrantVectorStore,
         client=qdrant_client,
@@ -30,23 +31,27 @@ class ChatbotContainer(containers.DeclarativeContainer):
         sparse_vector_name="text-sparse",
         enable_hybrid=True,
     )
+    
+    # Index components
     index = providers.Singleton(
         VectorStoreIndex.from_vector_store,
         vector_store=vector_store,
         use_async=True,
     )
+    
+    # Retriever with explicit configuration
     retriever = providers.Singleton(
         index.provided.as_retriever,
         similarity_top_k=10,
         vector_store_query_mode="hybrid",
     )
 
-    # Reranker, prompt, chat store…
-    cohere_reranker = AI.cohere_reranker
+    # Helper components
     small_talk_checker = providers.Singleton(SmallTalkChecker)
     rag_prompt = providers.Singleton(RAGPrompt)
     chat_store = providers.Singleton(SimpleChatStore)
 
+    # Main chat engine
     chat_engine = providers.Singleton(
         ChatEngine,
         llm=llm,

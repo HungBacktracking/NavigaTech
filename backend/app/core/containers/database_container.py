@@ -22,6 +22,7 @@ class DatabaseContainer(containers.DeclarativeContainer):
         secret_key=config.AWS_SECRET_KEY
     )
 
+    # Qdrant clients - removed duplicate declarations
     qdrant_client = providers.Singleton(
         QdrantClient,
         url=config.QDRANT_URL,
@@ -31,16 +32,4 @@ class DatabaseContainer(containers.DeclarativeContainer):
         AsyncQdrantClient,
         url=config.QDRANT_URL,
         api_key=config.QDRANT_API_TOKEN,
-    )
-
-    # Qdrant clients
-    qdrant_client = providers.Singleton(
-        QdrantClient,
-        url=configs.QDRANT_URL,
-        api_key=configs.QDRANT_API_TOKEN,
-    )
-    async_qdrant_client = providers.Singleton(
-        AsyncQdrantClient,
-        url=configs.QDRANT_URL,
-        api_key=configs.QDRANT_API_TOKEN,
     )
