@@ -1,79 +1,63 @@
 import { IAuthLoginResponse } from "../lib/types/auth";
 import { User, UserDetail, UserLoginDto } from "../lib/types/user";
-import { mockUserDetail } from "./user";
+import api from "../lib/clients/axios/api";
 
 export interface UploadCVResponse {
   object_key: string;
   upload_url: string;
 }
 
+export interface DownloadCVResponse {
+  download_url: string;
+}
+
 export const authApi = {
-  login: async (userCrendentials: UserLoginDto) : Promise<IAuthLoginResponse> => {
-    console.log(`Logging in with email: ${userCrendentials.email}`);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          access_token: "mock_access_token",
-          expiration_date: "2025-10-01T00:00:00Z",
-          user: {
-            id: mockUserDetail.id,
-            email: mockUserDetail.email,
-            uploaded_resume: mockUserDetail.uploaded_resume,
-            name: mockUserDetail.name,
-            avatar_url: mockUserDetail.avatar_url,
-          },
-        });
-      }, 100);
-    });
+  login: async (userCredentials: UserLoginDto): Promise<IAuthLoginResponse> => {
+    const response = await api.post('/auth/sign-in', userCredentials);  
+    return response.data;
   },
 
   register: async (userData: UserLoginDto): Promise<User> => {
-    console.log(`Registering user with email: ${userData.email}`);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: mockUserDetail.id,
-          email: userData.email,
-          uploaded_resume: false,
-          name: mockUserDetail.name,
-          avatar_url: mockUserDetail.avatar_url,
-        });
-      }, 100);
-    });
+    const response = await api.post('/auth/sign-up', userData);
+    return response.data;
   },
 
   getCurrentUser: async (): Promise<User> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          id: mockUserDetail.id,
-          email: mockUserDetail.email,
-          uploaded_resume: mockUserDetail.uploaded_resume,
-          name: mockUserDetail.name,
-          avatar_url: mockUserDetail.avatar_url,
-        });
-      }, 100);
-    });
+    const response = await api.get('/users/me');
+    return response.data;
   },
   
   uploadCV: async (file: File): Promise<UploadCVResponse> => {
     console.log(`Uploading CV: ${file.name}`);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve({
-          object_key: "resume-123456",
-          upload_url: "https://example.com/upload/123456"
-        });
-      }, 2000);
+    
+    // Step 1: Get upload URL from backend
+    const uploadResponse = await api.post('/resumes/upload', {}, {
+      params: { file_type: "resume" }
     });
+    const { object_key, upload_url } = uploadResponse.data;
+    
+    // Step 2: Upload the file directly to the storage using the pre-signed URL
+    const uploadFileRes = await fetch(upload_url, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': file.type,
+      },
+      body: file
+    });
+    console.log(`File upload response: ${uploadFileRes}`);
+    
+    return { object_key, upload_url };
   },
 
-  processCV: async (objectKey: string): Promise<UserDetail> => {
-    console.log(`Processing CV with object key: ${objectKey}`);
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(mockUserDetail);
-      }, 3000);
-    });
+  processCV: async (): Promise<UserDetail> => {
+    const response = await api.post('/resumes/process');
+    return response.data;
   },
+  
+  downloadCV: async (): Promise<DownloadCVResponse> => {
+    const response = await api.get('/resumes/download', {
+      params: { file_type: "resume" }
+    });
+    return response.data;
+  }
 };

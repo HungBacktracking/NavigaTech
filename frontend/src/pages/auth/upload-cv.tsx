@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Steps, Typography, theme, Flex, message, List } from 'antd';
 import { motion } from 'framer-motion';
-import { authApi, UploadCVResponse } from '../../services/auth';
+import { authApi } from '../../services/auth';
 import {
   UploadStep,
   ProcessingStep,
@@ -18,37 +18,27 @@ const UploadCVPage = () => {
 
   const handleUpload = async (file: File) => {
     try {
-      const uploadResponse: UploadCVResponse = await authApi.uploadCV(file);
-      // send file to the upload URL
-      // const formData = new FormData();
-      // formData.append('file', file);
-      // await fetch(uploadResponse.upload_url, {
-      //   method: 'PUT',
-      //   body: file,
-      //   headers: {
-      //     'Content-Type': file.type,
-      //   },
-      // });
+      await authApi.uploadCV(file);
+
       setCurrentStep(1);
 
-      processCV(uploadResponse.object_key);
+      await processCV();
     } catch (error) {
       console.error('Upload failed:', error);
       messageApi.error('Failed to upload CV. Please try again.');
     }
   };
 
-  const processCV = async (objectKey: string) => {
+  const processCV = async () => {
     try {
-      const data = await authApi.processCV(objectKey);
+      const userData = await authApi.processCV();
+      console.log('CV processed successfully:', userData);
 
-      console.log('CV processed successfully:', data);
       setCurrentStep(2);
 
       setTimeout(() => {
         window.location.href = '/home';
-      }, 2000);
-
+      }, 1000);
     } catch (error) {
       console.error('Processing failed:', error);
       messageApi.error('Failed to process your CV. Please try again.');
