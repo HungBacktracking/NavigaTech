@@ -4,6 +4,7 @@ from app.repository.award_repository import AwardRepository
 from app.repository.chatbot_repository import ChatbotRepository
 from app.repository.education_repository import EducationRepository
 from app.repository.experience_repository import ExperienceRepository
+from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_repository import JobRepository
 from app.repository.project_repository import ProjectRepository
 from app.repository.skill_repository import SkillRepository
@@ -25,4 +26,5 @@ class RepositoryContainer(containers.DeclarativeContainer):
     award_repository = providers.Factory(AwardRepository, session_factory=db.provided.session)
     job_repository = providers.Factory(JobRepository, session_factory=db.provided.session)
     user_file_repository = providers.Factory(UserFileRepository, session_factory=db.provided.session)
+    favorite_job_repository = providers.Factory(FavoriteJobRepository, session_factory=db.provided.session)
     chatbot_repository = providers.Factory(ChatbotRepository, mongo_db=mongo_db.provided.db)
