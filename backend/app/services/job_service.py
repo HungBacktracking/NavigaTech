@@ -100,13 +100,13 @@ class JobService(BaseService):
                 Description: {job_dict.get("job_description", "")}\
                 Benefit: {job_dict.get("benefit", "")}\
                 Requirements: {job_dict.get("job_requirement", "")}\\
-                Skills: {" ".join(job_dict.get("skills", ""))}
+                Skills: {job_dict.get("skills", "")}
             """
 
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        return self.reporter.report(resume_text, jd_text)
+        return self.reporter.run(resume_text, jd_text)
 
     def generate_resume(self, job_id: UUID, user_id: UUID):
         pass
@@ -126,7 +126,7 @@ class JobService(BaseService):
             Description: {job_dict.get("job_description", "")}\
             Benefit: {job_dict.get("benefit", "")}\
             Requirements: {job_dict.get("job_requirement", "")}\\
-            Skills: {" ".join(job_dict.get("skills", ""))}
+            Skills: {job_dict.get("skills", "")}
         """
 
         user_detail = self.user_service.get_detail_by_id(user_id)

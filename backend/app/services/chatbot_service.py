@@ -5,7 +5,9 @@ from app.chatbot.chat_engine import ChatEngine
 from app.exceptions.custom_error import CustomError
 from app.repository import UserRepository
 from app.repository.chatbot_repository import ChatbotRepository
+from app.resume_building.resume_convert import ResumeConverter
 from app.schema.chat_schema import SessionResponse, MessageResponse
+from app.services import UserService
 from app.services.base_service import BaseService
 
 
@@ -14,10 +16,13 @@ class ChatbotService(BaseService):
         self,
         user_repository: UserRepository,
         chatbot_repository: ChatbotRepository,
+        user_service: UserService,
         # chat_engine: ChatEngine
     ):
         self.chatbot_repo = chatbot_repository
         self.user_repo = user_repository
+        self.user_service = user_service
+        self.resume_converter = ResumeConverter(data={})
         # self.chat_engine = chat_engine
         super().__init__(user_repository)
 
@@ -46,6 +51,15 @@ class ChatbotService(BaseService):
             )
             for doc in docs
         ]
+
+    async def generate_message(self, session_id: str, message: str, user_id: str):
+        self.verify_user(user_id)
+
+        user_detail = self.user_service.get_detail_by_id(user_id)
+        resume_text = self.resume_converter.process(user_detail.model_dump())
+        chat_engine = ChatEngine(session_id=session_id, resume=resume_text)
+
+        return chat_engine.chat(message)
 
     async def post_message(self, user_id: str, session_id: str, role: str, content: str) -> MessageResponse:
         self.verify_user(user_id)
