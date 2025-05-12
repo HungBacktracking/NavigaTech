@@ -9,6 +9,8 @@ class ElasticsearchRepository:
     def __init__(self, es_client: Elasticsearch):
         self.es_client = es_client
         self.index_name = "jobs"
+
+        self.create_index()
     
     def create_index(self):
         """Create job index with appropriate mappings"""

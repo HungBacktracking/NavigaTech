@@ -1,5 +1,5 @@
 from contextlib import AbstractContextManager
-from typing import Callable, Optional, List, Tuple, Any, Dict
+from typing import Callable, Optional, List, Tuple
 from uuid import UUID
 
 from sqlmodel import Session, select
@@ -59,7 +59,7 @@ class JobRepository(BaseRepository):
     def get_all(self) -> List[Job]:
         with self.replica_session_factory() as session:
             statement = select(Job)
-            jobs = session.exec(statement).all()
+            jobs = session.execute(statement).scalars().all()
 
             return jobs
 

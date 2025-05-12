@@ -16,7 +16,7 @@ class BaseJob(BaseModel):
     company_address: Optional[str] = None
     company_description: Optional[str] = None
     job_type: Optional[str] = None
-    skills: Optional[List[str]] = None
+    skills: str = None
     location: Optional[str] = None
     date_posted: Optional[date] = None
     job_description: str

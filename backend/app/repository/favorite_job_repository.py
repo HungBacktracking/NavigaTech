@@ -29,12 +29,12 @@ class FavoriteJobRepository(BaseRepository):
     def get_favorites_by_job_ids(self, job_ids: List[UUID], user_id: UUID) -> Dict[UUID, FavoriteJob]:
         favorites = {}
         if job_ids:
-            with self.replica_session_factory() as session:
+            with self.session_factory() as session:
                 statement = select(FavoriteJob).where(
                     FavoriteJob.job_id.in_(job_ids),
                     FavoriteJob.user_id == user_id
                 )
-                results = session.exec(statement).all()
+                results = session.execute(statement).scalars().all()
                 favorites = {fav.job_id: fav for fav in results}
 
         return favorites
