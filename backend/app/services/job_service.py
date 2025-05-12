@@ -1,5 +1,5 @@
 import uuid
-from typing import Optional, List
+from typing import List, Dict
 from uuid import UUID
 
 from app.convert.job import to_favorite_job_response
@@ -9,6 +9,7 @@ from app.job_report.cv_grading import ResumeScorer
 from app.model.favorite_job import FavoriteJob
 from app.model.job import Job
 from app.recommendation.job_recommendation import JobRecommendation
+from app.repository.elasticsearch_repository import ElasticsearchRepository
 from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_repository import JobRepository
 from app.resume_building.resume_convert import ResumeConverter
@@ -23,6 +24,7 @@ class JobService(BaseService):
         self,
         job_repository: JobRepository,
         favorite_job_repository: FavoriteJobRepository,
+        elasticsearch_repository: ElasticsearchRepository,
         user_service: UserService,
         resume_converter: ResumeConverter,
         resume_report: ResumeReport,
@@ -31,6 +33,7 @@ class JobService(BaseService):
     ):
         self.job_repository = job_repository
         self.favorite_job_repository = favorite_job_repository
+        self.es_repository = elasticsearch_repository
         self.user_service = user_service
         self.resume_converter = resume_converter
         self.reporter = resume_report
@@ -38,39 +41,48 @@ class JobService(BaseService):
         self.recommendation = job_recommendation
         super().__init__(job_repository, favorite_job_repository)
 
-    def search_job(self, request: JobSearchRequest, user_id: UUID) -> list[JobResponse]:
-        rows: List[tuple[Job, Optional[FavoriteJob]]] = (
-            self.job_repository.search_job(request, user_id)
-        )
-
+    def full_text_search_job(self, request: JobSearchRequest, user_id: UUID) -> list[JobResponse]:
+        # Use Elasticsearch for searching
+        es_results = self.es_repository.search_jobs(request)
+        
+        # Get favorite status for each job
+        job_ids = [UUID(job["id"]) for job in es_results]
+        favorites = self.favorite_job_repository.get_favorites_by_job_ids(job_ids, user_id)
+        
         results: List[JobResponse] = []
-        for job, fav in rows:
+        for job_data in es_results:
+            job_id = UUID(job_data["id"])
+            fav = favorites.get(job_id)
+            
             results.append(
                 JobResponse(
-                    id=job.id,
-                    job_url=job.job_url,
-                    logo_url=job.logo_url,
-                    job_name=job.job_name,
-                    company_name=job.company_name,
-                    company_type=job.company_type,
-                    company_address=job.company_address,
-                    company_description=job.company_description,
-                    job_type=job.job_type,
-                    skills=job.skills,
-                    location=job.location,
-                    date_posted=job.date_posted,
-                    job_description=job.job_description,
-                    job_requirement=job.job_requirement,
-                    benefit=job.benefit,
-                    is_expired=job.is_expired,
+                    id=job_id,
+                    job_url=job_data.get("job_url"),
+                    from_site=job_data.get("from_site"),
+                    logo_url=job_data.get("logo_url"),
+                    job_name=job_data.get("job_name"),
+                    job_level=job_data.get("job_level"),
+                    company_name=job_data.get("company_name"),
+                    company_type=job_data.get("company_type"),
+                    company_address=job_data.get("company_address"),
+                    company_description=job_data.get("company_description"),
+                    job_type=job_data.get("job_type"),
+                    skills=job_data.get("skills"),
+                    location=job_data.get("location"),
+                    date_posted=job_data.get("date_posted"),
+                    job_description=job_data.get("job_description"),
+                    job_requirement=job_data.get("job_requirement"),
+                    benefit=job_data.get("benefit"),
 
                     is_analyze=fav.is_analyze if fav else False,
                     resume_url=fav.resume_url if fav else None,
-                    is_favorite=fav.is_favorite if fav else False,
+                    is_favorite=fav.is_favorite if fav else False
                 )
             )
 
         return results
+    
+
 
     def get_user_favorite_jobs_with_analytics(self, user_id: UUID) -> List[JobFavoriteResponse]:
         rows = self.job_repository.find_favorite_job_with_analytics(user_id)
@@ -171,6 +183,18 @@ class JobService(BaseService):
             raise CustomError.NOT_FOUND.as_exception()
 
         return self.get_user_favorite_jobs_with_analytics(user_id)
+
+
+        
+    def index_all_jobs(self):
+        """Index all jobs from database to Elasticsearch"""
+        jobs = self.job_repository.get_all()
+        job_dicts = [job.model_dump() for job in jobs]
+
+        # Bulk index
+        self.es_repository.index_bulk_jobs(job_dicts)
+            
+        return len(job_dicts)
 
 
 

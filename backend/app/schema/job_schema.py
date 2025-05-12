@@ -10,18 +10,18 @@ class BaseJob(BaseModel):
     job_url: str
     logo_url: str
     job_name: str
+    job_level: Optional[str] = None
     company_name: str
     company_type: Optional[str] = None
     company_address: Optional[str] = None
     company_description: Optional[str] = None
     job_type: Optional[str] = None
-    skills: Optional[List[str]] = None
+    skills: str = None
     location: Optional[str] = None
     date_posted: Optional[date] = None
     job_description: str
     job_requirement: str
     benefit: Optional[str] = None
-    is_expired: Optional[bool] = None
     is_analyze: bool
     resume_url: Optional[str] = None
     is_favorite: bool

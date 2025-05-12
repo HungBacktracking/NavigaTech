@@ -15,9 +15,10 @@ class JobRepository(BaseRepository):
     def __init__(
         self, 
         session_factory: Callable[..., AbstractContextManager[Session]],
-        replica_session_factory: Callable[..., AbstractContextManager[Session]] = None
+        replica_session_factory: Callable[..., AbstractContextManager[Session]] = None,
     ):
         super().__init__(session_factory, Job, replica_session_factory)
+
 
     def search_job(self, request: JobSearchRequest, user_id: UUID) -> List[Tuple[Job, Optional[FavoriteJob]]]:
         with self.replica_session_factory() as session:
@@ -54,6 +55,13 @@ class JobRepository(BaseRepository):
             )
 
             return list(session.exec(statement).all())
+
+    def get_all(self) -> List[Job]:
+        with self.replica_session_factory() as session:
+            statement = select(Job)
+            jobs = session.execute(statement).scalars().all()
+
+            return jobs
 
 
 
