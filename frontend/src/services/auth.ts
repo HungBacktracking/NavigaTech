@@ -2,6 +2,7 @@ import { IAuthLoginResponse } from "../lib/types/auth";
 import { User, UserDetail, UserLoginDto } from "../lib/types/user";
 import api from "../lib/clients/axios/api";
 
+
 export interface UploadCVResponse {
   object_key: string;
   upload_url: string;
@@ -34,30 +35,38 @@ export const authApi = {
   },
   
   uploadCV: async (file: File): Promise<UploadCVResponse> => {
-    console.log(`Uploading CV: ${file.name}`);
-    
-    // Step 1: Get upload URL from backend
     const uploadResponse = await api.post('/resumes/upload', {}, {
       params: { file_type: "resume" }
     });
     const { object_key, upload_url } = uploadResponse.data;
     
-    // Step 2: Upload the file directly to the storage using the pre-signed URL
-    const uploadFileRes = await fetch(upload_url, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': file.type,
-      },
-      body: file
-    });
-    console.log(`File upload response: ${uploadFileRes}`);
-    
-    return { object_key, upload_url };
+    try {
+      const s3Response = await fetch(upload_url, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': file.type || 'application/octet-stream',
+        },
+        body: file,
+      });
+
+      if (!s3Response.ok) {
+        const errorDetails = await s3Response.text();
+        throw new Error(`Upload failed: ${errorDetails}`);
+      }
+
+      return { object_key, upload_url };
+    } catch (error) {
+      console.error('Error uploading file to S3:', error);
+      throw error;
+    }
   },
 
   processCV: async (): Promise<UserDetail> => {
     const response = await api.post('/resumes/process');
-    return response.data;
+    console.log(`Process CV response: ${response.data}`);
+    const updateMeResponse = await api.put('/users/me', { uploaded_resume: true });
+    
+    return updateMeResponse.data;
   },
   
   downloadCV: async (): Promise<DownloadCVResponse> => {

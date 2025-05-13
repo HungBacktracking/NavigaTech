@@ -24,7 +24,6 @@ class BaseJob(BaseModel):
     job_requirement: str
     benefit: Optional[str] = None
     is_analyze: bool
-    resume_url: Optional[str] = None
     is_favorite: bool
 
     class Config:

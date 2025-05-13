@@ -1,70 +1,52 @@
+import { PageRequest } from "./pagination";
+
 export interface Job {
   id: string;
-  title: string;
-  companyName: string;
-  companyLogo?: string;
-  location: string;
-  datePosted: Date;
-  originalUrl: string;
-  skills: string[];
-  type?: string;
-  level?: string;
-  salary?: string;
-  isFavorite?: boolean;
-}
-
-export interface DetailJob {
-  id: string;
-  title: string;
-  originalUrl: string;
-  company: Company;
-  location: string;
-  datePosted: Date;
-  skills: string[];
-  jobDescription: string;
-  jobRequirements?: string;
-  type?: string;
-  level?: string;
-  salary?: string;
+  from_site: string;
+  job_url: string;
+  logo_url: string;
+  job_name: string;
+  job_level?: string;
+  company_name: string;
+  company_type?: string;
+  company_address?: string;
+  company_description?: string;
+  job_type?: string;
+  skills: string;
+  location?: string;
+  date_posted?: string;
+  job_description: string;
+  job_requirement: string;
   benefit?: string;
-  isExpired?: boolean;
-  isFavorite?: boolean;
-  isAnalyzed?: boolean;
+  is_analyze: boolean;
+  resume_url?: string;
+  is_favorite: boolean;
 }
 
-export interface Company {
-  name: string;
-  logo?: string;
-  address?: string;
-  description?: string;
+export interface FavoriteJobRequest {
+  job_id: string;
+  user_id: string;
+  is_analyze?: boolean;
+  is_generated_resume?: boolean;
+  is_favorite: boolean;
 }
 
-export interface JobAnalysis extends Job {
-  matchScore: number;
-  isCreatedCV: boolean;
-  weaknesses: string[];
-  strengths: string[];
-  analyzedAt: Date;
+export interface JobAnalytic {
+  general_score: number;
+  general_feedback: string;
+  skill_feedback: string;
+  role_feedback: string;
+  experience_feedback: string;
+  benefit_feedback: string;
+  education_feedback: string;
 }
 
-export interface JobAnalysisDetail extends JobAnalysis {
-  generalFeedback: string;
-  roleFeedback: string;
-  skillsFeedback: string;
-  workExperienceFeedback: string;
-  educationFeedback: string;
-  languageFeedback: string;
+export interface JobFavoriteResponse extends Job {
+  job_analytics?: JobAnalytic;
 }
 
-export interface JobQueryParams {
-  page: number;
-  pageSize: number;
-  search?: string;
-  filterByJobLevel?: string[];
-}
-
-export interface JobAnalysisQueryParams {
-  page: number;
-  pageSize: number;
-  search?: string;
+export interface JobSearchRequest extends PageRequest {
+  query: string;
+  roles?: string[];
+  levels?: string[];
 }
