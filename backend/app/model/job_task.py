@@ -1,17 +1,13 @@
-from datetime import datetime, timezone
+from datetime import datetime
 from enum import Enum
-from typing import Optional, TYPE_CHECKING
+from typing import Optional
 from uuid import UUID
 
 from pydantic import ConfigDict
-from sqlmodel import Column, Field, func, Text, DateTime, Date, JSON, Relationship
+from sqlmodel import Column, Field, func, DateTime, JSON
 
 from app.model.base_model import BaseModel
 
-
-if TYPE_CHECKING:
-    from app.model.job import Job
-    from app.model.user import User
 
 class TaskStatus(str, Enum):
     PENDING = "pending"
@@ -20,19 +16,12 @@ class TaskStatus(str, Enum):
     FAILED = "failed"
 
 
-class TaskType(str, Enum):
-    JOB_SCORE = "job_score"
-    JOB_ANALYZE = "job_analyze"
-    RESUME_GENERATE = "resume_generate"
-
-
 class JobTask(BaseModel, table=True):
     __tablename__ = "job_tasks"
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     job_id: UUID = Field(foreign_key="job.id")
     user_id: UUID = Field(foreign_key="user.id")
-    task_type: str = Field()
     status: str = Field(default=TaskStatus.PENDING.value)
     result: Optional[JSON] = Field(default=None, sa_column=Column(JSON, nullable=True))
     error_message: Optional[str] = Field(default=None, nullable=True)
@@ -46,7 +35,6 @@ class JobTask(BaseModel, table=True):
             "id": self.id,
             "job_id": self.job_id,
             "user_id": self.user_id,
-            "task_type": self.task_type,
             "status": self.status,
             "result": self.result,
             "error_message": self.error_message,

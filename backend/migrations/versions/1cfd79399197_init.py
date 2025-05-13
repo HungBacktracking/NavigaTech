@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 3a4f1b29ca3d
+Revision ID: 1cfd79399197
 Revises: 
-Create Date: 2025-05-13 19:44:14.683077
+Create Date: 2025-05-14 01:41:58.425498
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = '3a4f1b29ca3d'
+revision = '1cfd79399197'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -126,7 +126,6 @@ def upgrade():
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('job_id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
-    sa.Column('task_type', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('status', sqlmodel.sql.sqltypes.AutoString(), nullable=False),
     sa.Column('result', sa.JSON(), nullable=True),
     sa.Column('error_message', sqlmodel.sql.sqltypes.AutoString(), nullable=True),
@@ -140,13 +139,18 @@ def upgrade():
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('job_id', sa.Uuid(), nullable=False),
     sa.Column('user_id', sa.Uuid(), nullable=False),
-    sa.Column('general_score', sa.Integer(), nullable=False),
-    sa.Column('general_feedback', sa.Text(), nullable=True),
-    sa.Column('skill_feedback', sa.Text(), nullable=True),
-    sa.Column('role_feedback', sa.Text(), nullable=True),
-    sa.Column('experience_feedback', sa.Text(), nullable=True),
-    sa.Column('benefit_feedback', sa.Text(), nullable=True),
-    sa.Column('education_feedback', sa.Text(), nullable=True),
+    sa.Column('match_overall', sa.Float(), nullable=False),
+    sa.Column('match_experience', sa.Float(), nullable=False),
+    sa.Column('match_skills', sa.Float(), nullable=False),
+    sa.Column('weaknesses', sa.Text(), nullable=False),
+    sa.Column('strengths', sa.Text(), nullable=False),
+    sa.Column('overall_assessment', sa.Text(), nullable=False),
+    sa.Column('strength_details', sa.Text(), nullable=False),
+    sa.Column('weakness_concerns', sa.Text(), nullable=False),
+    sa.Column('recommendations', sa.Text(), nullable=False),
+    sa.Column('questions', sa.Text(), nullable=False),
+    sa.Column('roadmap', sa.Text(), nullable=False),
+    sa.Column('conclusion', sa.Text(), nullable=False),
     sa.Column('created_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),

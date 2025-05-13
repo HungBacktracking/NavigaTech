@@ -228,12 +228,11 @@ class KafkaService:
         self._logger.info("Starting Kafka consumer for user notifications")
         self.start_consumer("user_notifications", "notification_consumer_group", callback)
                 
-    def create_job_task(self, job_id: UUID, user_id: UUID, task_type: str, task_data: Optional[Dict] = None):
+    def create_job_task(self, job_id: UUID, user_id: UUID, task_data: Optional[Dict] = None):
         """Create a job task in Kafka"""
         message = {
             "job_id": job_id,
             "user_id": user_id,
-            "task_type": task_type,
             "data": task_data or {}
         }
         return self.send_message("job_tasks", message) 

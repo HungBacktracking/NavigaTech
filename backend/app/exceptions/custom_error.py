@@ -9,6 +9,7 @@ class CustomError(Enum):
     NOT_FOUND = (status.HTTP_404_NOT_FOUND, "10", "The resource could not be found")
     DUPLICATE_RESOURCE = (status.HTTP_409_CONFLICT, "11", "The resource already exists")
     INVALID_FILE_TYPE = (status.HTTP_400_BAD_REQUEST, "12", "Invalid file type")
+    EXISTING_RESOURCE = (status.HTTP_409_CONFLICT, "13", "The resource already exists")
     # …
 
     def __init__(self, http_status: int, code: str, message: str):

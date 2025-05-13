@@ -6,9 +6,10 @@ import traceback
 from typing import Dict, Any, Optional
 from uuid import UUID
 
-from app.model.job_task import TaskStatus, TaskType
+from app.model.job_task import TaskStatus
 from app.services.job_service import JobService
 from app.services.job_task_service import JobTaskService
+from app.services.job_analytic_service import JobAnalyticService
 from app.services.kafka_service import KafkaService
 
 
@@ -17,11 +18,13 @@ class JobWorker:
         self,
         job_service: JobService,
         job_task_service: JobTaskService,
-        kafka_service: KafkaService
+        kafka_service: KafkaService,
+        job_analytic_service: Optional[JobAnalyticService] = None
     ):
         self.job_service = job_service
         self.job_task_service = job_task_service
         self.kafka_service = kafka_service
+        self.job_analytic_service = job_analytic_service
         self._logger = logging.getLogger(__name__)
         self._running = False
         self._worker_thread = None
@@ -65,21 +68,19 @@ class JobWorker:
                 
                 job_id = message.get("job_id")
                 user_id = message.get("user_id")
-                task_type = message.get("task_type")
                 
-                if not all([job_id, user_id, task_type]):
+                if not all([job_id, user_id]):
                     self._logger.error(f"Invalid task message, missing required fields: {message}")
                     return
                 
                 # Create a task record
                 task = self.job_task_service.create_task(
                     job_id=UUID(job_id) if isinstance(job_id, str) else job_id,
-                    user_id=UUID(user_id) if isinstance(user_id, str) else user_id,
-                    task_type=TaskType(task_type)
+                    user_id=UUID(user_id) if isinstance(user_id, str) else user_id
                 )
                 
                 task_id = task.id
-                self._logger.info(f"Created task record {task_id} for job {job_id}, user {user_id}, type {task_type}")
+                self._logger.info(f"Created task record {task_id} for job {job_id}, user {user_id}")
                 
                 # Update task to processing
                 self.job_task_service.update_task_status(task.id, TaskStatus.PROCESSING)
@@ -89,18 +90,30 @@ class JobWorker:
                 error = None
                 
                 try:
-                    # Process the task based on type
-                    if task_type == TaskType.JOB_SCORE.value:
-                        self._logger.info(f"Processing job scoring task for job {job_id}")
-                        result = self.job_service.score_job(job_id, user_id)
-                        self._logger.info(f"Job scoring completed for job {job_id}")
-                    elif task_type == TaskType.JOB_ANALYZE.value:
-                        self._logger.info(f"Processing job analysis task for job {job_id}")
-                        result = self.job_service.analyze_job(job_id, user_id)
-                        self._logger.info(f"Job analysis completed for job {job_id}")
-                    else:
-                        error = f"Unknown task type: {task_type}"
+                    if not self.job_analytic_service:
+                        error = "JobAnalyticService not initialized"
                         self._logger.error(error)
+                    else:
+                        self._logger.info(f"Processing complete job analysis task for job {job_id}")
+
+                        # Run scoring and analysis in sequence
+                        score_result = self.job_service.score_job(job_id, user_id)
+                        self._logger.info(f"Job scoring completed for job {job_id}")
+
+                        analysis_result = self.job_service.analyze_job(job_id, user_id)
+                        self._logger.info(f"Job analysis completed for job {job_id}")
+
+                        analytic_response = self.job_analytic_service.process_analyze(
+                            job_id=UUID(job_id) if isinstance(job_id, str) else job_id,
+                            user_id=UUID(user_id) if isinstance(user_id, str) else user_id,
+                            score_result=score_result,
+                            analysis_result=analysis_result
+                        )
+                        self._logger.info(f"Combined analysis saved for job {job_id}")
+
+                        # Convert to dict for result storage
+                        result = analytic_response.model_dump()
+
                 except Exception as e:
                     error = str(e)
                     stack_trace = traceback.format_exc()
@@ -121,7 +134,6 @@ class JobWorker:
                 # Send notification to user
                 notification = {
                     "task_id": task.id,
-                    "task_type": task_type,
                     "job_id": job_id,
                     "status": TaskStatus.COMPLETED.value if not error else TaskStatus.FAILED.value,
                     "result": result,

@@ -7,9 +7,19 @@ from app.api.endpoints.job_task import router as job_task_router
 from app.api.endpoints.ws import router as ws_router
 from app.api.endpoints.chat import router as chat_router
 from app.api.endpoints.resume import router as resume_router
+from app.api.endpoints.job_analysis import router as job_analysis_router
 
 routers = APIRouter()
-router_list = [auth_router, user_router, job_router, job_task_router, ws_router, chat_router, resume_router]
+router_list = [
+    auth_router,
+    user_router,
+    job_router,
+    job_analysis_router,
+    job_task_router,
+    ws_router,
+    chat_router,
+    resume_router
+]
 
 for router in router_list:
     router.tags = routers

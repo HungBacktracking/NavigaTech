@@ -8,19 +8,16 @@ from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
-from app.model.job_task import TaskType
 from app.schema.base_schema import PageResponse
 from app.schema.job_schema import JobSearchRequest, JobResponse, JobFavoriteResponse
-from app.schema.job_task_schema import JobTaskResponse, JobTaskStartRequest
 from app.schema.user_schema import UserBasicResponse, UserDetailResponse
 from app.services.job_service import JobService
-from app.services.kafka_service import KafkaService
 from app.repository.elasticsearch_repository import ElasticsearchRepository
 
 router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer())])
 
 
-@router.post("/search", response_model=PageResponse[JobResponse])
+@router.get("/search", response_model=PageResponse[JobResponse])
 @inject
 def search_job(
     request: JobSearchRequest,
@@ -54,7 +51,7 @@ def get_favorite_jobs(
     )
 
 
-@router.post("/{job_id}/favorite")
+@router.post("/{job_id}/favorite", response_model=PageResponse[JobFavoriteResponse])
 @inject
 def add_favorite_job(
         job_id: UUID,
@@ -64,7 +61,8 @@ def add_favorite_job(
     return service.add_to_favorite(job_id, current_user.id)
 
 
-@router.post("/{job_id}/delete-favorite")
+@router.post("/{job_id}/delete-favorite", response_model=PageResponse[JobFavoriteResponse])
+@inject
 @inject
 def remove_favorite_job(
         job_id: UUID,
@@ -74,38 +72,6 @@ def remove_favorite_job(
     return service.remove_from_favorite(job_id, current_user.id)
 
 
-@router.post("/{job_id}/scoring")
-@inject
-def score_job(
-        job_id: UUID,
-        kafka_service: KafkaService = Depends(Provide[ApplicationContainer.services.kafka_service]),
-        current_user: UserBasicResponse = Depends(get_current_user)
-):
-    # Send task to Kafka for background processing
-    kafka_service.create_job_task(
-        job_id=job_id,
-        user_id=current_user.id,
-        task_type=TaskType.JOB_SCORE.value
-    )
-    
-    return {"message": "Job scoring started in background", "job_id": str(job_id)}
-
-
-@router.post("/{job_id}/analyze")
-@inject
-def analyze_job(
-        job_id: UUID,
-        kafka_service: KafkaService = Depends(Provide[ApplicationContainer.services.kafka_service]),
-        current_user: UserBasicResponse = Depends(get_current_user)
-):
-    # Send task to Kafka for background processing
-    kafka_service.create_job_task(
-        job_id=job_id,
-        user_id=current_user.id,
-        task_type=TaskType.JOB_ANALYZE.value
-    )
-    
-    return {"message": "Job analysis started in background", "job_id": str(job_id)}
 
 
 @router.post("/{job_id}/resume", response_model=JobResponse)

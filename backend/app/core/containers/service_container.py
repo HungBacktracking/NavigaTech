@@ -3,6 +3,7 @@ from app.services import AuthService, UserService
 from app.services.chatbot_service import ChatbotService
 from app.services.job_service import JobService
 from app.services.job_task_service import JobTaskService
+from app.services.job_analytic_service import JobAnalyticService
 from app.services.job_worker import JobWorker
 from app.services.kafka_service import KafkaService
 from app.services.resume_service import ResumeService
@@ -47,6 +48,12 @@ class ServiceContainer(containers.DeclarativeContainer):
         job_recommendation=recommendation
     )
     
+    # Job analytic service
+    job_analytic_service = providers.Factory(
+        JobAnalyticService,
+        job_analytic_repository=repos.job_analytic_repository
+    )
+    
     # Job task service
     job_task_service = providers.Factory(
         JobTaskService,
@@ -58,7 +65,8 @@ class ServiceContainer(containers.DeclarativeContainer):
         JobWorker,
         job_service=job_service,
         job_task_service=job_task_service,
-        kafka_service=kafka_service
+        kafka_service=kafka_service,
+        job_analytic_service=job_analytic_service
     )
     
     s3_service = providers.Factory(

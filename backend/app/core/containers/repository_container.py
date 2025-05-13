@@ -7,6 +7,7 @@ from app.repository.experience_repository import ExperienceRepository
 from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_repository import JobRepository
 from app.repository.job_task_repository import JobTaskRepository
+from app.repository.job_analytic_repository import JobAnalyticRepository
 from app.repository.project_repository import ProjectRepository
 from app.repository.skill_repository import SkillRepository
 from app.repository.user_file_repository import UserFileRepository
@@ -79,4 +80,9 @@ class RepositoryContainer(containers.DeclarativeContainer):
         JobTaskRepository,
         session_factory=db.provided.session,
         replica_session_factory=db.provided.replica_session
+    )
+    
+    job_analytic_repository = providers.Factory(
+        JobAnalyticRepository,
+        session_factory=db.provided.session
     )

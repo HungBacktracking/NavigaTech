@@ -18,6 +18,7 @@ class ApplicationContainer(containers.DeclarativeContainer):
             "app.api.endpoints.auth",
             "app.api.endpoints.user",
             "app.api.endpoints.job",
+            "app.api.endpoints.job_analysis",
             "app.api.endpoints.job_task",
             "app.api.endpoints.ws",
             "app.api.endpoints.chat",
