@@ -24,7 +24,6 @@ class KafkaService:
     def _init_producer(self):
         """Initialize Kafka producer with retry logic"""
         try:
-            # Create a custom JSON serializer that handles UUIDs
             def json_serializer(obj):
                 if isinstance(obj, UUID):
                     return str(obj)
@@ -45,7 +44,6 @@ class KafkaService:
             self.producer = None
 
     def _ensure_producer(self):
-        """Ensure the producer is initialized"""
         if self.producer is None:
             self._init_producer()
         return self.producer is not None
@@ -87,13 +85,28 @@ class KafkaService:
         if user_id in self.active_connections:
             try:
                 websocket = self.active_connections[user_id]
+                
+                # Check if the WebSocket is closed
+                if websocket.client_state.DISCONNECTED:
+                    self._logger.warning(f"WebSocket for user {user_id} is disconnected, removing connection")
+                    self.remove_connection(user_id)
+                    return False
+                    
+                # Send the notification
                 await websocket.send_json(notification)
                 self._logger.info(f"Notification sent to user {user_id} via WebSocket")
                 return True
+            except RuntimeError as e:
+                if "websocket operation outside of a connection" in str(e).lower():
+                    self._logger.warning(f"WebSocket for user {user_id} is no longer connected, removing connection")
+                    self.remove_connection(user_id)
+                else:
+                    self._logger.error(f"Runtime error sending notification to user {user_id}: {str(e)}")
+                return False
             except Exception as e:
                 self._logger.error(f"Error sending notification to user {user_id}: {str(e)}")
-                # Remove the connection if it's closed
                 self.remove_connection(user_id)
+
                 return False
         else:
             self._logger.warning(f"No active WebSocket connection for user {user_id}")
@@ -190,6 +203,9 @@ class KafkaService:
                 if not user_id or not notification:
                     self._logger.error(f"Invalid notification message: {message}")
                     return
+
+                user_id = str(user_id)
+                self._logger.info(f"Received notification for user {user_id}")
                     
                 # Create a new event loop for this thread
                 loop = asyncio.new_event_loop()
@@ -197,7 +213,11 @@ class KafkaService:
                 
                 # Send notification to user via WebSocket
                 try:
-                    loop.run_until_complete(self.send_notification(user_id, notification))
+                    result = loop.run_until_complete(self.send_notification(user_id, notification))
+                    if result:
+                        self._logger.info(f"Successfully sent notification to user {user_id}")
+                    else:
+                        self._logger.warning(f"Failed to send notification to user {user_id}, no active connection")
                 finally:
                     loop.close()
                     
@@ -211,8 +231,8 @@ class KafkaService:
     def create_job_task(self, job_id: UUID, user_id: UUID, task_type: str, task_data: Optional[Dict] = None):
         """Create a job task in Kafka"""
         message = {
-            "job_id": job_id,  # The JSON serializer will handle UUID conversion
-            "user_id": user_id,  # The JSON serializer will handle UUID conversion
+            "job_id": job_id,
+            "user_id": user_id,  
             "task_type": task_type,
             "data": task_data or {}
         }

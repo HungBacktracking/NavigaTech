@@ -39,6 +39,7 @@ def get_current_user(
 
 async def get_ws_user(
     websocket: WebSocket,
+    user_id: UUID,
     service: UserService = Depends(Provide[ApplicationContainer.services.user_service])
 ) -> Optional[UserBasicResponse]:
     """
@@ -53,12 +54,17 @@ async def get_ws_user(
     try:
         payload = jwt.decode(token, configs.SECRET_KEY, algorithms=ALGORITHM)
         token_data = Payload(**payload)
+        
+        # Verify that the token belongs to the user_id in the path
+        if str(token_data.id) != str(user_id):
+            return None
+            
     except (jwt.JWTError, ValidationError):
         raise AuthError(detail="Could not validate credentials")
 
     current_user: UserBasicResponse = service.get_by_id(token_data.id)
     if not current_user:
-        raise AuthError(detail="User not found")
+        raise AuthError(detail="Could not validate credentials")
 
     return current_user
 
