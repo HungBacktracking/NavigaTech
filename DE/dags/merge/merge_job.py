@@ -48,23 +48,21 @@ output_key = f"clean2/final_{timestamp}.json"
 def normalize_vietnamworks_job(job):
     return {
         "id": job.get("id"),
-        "title": job.get("Tiêu đề", ""),
-        "job_url": job.get("Link công việc", ""),
-        "company": job.get("Công ty", ""),
-        "company_url": job.get("Link công ty", ""),
-        "salary": job.get("Lương", ""),
-        "location": job.get("Địa điểm", ""),
+        "title": job.get("title", ""),
+        "job_url": job.get("job_url", ""),
+        "company": job.get("company", ""),
+        "company_url": job.get("company_url", ""),
+        "salary": job.get("salary", ""),
+        "location": job.get("location", ""),
         "date_posted": None,
         "description": job.get("jd", ""),
-        "responsibilities": job.get("Mô tả công việc", ""),
-        "qualifications & skills": job.get("Yêu cầu công việc", ""),
-        "min_salary": job.get("min_salary"),
-        "max_salary": job.get("max_salary"),
+        "responsibilities": job.get("responsibilities", ""),
+        "qualifications & skills": job.get("qualifications & skills", ""),
         "job_type": None,
-        "job_level": None,
+        "job_level": job.get("job_level"),
         "company_addresses": None,
         "benefits": "",
-        "company_logo": job.get("Logo công ty", "")
+        "company_logo": job.get("company_logo", "")
     }
 
 
@@ -81,8 +79,6 @@ def normalize_linkedin_indeed_job(job):
         "description": job.get("description", ""),
         "responsibilities": job.get("responsibilities", ""),
         "qualifications & skills": job.get("qualifications & skills", ""),
-        "min_salary": job.get("min_salary"),
-        "max_salary": job.get("max_salary"),
         "job_type": job.get("job_type"),
         "job_level": job.get("job_level"),
         "company_addresses": job.get("company_addresses"),

@@ -162,20 +162,37 @@ for keyword in keywords:
 
                 mo_ta, yeu_cau, salary, location, deadline, orther = extract_job_details(job_link)
 
+                # job_info = {
+                #     "Từ khóa": keyword,
+                #     "Tiêu đề": title,
+                #     "Link công việc": job_link,
+                #     "Công ty": company,
+                #     "Link công ty": company_link,
+                #     "Lương": salary,
+                #     "Địa điểm": location,
+                #     "Ngày hết hạn": deadline,
+                #     "Mô tả công việc": mo_ta,
+                #     "Yêu cầu công việc": yeu_cau,
+                #     "jd": orther,
+                #     "Logo công ty": company_logo_link,
+                # }
+
+
                 job_info = {
-                    "Từ khóa": keyword,
-                    "Tiêu đề": title,
-                    "Link công việc": job_link,
-                    "Công ty": company,
-                    "Link công ty": company_link,
-                    "Lương": salary,
-                    "Địa điểm": location,
-                    "Ngày hết hạn": deadline,
-                    "Mô tả công việc": mo_ta,
-                    "Yêu cầu công việc": yeu_cau,
+                    "keyword": keyword,
+                    "title": title,
+                    "job_url": job_link,
+                    "company": company,
+                    "company_url": company_link,
+                    "salary": salary,
+                    "location": location,
+                    "expiration_date": deadline,
+                    "responsibilities": mo_ta,
+                    "qualifications & skills": yeu_cau,
                     "jd": orther,
-                    "Logo công ty": company_logo_link,
+                    "company_logo": company_logo_link,
                 }
+
 
                 if not first_job:
                     output_file.write(",\n")

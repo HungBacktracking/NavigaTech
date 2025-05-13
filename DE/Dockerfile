@@ -21,9 +21,10 @@ RUN apt-get update && \
 
 USER airflow
 # Install Python dependencies from the requirements.txt
-COPY wheels/ /wheels/
+# COPY wheels/ /wheels/
 COPY requirements.txt /requirements.txt
-RUN pip install --find-links=/wheels -r /requirements.txt
+RUN pip install -r /requirements.txt
 
+# RUN pip install --no-cache-dir -r /opt/airflow/requirements.txt
 
 

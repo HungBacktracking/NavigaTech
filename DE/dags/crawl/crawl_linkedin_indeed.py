@@ -1,34 +1,40 @@
 import os
+import json
 import datetime
 import pandas as pd
-from jobspy import scrape_jobs
-import json
 import numpy as np
+from dotenv import load_dotenv
+from jobspy import scrape_jobs
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import boto3
 from botocore.exceptions import ClientError
-from dotenv import load_dotenv
 
+# Load environment variables
 load_dotenv("/opt/airflow/utils/.env")
 
-keywords = [
+# --- Constants ---
+KEYWORDS = [
     "Data Engineer", "Data Analyst", "Data Scientist", "Machine Learning",
     "Artificial Intelligence", "MLOps", "LLM Engineer", "NLP Engineer",
     "Software Engineer", "Backend Developer", "Frontend Developer",
     "Full Stack Developer", "DevOps", "Cloud Engineer", "SRE",
     "Platform Engineer", "Security Engineer", "Big Data Engineer"
 ]
-
-country = "Vietnam"
+COUNTRY = "Vietnam"
 MAX_THREADS = 5
+BUCKET_NAME = os.getenv("AWS_S3_BUCKET")
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
+AWS_REGION = os.getenv("AWS_REGION")
+
 
 def scrape_keyword(keyword):
     try:
         jobs = scrape_jobs(
             site_name=["linkedin", "indeed"],
             search_term=keyword,
-            location="Vietnam",
-            country_indeed=country,
+            location=COUNTRY,
+            country_indeed=COUNTRY,
             results_wanted=5000,
             linkedin_fetch_description=True,
             verbose=0
@@ -39,6 +45,7 @@ def scrape_keyword(keyword):
     except Exception as e:
         print(f"[Error] Keyword '{keyword}': {e}")
         return pd.DataFrame()
+
 
 def scrape_all_keywords(keywords):
     all_jobs = []
@@ -51,66 +58,78 @@ def scrape_all_keywords(keywords):
                 if not df.empty:
                     all_jobs.append(df)
             except Exception as e:
-                print(f"Error processing '{kw}': {e}")
+                print(f"[Error] Processing '{kw}': {e}")
     return pd.concat(all_jobs, ignore_index=True) if all_jobs else pd.DataFrame()
+
 
 def check_bucket_exists(s3_client, bucket_name):
     try:
         s3_client.head_bucket(Bucket=bucket_name)
         return True
     except ClientError as e:
-        error_code = int(e.response['Error']['Code'])
-        if error_code == 404:
-            print(f"Bucket '{bucket_name}' does not exist!")
+        if e.response['Error']['Code'] == '404':
+            print(f"[Error] Bucket '{bucket_name}' does not exist.")
         else:
-            print(f"Error checking bucket '{bucket_name}': {e}")
+            print(f"[Error] Checking bucket: {e}")
         return False
 
-def upload_to_s3(file_path, bucket_name, s3_key, aws_access_key_id=None, aws_secret_access_key=None, region_name=None):
+
+def upload_to_s3(file_path, bucket_name, s3_key):
     try:
         session = boto3.session.Session(
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key,
-            region_name=region_name
+            aws_access_key_id=AWS_ACCESS_KEY,
+            aws_secret_access_key=AWS_SECRET_KEY,
+            region_name=AWS_REGION
         )
         s3 = session.client('s3')
 
         if not check_bucket_exists(s3, bucket_name):
-            print(f"Upload aborted because bucket '{bucket_name}' does not exist.")
+            print("⛔ Upload aborted: bucket not found.")
             return
 
         s3.upload_file(file_path, bucket_name, s3_key)
-        print(f"Uploaded {file_path} to s3://{bucket_name}/{s3_key}")
+        print(f"✅ Uploaded: s3://{bucket_name}/{s3_key}")
     except Exception as e:
-        print(f"Upload to S3 failed: {e}")
+        print(f"[Error] Upload failed: {e}")
+
+
+def save_jobs_to_json(df, output_path):
+    clean_df = df.replace({np.nan: None, pd.NaT: None})
+    jobs_json = clean_df.to_dict(orient="records")
+
+    os.makedirs(os.path.dirname(output_path), exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(jobs_json, f, ensure_ascii=False, indent=2, default=str)
+
 
 # --- MAIN ---
-all_jobs_df = scrape_all_keywords(keywords)
+def main():
+    all_jobs_df = scrape_all_keywords(KEYWORDS)
 
-if not all_jobs_df.empty:
+    if all_jobs_df.empty:
+        print("⚠️ No data scraped. Skipping export and upload.")
+        return
+
+    # Drop duplicate job URLs
     if 'job_url' in all_jobs_df.columns:
         all_jobs_df = all_jobs_df.drop_duplicates(subset=['job_url'], keep='first')
     else:
-        url_columns = [col for col in all_jobs_df.columns if 'url' in col.lower()]
-        if url_columns:
-            all_jobs_df = all_jobs_df.drop_duplicates(subset=[url_columns[0]], keep='first')
+        url_cols = [col for col in all_jobs_df.columns if 'url' in col.lower()]
+        if url_cols:
+            all_jobs_df = all_jobs_df.drop_duplicates(subset=[url_cols[0]], keep='first')
 
+    # Export to JSON
     timestamp = datetime.datetime.now().strftime("%Y%m%d")
-    json_output = f"/opt/airflow/data/raw/linkedin_indeed_jobs_{timestamp}.json"
-    os.makedirs(os.path.dirname(json_output), exist_ok=True)
-    clean_df = all_jobs_df.replace({np.nan: None, pd.NaT: None})
-    jobs_json = clean_df.to_dict(orient='records')
-
-    with open(json_output, 'w', encoding='utf-8') as f:
-        json.dump(jobs_json, f, ensure_ascii=False, indent=2, default=str)
-
-    bucket_name = os.getenv("AWS_S3_BUCKET")
+    local_path = f"/opt/airflow/data/raw/linkedin_indeed_jobs_{timestamp}.json"
     s3_key = f"raw/linkedin_indeed_jobs_{timestamp}.json"
-    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-    region_name = os.getenv("AWS_REGION")
 
-    print(f"Uploading {json_output} to s3://{bucket_name}/{s3_key}...")
-    upload_to_s3(json_output, bucket_name, s3_key, aws_access_key_id, aws_secret_access_key, region_name)
-else:
-    print("No data scraped, skipping JSON export and upload.")
+    save_jobs_to_json(all_jobs_df, local_path)
+    print(f"📁 Saved local file: {local_path}")
+
+    # Upload to S3
+    print(f"⬆️ Uploading to S3...")
+    upload_to_s3(local_path, BUCKET_NAME, s3_key)
+
+
+if __name__ == "__main__":
+    main()

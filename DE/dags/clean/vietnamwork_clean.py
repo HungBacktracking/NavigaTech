@@ -1,151 +1,130 @@
-import json
-import re
 import os
+import re
 import io
+import json
 from datetime import datetime, timedelta
+
 import boto3
 from dotenv import load_dotenv
 
-# Load environment variables (for AWS credentials and bucket name)
+# Load environment variables
 load_dotenv("/opt/airflow/utils/.env")
 
-timestamp = datetime.now().strftime("%Y%m%d")
+# Constants
+BASE64_EMPTY_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7"
+BUCKET_NAME = os.getenv("AWS_S3_BUCKET")
+REGION = os.getenv("AWS_REGION")
+AWS_ACCESS_KEY = os.getenv("AWS_ACCESS_KEY_ID")
+AWS_SECRET_KEY = os.getenv("AWS_SECRET_ACCESS_KEY")
 
 # Initialize S3 client
 s3 = boto3.client(
-    's3',
-    aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
-    region_name=os.getenv("AWS_REGION")
+    "s3",
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY,
+    region_name=REGION
 )
 
-bucket_name = os.getenv("AWS_S3_BUCKET")
-input_key = f"raw/vietnamworks_jobs_{timestamp}.json"
-output_key = f"clean1/vietnamworks_jobs_cleaned_{timestamp}.json"
 
-
-
-# --- Helper functions ---
 def remove_special_chars(text):
-    """Remove special characters (keep letters, numbers, spaces)."""
-    return re.sub(r'[^a-zA-Z0-9À-ỹà-ỹ\s]', '', text)
-
-# def jd_to_markdown(jd_raw):
-#     """Convert job description to simple markdown (bold + bullet points)."""
-#     jd = jd_raw.replace("\\n", "\n").strip()
-
-#     # Add bold section titles
-#     jd = re.sub(r"(Job Description)", r"\n**\1**", jd, flags=re.I)
-#     jd = re.sub(r"(Job Requirements)", r"\n**\1**", jd, flags=re.I)
-#     jd = re.sub(r"(Benefit & Perks)", r"\n**\1**", jd, flags=re.I)
-
-#     # Replace bullet symbols
-#     jd = re.sub(r"•\t?", "- ", jd)
-
-#     # Collapse extra newlines
-#     jd = re.sub(r"\n{3,}", "\n\n", jd)
-
-#     return jd.strip()
-
+    """Remove special characters, keep letters, numbers, spaces."""
+    return re.sub(r"[^a-zA-Z0-9À-ỹà-ỹ\s]", "", text)
 
 
 def jd_to_markdown(jd_text):
-    # Thay thế \\n thành newline thực (nếu dữ liệu gốc là chuỗi từ JSON)
+    """Convert job description text to Markdown format."""
     jd_text = jd_text.replace("\\n", "\n").strip()
-
-    # Tách các phần theo dòng mới mà dòng sau bắt đầu bằng chữ cái hoặc số
     sections = re.split(r'\n(?=\w)', jd_text)
 
     markdown_lines = []
-
     for section in sections:
-        # Tách tiêu đề là dòng đầu tiên
         lines = section.strip().split('\n', 1)
         title = lines[0].strip()
-        content = lines[1].strip() if len(lines) > 1 else ''
+        content = lines[1].strip() if len(lines) > 1 else ""
 
-        # Thêm tiêu đề được bôi đậm
         markdown_lines.append(f"**{title}**")
-
-        # Chuyển các dòng có đầu dòng là bullet (• hoặc - hoặc tab) thành dấu markdown
         content = re.sub(r'^[\t•\-]+\s*', '- ', content, flags=re.MULTILINE)
 
-        # Thêm nội dung (nếu có)
         if content:
             markdown_lines.append(content)
+        markdown_lines.append("")
 
-        markdown_lines.append('')  # thêm dòng trống giữa các phần
-
-    # Kết hợp lại thành chuỗi markdown
     return '\n'.join(markdown_lines).strip()
+
+
+def extract_job_level_from_title(title: str) -> str:
+    """Dựa vào title để suy đoán cấp độ công việc."""
+    if not title:
+        return ""
+
+    title = title.lower()
+    patterns = [
+        (r"\b(intern|thực tập)\b", "Intern"),
+        (r"\b(fresher|graduate)\b", "Fresher"),
+        (r"\b(junior|jr\.)\b", "Junior"),
+        (r"\b(senior|sr\.)\b", "Senior"),
+        (r"\b(mid|middle)\b", "Middle"),
+        (r"\b(lead|leader|team lead)\b", "Lead"),
+        (r"\b(manager|supervisor)\b", "Manager"),
+        (r"\b(director|head)\b", "Director"),
+    ]
+
+    for pattern, level in patterns:
+        if re.search(pattern, title):
+            return level
+
+    return "Unknown"
+
 
 def clean_job(job):
     """Clean and normalize a single job entry."""
-    desc = job.get("Job Description", "")
-    reqs = job.get("Job Requirements", "")
-    job["Job Description"] = re.sub(r'\s+', ' ', remove_special_chars(desc)).strip()
-    job["Job Requirements"] = re.sub(r'\s+', ' ', remove_special_chars(reqs)).strip()
-
-    # Convert JD to markdown
+    job["Job Description"] = re.sub(r'\s+', ' ', remove_special_chars(job.get("Job Description", ""))).strip()
+    job["Job Requirements"] = re.sub(r'\s+', ' ', remove_special_chars(job.get("Job Requirements", ""))).strip()
     job["jd"] = jd_to_markdown(job.get("jd", ""))
 
-    # Process salary
-    salary_text = job.get("Salary", "").lower()
-    salary_numbers = re.findall(r'\d[\d,]*', salary_text)
-
-    if salary_numbers:
-        salaries = [int(s.replace(',', '')) for s in salary_numbers]
-        if "up to" in salary_text or "tới" in salary_text:
-            job["min_salary"] = None
-            job["max_salary"] = salaries[0]
-        elif "from" in salary_text or "từ" in salary_text:
-            job["min_salary"] = salaries[0]
-            job["max_salary"] = None
-        elif len(salaries) == 1:
-            job["min_salary"] = job["max_salary"] = salaries[0]
-        else:
-            job["min_salary"] = min(salaries)
-            job["max_salary"] = max(salaries)
-    else:
-        job["min_salary"] = job["max_salary"] = None
+    # Add job level from title
+    title = job.get("Title", "")
+    job["job_level"] = extract_job_level_from_title(title)
 
     # Process expiration date
     expire_text = job.get("Expiration Date", "")
-    match = re.search(r'(\d+)', expire_text)
+    match = re.search(r'\d+', expire_text)
     if match:
-        days = int(match.group(1))
+        days = int(match.group())
         expire_date = datetime.now() + timedelta(days=days)
         job["Expiration Date"] = expire_date.strftime("%Y-%m-%d")
     else:
         job["Expiration Date"] = None
 
-    for logo in job.get("Logo công ty", []):
-        if logo == "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7":
-            job["Logo công ty"] = None
+    # Clean company logo
+    if job.get("company_logo") == BASE64_EMPTY_IMAGE:
+        job["company_logo"] = None
 
     return job
 
-def main():
-    # --- Apply cleaning to all jobs ---
-    # --- Download JSON file from S3 ---
-    print(f"Downloading s3://{bucket_name}/{input_key}...")
-    input_obj = s3.get_object(Bucket=bucket_name, Key=input_key)
-    jobs = json.load(input_obj['Body'])
 
+def main():
+    now = datetime.now()
+    timestamp = now.strftime("%Y%m%d")
+    input_key = f"raw/vietnamworks_jobs_{timestamp}.json"
+    output_key = f"clean1/vietnamworks_jobs_cleaned_{timestamp}.json"
+
+    print(f"Downloading from s3://{BUCKET_NAME}/{input_key}...")
+    input_obj = s3.get_object(Bucket=BUCKET_NAME, Key=input_key)
+    jobs = json.load(input_obj['Body'])
 
     cleaned_jobs = [clean_job(job) for job in jobs]
 
-    # --- Write cleaned data to JSON in-memory ---
     output_buffer = io.BytesIO()
-    json_bytes = json.dumps(cleaned_jobs, ensure_ascii=False, indent=2).encode('utf-8')
+    json_bytes = json.dumps(cleaned_jobs, ensure_ascii=False, indent=2).encode("utf-8")
     output_buffer.write(json_bytes)
     output_buffer.seek(0)
 
-    # --- Upload cleaned JSON back to S3 ---
-    print(f"Uploading cleaned data to s3://{bucket_name}/{output_key}...")
-    s3.upload_fileobj(output_buffer, bucket_name, output_key)
+    print(f"Uploading cleaned data to s3://{BUCKET_NAME}/{output_key}...")
+    s3.upload_fileobj(output_buffer, BUCKET_NAME, output_key)
 
-    print(f"✅ Cleaning and upload completed: s3://{bucket_name}/{output_key}")
+    print(f"Cleaning and upload completed: s3://{BUCKET_NAME}/{output_key}")
+
 
 if __name__ == "__main__":
     main()
