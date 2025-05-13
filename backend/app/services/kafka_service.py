@@ -232,7 +232,7 @@ class KafkaService:
         """Create a job task in Kafka"""
         message = {
             "job_id": job_id,
-            "user_id": user_id,  
+            "user_id": user_id,
             "task_type": task_type,
             "data": task_data or {}
         }

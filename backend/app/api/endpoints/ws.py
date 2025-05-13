@@ -16,7 +16,6 @@ async def websocket_endpoint(
     user_id: UUID,
     kafka_service: KafkaService = Depends(Provide[ApplicationContainer.services.kafka_service]),
 ):
-    # Authenticate user
     user = await get_ws_user(websocket, user_id)
     if not user:
         await websocket.close(code=4000)
@@ -28,8 +27,7 @@ async def websocket_endpoint(
     try:
         # Keep connection open
         while True:
-            # Wait for any client messages (could be used for ping/pong)
+            # Wait for any client messages
             await websocket.receive_text()
     except WebSocketDisconnect:
-        # Clean up on disconnect
         kafka_service.remove_connection(str(user_id)) 
