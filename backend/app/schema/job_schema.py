@@ -17,10 +17,10 @@ class BaseJob(BaseModel):
     company_address: Optional[str] = None
     company_description: Optional[str] = None
     job_type: Optional[str] = None
-    skills: str = None
+    skills: Optional[str] = None
     location: Optional[str] = None
     date_posted: Optional[date] = None
-    job_description: str
+    job_description: Optional[str] = None
     job_requirement: str
     benefit: Optional[str] = None
     is_analyze: bool
