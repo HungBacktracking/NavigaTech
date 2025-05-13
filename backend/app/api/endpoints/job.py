@@ -17,7 +17,7 @@ from app.repository.elasticsearch_repository import ElasticsearchRepository
 router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer())])
 
 
-@router.get("/search", response_model=PageResponse[JobResponse])
+@router.post("/search", response_model=PageResponse[JobResponse])
 @inject
 def search_job(
     request: JobSearchRequest,
