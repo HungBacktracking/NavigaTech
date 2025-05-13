@@ -58,14 +58,14 @@ class Configs(BaseSettings):
         port=DB_PORT,
         database=ENV_DATABASE_MAPPER[ENV]
     )
-    
+
     # replica database
     REPLICA_DB_USER: str = os.getenv("REPLICA_DB_USER", DB_USER)
     REPLICA_DB_PASSWORD: str = os.getenv("REPLICA_DB_PASSWORD", DB_PASSWORD)
     REPLICA_DB_HOST: str = os.getenv("REPLICA_DB_HOST")
     REPLICA_DB_PORT: str = os.getenv("REPLICA_DB_PORT", "5432")
     REPLICA_DB_ENGINE: str = os.getenv("REPLICA_DB_ENGINE", DB_ENGINE)
-    
+
     REPLICA_DATABASE_URI: str = "{db_engine}://{user}:{password}@{host}:{port}/{database}".format(
         db_engine=REPLICA_DB_ENGINE,
         user=REPLICA_DB_USER,
@@ -91,6 +91,10 @@ class Configs(BaseSettings):
     # Elasticsearch
     ELASTICSEARCH_URL: str = os.getenv("ELASTICSEARCH_URL", "http://elasticsearch:9200")
 
+    # Kafka
+    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
+    KAFKA_CONSUMER_GROUP: str = os.getenv("KAFKA_CONSUMER_GROUP", "navigatech-app")
+
     # LLM + Embeddings
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
@@ -104,7 +108,6 @@ class Configs(BaseSettings):
 
     COHERE_API_TOKEN: str = os.getenv("COHERE_API_TOKEN")
 
-
     # AWS
     AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")
@@ -112,14 +115,11 @@ class Configs(BaseSettings):
     AWS_S3_BUCKET_NAME: str = os.getenv("AWS_S3_BUCKET_NAME")
     AWS_S3_BUCKET_URL: str = os.getenv("AWS_S3_BUCKET_URL")
 
-
     # find query
     PAGE: int = 1
     PAGE_SIZE: int = 20
     ORDERING: str = "-id"
 
-    # Kafka settings
-    KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
     class Config:
         case_sensitive = True

@@ -83,10 +83,22 @@ class ApplicationContainer(containers.DeclarativeContainer):
     # Start the job worker when the container is initialized
     def init_resources(self):
         super().init_resources()
-        # Start the job worker for background processing
-        self.services().job_worker().start()
+        # No need to start job_worker here as it's now started in the lifespan
+        
+        # Start the notification consumer for WebSocket notifications
+        self.services.kafka_service().start_notification_consumer()
         
     def shutdown_resources(self):
-        # Stop the job worker
-        self.services().job_worker().stop()
+        # Stop the job worker if it exists
+        if hasattr(self.services, 'job_worker'):
+            worker = self.services.job_worker()
+            if worker:
+                worker.stop()
+                
+        # Stop the notification consumer
+        if hasattr(self.services, 'kafka_service'):
+            kafka = self.services.kafka_service()
+            if kafka:
+                kafka.stop_notification_consumer()
+                
         super().shutdown_resources()
