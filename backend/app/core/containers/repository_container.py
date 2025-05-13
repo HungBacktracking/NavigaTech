@@ -84,5 +84,6 @@ class RepositoryContainer(containers.DeclarativeContainer):
     
     job_analytic_repository = providers.Factory(
         JobAnalyticRepository,
-        session_factory=db.provided.session
+        session_factory=db.provided.session,
+        replica_session_factory=db.provided.replica_session
     )

@@ -7,14 +7,14 @@ from app.schema.job_analytic_schema import JobAnalyticRequest
 
 
 class JobAnalyticRepository(BaseRepository):
-    def __init__(self, session_factory):
-        super().__init__(session_factory, JobAnalytic)
+    def __init__(self, session_factory, replica_session_factory):
+        super().__init__(session_factory, JobAnalytic, replica_session_factory)
         
     def find_by_job_and_user(self, job_id: UUID, user_id: UUID) -> Optional[JobAnalytic]:
         """
         Find job analytic by job_id and user_id
         """
-        with self.session_factory() as session:
+        with self.replica_session_factory() as session:
             return session.query(JobAnalytic).filter(
                 JobAnalytic.job_id == job_id,
                 JobAnalytic.user_id == user_id,

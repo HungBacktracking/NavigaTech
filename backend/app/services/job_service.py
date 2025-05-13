@@ -7,7 +7,6 @@ from app.convert.job import to_favorite_job_response
 from app.exceptions.custom_error import CustomError
 from app.job_report.cv_ai_report import ResumeReport
 from app.job_report.cv_grading import ResumeScorer
-from app.model.favorite_job import FavoriteJob
 from app.model.job import Job
 from app.recommendation.job_recommendation import JobRecommendation
 from app.repository.elasticsearch_repository import ElasticsearchRepository

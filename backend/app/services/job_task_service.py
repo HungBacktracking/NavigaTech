@@ -6,12 +6,14 @@ from app.exceptions.custom_error import CustomError
 from app.model.job_task import JobTask, TaskStatus
 from app.repository.job_task_repository import JobTaskRepository
 from app.schema.job_task_schema import JobTaskCreate, JobTaskResponse
+from app.services.base_service import BaseService
 
 
-class JobTaskService:
+class JobTaskService(BaseService):
     def __init__(self, job_task_repository: JobTaskRepository):
         self.job_task_repository = job_task_repository
         self._logger = logging.getLogger(__name__)
+        super().__init__(job_task_repository)
 
     def create_task(self, job_id: UUID, user_id: UUID) -> JobTask:
         task = JobTaskCreate(

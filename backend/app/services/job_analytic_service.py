@@ -7,9 +7,10 @@ from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_analytic_repository import JobAnalyticRepository
 from app.schema.job_analytic_schema import JobAnalyticResponse
 from app.schema.job_schema import FavoriteJobRequest
+from app.services.base_service import BaseService
 
 
-class JobAnalyticService:
+class JobAnalyticService(BaseService):
     def __init__(
             self,
             job_analytic_repository: JobAnalyticRepository,
@@ -17,6 +18,7 @@ class JobAnalyticService:
     ):
         self.repository = job_analytic_repository
         self.favorite_job_repository = favorite_job_repository
+        super().__init__(job_analytic_repository, favorite_job_repository)
         
     def get_by_job_and_user(self, job_id: UUID, user_id: UUID) -> Optional[JobAnalyticResponse]:
         """
