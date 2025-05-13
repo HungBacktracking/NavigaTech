@@ -16,12 +16,6 @@ class FavoriteJobRepository(BaseRepository):
     ):
         super().__init__(session_factory, FavoriteJob, replica_session_factory)
 
-    def find_by_user_id(self, job_id: UUID, user_id: UUID) -> Optional[FavoriteJob]:
-        with self.replica_session_factory() as session:
-            statement = select(FavoriteJob).where(FavoriteJob.user_id == user_id).where(FavoriteJob.job_id == job_id)
-
-            return session.execute(statement).scalars().first()
-
     def find_by_job_and_user_id(
         self, job_id: UUID, user_id: UUID
     ) -> Optional[FavoriteJob]:
@@ -38,7 +32,7 @@ class FavoriteJobRepository(BaseRepository):
     def get_favorites_by_job_ids(self, job_ids: List[UUID], user_id: UUID) -> Dict[UUID, FavoriteJob]:
         favorites = {}
         if job_ids:
-            with self.session_factory() as session:
+            with self.replica_session_factory() as session:
                 statement = select(FavoriteJob).where(
                     FavoriteJob.job_id.in_(job_ids),
                     FavoriteJob.user_id == user_id

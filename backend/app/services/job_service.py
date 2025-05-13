@@ -115,18 +115,15 @@ class JobService(BaseService):
             total_pages=total_pages,
         )
 
-    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20):
+    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        offset = (page - 1) * page_size
-
         all_recommendations = self.recommendation.search(resume_text, top_k=100)
+
+        offset = (page - 1) * page_size
         total_count = len(all_recommendations)
-
-        recommendations = self.recommendation.search(resume_text, top_k=offset + page_size)
-
-        paginated_results = recommendations[offset : offset + page_size]
+        paginated_results = all_recommendations[offset : offset + page_size]
 
         results = []
         for item in paginated_results:
@@ -138,12 +135,8 @@ class JobService(BaseService):
             # Get favorite status if job exists
             fav = None
             if job:
-                fav = self.favorite_job_repository.find_by_job_and_user_id(
-                    job.id, user_id
-                )
+                fav = self.favorite_job_repository.find_by_job_and_user_id(job.id, user_id)
 
-            # Create JobResponse object with job data
-            if job:
                 results.append(
                     JobResponse(
                         id=job.id,
@@ -164,7 +157,6 @@ class JobService(BaseService):
                         job_requirement=job.job_requirement,
                         benefit=job.benefit,
                         is_analyze=fav.is_analyze if fav else False,
-                        resume_url=fav.resume_url if fav else None,
                         is_favorite=fav.is_favorite if fav else False
                     )
                 )
@@ -239,7 +231,7 @@ class JobService(BaseService):
             is_favorite=True
         )
 
-        fav_job = self.favorite_job_repository.find_by_user_id(job_id, user_id)
+        fav_job = self.favorite_job_repository.find_by_job_and_user_id(job_id, user_id)
         if fav_job:
             self.favorite_job_repository.update(fav_job.id, request)
         else:
@@ -252,7 +244,7 @@ class JobService(BaseService):
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
 
-        fav_job = self.favorite_job_repository.find_by_user_id(job_id, user_id)
+        fav_job = self.favorite_job_repository.find_by_job_and_user_id(job_id, user_id)
         if fav_job:
             request = FavoriteJobRequest(
                 job_id=job_id,

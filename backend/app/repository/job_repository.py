@@ -76,13 +76,7 @@ class JobRepository(BaseRepository):
             statement = select(Job).where(Job.deleted_at == None)
             jobs = session.execute(statement).scalars().all()
             return jobs
-            
-    def get_all_including_deleted(self) -> List[Job]:
-        """Get all jobs including soft-deleted ones"""
-        with self.replica_session_factory() as session:
-            statement = select(Job)
-            jobs = session.execute(statement).scalars().all()
-            return jobs
+
 
     def get_total_count(self) -> int:
         """Get the total count of non-deleted jobs in the database"""
@@ -96,11 +90,6 @@ class JobRepository(BaseRepository):
         with self.replica_session_factory() as session:
             statement = select(func.count(Job.id))
             count = session.execute(statement).scalar_one()
+
             return count
 
-    def get_all_job_ids(self) -> List[UUID]:
-        """Get all non-deleted job IDs from the database"""
-        with self.replica_session_factory() as session:
-            statement = select(Job.id).where(Job.deleted_at == None)
-            job_ids = session.execute(statement).scalars().all()
-            return job_ids
