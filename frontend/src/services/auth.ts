@@ -17,9 +17,15 @@ export const authApi = {
     return response.data;
   },
 
-  register: async (userData: UserLoginDto): Promise<User> => {
+  register: async (userData: UserLoginDto): Promise<IAuthLoginResponse> => {
     const response = await api.post('/auth/sign-up', userData);
-    return response.data;
+    console.log(`Registration response: ${response.data}`);
+    
+    const loginResponse = await authApi.login({
+      email: userData.email,
+      password: userData.password,
+    });
+    return loginResponse;
   },
 
   getCurrentUser: async (): Promise<User> => {

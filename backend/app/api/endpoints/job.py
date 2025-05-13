@@ -2,13 +2,14 @@ from typing import List
 from uuid import UUID
 
 from dependency_injector.wiring import Provide
-from fastapi import APIRouter, Depends, BackgroundTasks
+from fastapi import APIRouter, Depends, BackgroundTasks, Query
 
 from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
 from app.model.job_task import TaskType
+from app.schema.base_schema import PageResponse
 from app.schema.job_schema import JobSearchRequest, JobResponse, JobFavoriteResponse
 from app.schema.job_task_schema import JobTaskResponse, JobTaskStartRequest
 from app.schema.user_schema import UserBasicResponse, UserDetailResponse
@@ -18,7 +19,7 @@ from app.services.kafka_service import KafkaService
 router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer())])
 
 
-@router.post("/search", response_model=List[JobResponse])
+@router.post("/search", response_model=PageResponse[JobResponse])
 @inject
 def search_job(
     request: JobSearchRequest,
@@ -28,21 +29,29 @@ def search_job(
     return job_service.full_text_search_job(request, current_user.id)
 
 
-@router.get("/recommendations")
+@router.get("/recommendations", response_model=PageResponse[JobResponse])
 @inject
 def get_recommendations(
+        page: int = Query(1, ge=1),
+        page_size: int = Query(20, ge=1, le=100),
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
-    return service.get_job_recommendation(current_user.id)
+    return service.get_job_recommendation(current_user.id, page, page_size)
 
-@router.get("/favorite", response_model=List[JobFavoriteResponse])
+
+@router.get("/favorite", response_model=PageResponse[JobFavoriteResponse])
 @inject
 def get_favorite_jobs(
+        page: int = Query(1, ge=1),
+        page_size: int = Query(20, ge=1, le=100),
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
-    return service.get_user_favorite_jobs_with_analytics(current_user.id)
+    return service.get_user_favorite_jobs_with_analytics(
+        current_user.id, page, page_size
+    )
+
 
 @router.post("/{job_id}/favorite")
 @inject
@@ -53,6 +62,7 @@ def add_favorite_job(
 ):
     return service.add_to_favorite(job_id, current_user.id)
 
+
 @router.post("/{job_id}/delete-favorite")
 @inject
 def remove_favorite_job(
@@ -61,6 +71,7 @@ def remove_favorite_job(
         current_user: UserBasicResponse = Depends(get_current_user)
 ):
     return service.remove_from_favorite(job_id, current_user.id)
+
 
 @router.post("/{job_id}/scoring")
 @inject
@@ -78,6 +89,7 @@ def score_job(
     
     return {"message": "Job scoring started in background", "job_id": str(job_id)}
 
+
 @router.post("/{job_id}/analyze")
 @inject
 def analyze_job(
@@ -93,6 +105,7 @@ def analyze_job(
     )
     
     return {"message": "Job analysis started in background", "job_id": str(job_id)}
+
 
 @router.post("/{job_id}/resume", response_model=JobResponse)
 @inject
@@ -114,4 +127,3 @@ def sync_jobs_to_elasticsearch(
     background_tasks.add_task(job_service.index_all_jobs)
 
     return {"message": "Job synchronization started in background"}
-

@@ -3,6 +3,7 @@ from typing import Callable, Optional, List, Tuple
 from uuid import UUID
 
 from sqlmodel import Session, select
+from sqlalchemy.sql import func
 
 from app.model.favorite_job import FavoriteJob
 from app.model.job import Job
@@ -19,16 +20,24 @@ class JobRepository(BaseRepository):
     ):
         super().__init__(session_factory, Job, replica_session_factory)
 
+    def find_by_url(self, job_url: str) -> Optional[Job]:
+        """Find a job by its URL"""
+        if not job_url:
+            return None
 
-    def search_job(self, request: JobSearchRequest, user_id: UUID) -> List[Tuple[Job, Optional[FavoriteJob]]]:
+        with self.replica_session_factory() as session:
+            statement = select(Job).where(Job.job_url == job_url)
+            return session.exec(statement).first()
+
+    def search_job(
+        self, request: JobSearchRequest, user_id: UUID
+    ) -> List[Tuple[Job, Optional[FavoriteJob]]]:
         with self.replica_session_factory() as session:
             select_statement = (
                 select(Job)
                 .outerjoin(
                     FavoriteJob,
-                    (Job.id == FavoriteJob.job_id)
-                    & (FavoriteJob.user_id == user_id)
-
+                    (Job.id == FavoriteJob.job_id) & (FavoriteJob.user_id == user_id),
                 )
                 .where(Job.name.ilike(f"%{request.name}%"))
                 .where(Job.company.ilike(f"%{request.company}%"))
@@ -37,24 +46,28 @@ class JobRepository(BaseRepository):
 
             return list(session.exec(select_statement).all())
 
-    def find_favorite_job_with_analytics(self, user_id: UUID) -> List[Tuple[Job, FavoriteJob, Optional[JobAnalytic]]]:
+    def find_favorite_job_with_analytics(
+        self, user_id: UUID, page: int = None, page_size: int = None
+    ) -> Tuple[List[Tuple[Job, FavoriteJob, Optional[JobAnalytic]]], int]:
         with self.replica_session_factory() as session:
             statement = (
                 select(Job, FavoriteJob, JobAnalytic)
-                .join(
-                    FavoriteJob,
-                    Job.id == FavoriteJob.job_id
-                )
-                .outerjoin(
-                    JobAnalytic,
-                    Job.id == JobAnalytic.job_id
-                )
+                .join(FavoriteJob, Job.id == FavoriteJob.job_id)
+                .outerjoin(JobAnalytic, Job.id == JobAnalytic.job_id)
                 .where(FavoriteJob.user_id == user_id)
                 .where(JobAnalytic.user_id == user_id)
                 .order_by(FavoriteJob.created_at.desc())
             )
 
-            return list(session.exec(statement).all())
+            count_statement = select(func.count()).select_from(statement.subquery())
+            total_count = session.exec(count_statement).one()
+
+            if page is not None and page_size is not None:
+                offset = (page - 1) * page_size
+                statement = statement.offset(offset).limit(page_size)
+
+            results = list(session.exec(statement).all())
+            return results, total_count
 
     def get_all(self) -> List[Job]:
         with self.replica_session_factory() as session:
@@ -62,6 +75,3 @@ class JobRepository(BaseRepository):
             jobs = session.execute(statement).scalars().all()
 
             return jobs
-
-
-

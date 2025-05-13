@@ -12,6 +12,8 @@ const AuthGuard = () => {
     if (!isLoading) {
       if (!isAuthenticated) {
         navigate('/auth', { replace: true });
+      } else if (!user) {
+        navigate('/auth', { replace: true });
       } else if (user && !user.uploaded_resume && location.pathname !== '/auth/upload-cv') {
         navigate('/auth/upload-cv', { replace: true });
       }
