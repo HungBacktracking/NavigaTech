@@ -29,6 +29,7 @@ class JobTaskRepository(BaseRepository):
             session.add(db_task)
             session.commit()
             session.refresh(db_task)
+
             return db_task
 
     def update_task_status(self, task_id: str, status: TaskStatus, result=None, error_message=None) -> Optional[JobTask]:

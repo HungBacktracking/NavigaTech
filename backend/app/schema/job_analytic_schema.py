@@ -4,16 +4,23 @@ from app.schema.base_schema import ModelBaseInfo
 
 
 class BaseJobAnalytic(BaseModel):
-    general_score: int
-    general_feedback: str
-    skill_feedback: str
-    role_feedback: str
-    experience_feedback: str
-    benefit_feedback: str
-    education_feedback: str
+    match_overall: float
+    match_experience: float
+    match_skills: float
+    weaknesses: str
+    strengths: str
+    overall_assessment: str
+    strength_details: str
+    weakness_concerns: str
+    recommendations: str
+    questions: str
+    roadmap: str
+    conclusion: str
 
     class Config:
         from_attributes = True
+
+class JobAnalyticRequest(BaseJobAnalytic): ...
 
 class JobAnalyticResponse(ModelBaseInfo, BaseJobAnalytic): ...
 
