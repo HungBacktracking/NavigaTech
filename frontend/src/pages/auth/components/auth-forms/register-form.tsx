@@ -4,6 +4,7 @@ import { Form, Input, Button, message, Typography, Checkbox } from 'antd';
 import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { authApi } from '../../../../services/auth';
 import axios from 'axios';
+import { setToken } from '../../../../lib/helpers/auth-tokens';
 
 const { Link } = Typography;
 
@@ -32,11 +33,14 @@ const RegisterForm = () => {
 
     setLoading(true);
     try {
-      await authApi.register({
+      const response = await authApi.register({
         email: data.email,
         password: data.password
       });
-      window.location.href = '/auth/upload-cv';
+
+      setToken(response.access_token);
+
+      window.location.href = '/home';
     } catch (error) {
       console.error('Registration failed:', error);
 

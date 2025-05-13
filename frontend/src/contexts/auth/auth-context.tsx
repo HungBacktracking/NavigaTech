@@ -22,7 +22,6 @@ export const useAuthProvider = (): IAuthContext => {
     queryKey: ['auth/current-user'],
     queryFn: authApi.getCurrentUser,
     enabled: isAuthenticatedBefore,
-    retry: 1
   });
 
   useEffect(() => {
