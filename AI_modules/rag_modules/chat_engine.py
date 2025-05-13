@@ -21,6 +21,7 @@ from llama_index.core.llms import ChatMessage
 
 from llama_index.llms.gemini import Gemini
 from small_talk_check import AdvancedRuleBasedSmallTalkChecker
+import json
 nest_asyncio.apply()
 
 
@@ -41,8 +42,8 @@ class MultiPipelineChatbot:
         top_k: int = 15,
         temperature: float = 0.6,
         max_tokens: int = 5000,
-        memory: Optional[object] = None,
-        resume: str = "default"
+        resume: str = "default",
+        memory: list = [],
     ):
         # Load environment variables
         load_dotenv(env_path)
@@ -67,9 +68,11 @@ class MultiPipelineChatbot:
         self.chat_store = SimpleChatStore()
         # load if exists
         if memory:
+            print(memory)
+            json_memory = self.process_history()
             try:
                 self.chat_store = SimpleChatStore.from_json(
-                    memory
+                    json_memory
                 )
             except Exception:
                 pass
@@ -92,6 +95,7 @@ class MultiPipelineChatbot:
         )
 
         # Helper to build RAG index and engine
+
         def build_retriever(collection_name: str):
             store = QdrantVectorStore(
                 client=client,
@@ -129,7 +133,7 @@ class MultiPipelineChatbot:
 
         # Build small talk engine
         smalltalk_prompt = os.getenv(
-            'SMALLTALK_SYSTEM_PROMPT') or 'You are a helpful assistant.'
+            'SMALLTALK_SYSTEM_PROMPT') or f'You are a helpful assistant. and here is user resume: \n {self.resume}'
         prefix = [ChatMessage(role='system', content=smalltalk_prompt)]
         self.smalltalk_engine = SimpleChatEngine(
             llm=self.llm,
@@ -203,13 +207,36 @@ class MultiPipelineChatbot:
 
         self.checker = AdvancedRuleBasedSmallTalkChecker()
 
+    def process_history(self):
+        chat_history = {
+            "store": {
+                "default": []
+            },
+            "class_name": "SimpleChatStore"
+        }
+        for chat_turn in self.memory:
+            message = {
+                "role": chat_turn["role"],
+                'additional_kwargs': {},
+                "blocks": [
+                    {
+                        "block_type": "text",
+                        "text": chat_turn["content"]
+                    }
+                ]
+            }
+            chat_history["store"]["default"].append(message)
+        return json.dumps(chat_history)
+
     def chat(self, user_input: str) -> str:
         """
         Routes input to small-talk or RAG engine, persists memory.
         """
         if self.checker.is_small_talk(user_input):
+            print("small")
             resp = self.smalltalk_engine.chat(user_input)
         else:
+            print("RAG")
             resp = self.rag_engine.chat(user_input)
 
         # self.chat_store.persist(self.memory_path)
