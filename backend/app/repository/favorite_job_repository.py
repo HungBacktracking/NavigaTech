@@ -19,7 +19,6 @@ class FavoriteJobRepository(BaseRepository):
     def find_by_job_and_user_id(
         self, job_id: UUID, user_id: UUID
     ) -> Optional[FavoriteJob]:
-        """Find a favorite job by job_id and user_id"""
         with self.replica_session_factory() as session:
             statement = (
                 select(FavoriteJob)

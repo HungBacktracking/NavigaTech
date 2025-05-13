@@ -38,7 +38,7 @@ class FavoriteJobRequest(BaseModel):
     user_id: UUID
     is_analyze: Optional[bool] = None
     is_generated_resume: Optional[bool] = None
-    is_favorite: bool
+    is_favorite: Optional[bool] = None
 
     class Config:
         from_attributes = True

@@ -51,7 +51,8 @@ class ServiceContainer(containers.DeclarativeContainer):
     # Job analytic service
     job_analytic_service = providers.Factory(
         JobAnalyticService,
-        job_analytic_repository=repos.job_analytic_repository
+        job_analytic_repository=repos.job_analytic_repository,
+        favorite_job_repository=repos.favorite_job_repository
     )
     
     # Job task service
