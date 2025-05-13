@@ -24,7 +24,6 @@ class BaseJob(BaseModel):
     job_requirement: str
     benefit: Optional[str] = None
     is_analyze: bool
-    resume_url: Optional[str] = None
     is_favorite: bool
 
     class Config:
@@ -40,6 +39,9 @@ class FavoriteJobRequest(BaseModel):
     is_analyze: Optional[bool] = None
     is_generated_resume: Optional[bool] = None
     is_favorite: bool
+
+    class Config:
+        from_attributes = True
 
 
 class JobFavoriteResponse(ModelBaseInfo, BaseJob):

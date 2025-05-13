@@ -22,6 +22,7 @@ def to_favorite_job_response(
         job_url=job.job_url,
         logo_url=job.logo_url,
         job_name=job.job_name,
+        from_site=job.from_site,
         company_name=job.company_name,
         company_type=job.company_type,
         company_address=job.company_address,
@@ -33,9 +34,7 @@ def to_favorite_job_response(
         job_description=job.job_description,
         job_requirement=job.job_requirement,
         benefit=job.benefit,
-        is_expired=job.is_expired,
         is_analyze=fav.is_analyze,
-        resume_url=fav.resume_url,
         is_favorite=fav.is_favorite,
 
         job_analytics=analytic_resp,

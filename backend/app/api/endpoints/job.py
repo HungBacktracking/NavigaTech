@@ -1,4 +1,4 @@
-from typing import List
+from app.scripts.elasticsearch_sync import sync_jobs_to_elasticsearch as sync_func
 from uuid import UUID
 
 from dependency_injector.wiring import Provide
@@ -15,6 +15,7 @@ from app.schema.job_task_schema import JobTaskResponse, JobTaskStartRequest
 from app.schema.user_schema import UserBasicResponse, UserDetailResponse
 from app.services.job_service import JobService
 from app.services.kafka_service import KafkaService
+from app.repository.elasticsearch_repository import ElasticsearchRepository
 
 router = APIRouter(prefix="/jobs", tags=["Job"], dependencies=[Depends(JWTBearer())])
 
@@ -121,9 +122,21 @@ def get_resume_job(
 @inject
 def sync_jobs_to_elasticsearch(
     background_tasks: BackgroundTasks,
+    batch_size: int = Query(500, ge=100, le=5000, description="Number of jobs to process in each batch"),
+    verify: bool = Query(True, description="Verify synchronization after completion"),
+    include_deleted: bool = Query(False, description="Include soft-deleted jobs"),
     job_service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
+    es_repository: ElasticsearchRepository = Depends(Provide[ApplicationContainer.repositories.elasticsearch_repository]),
     current_user: UserBasicResponse = Depends(get_current_user)
 ):
-    background_tasks.add_task(job_service.index_all_jobs)
+    background_tasks.add_task(sync_func, job_service=job_service, es_repository=es_repository, 
+                             batch_size=batch_size, verify=verify, include_deleted=include_deleted)
 
-    return {"message": "Job synchronization started in background"}
+    return {
+        "message": "Job synchronization started in background",
+        "details": {
+            "batch_size": batch_size,
+            "verification": "enabled" if verify else "disabled",
+            "include_deleted": "yes" if include_deleted else "no"
+        }
+    }

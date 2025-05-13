@@ -22,7 +22,8 @@ class BaseRepository:
 
     def create(self, create_request: T):
         with self.session_factory() as session:
-            model_db = self.model.model_validate(create_request)
+            request = self.model(**create_request.model_dump(exclude_none=True))
+            model_db = self.model.model_validate(request)
 
             session.add(model_db)
             session.commit()

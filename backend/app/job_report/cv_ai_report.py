@@ -50,12 +50,11 @@ class ResumeReport:
             **SAMPLE OUTPUT FORMAT**: 
             { 
                 "overall_assessment": < Markdown text>, 
-                "strengths": <Markdown text>, 
-                "weaknesses_concerns": <Markdown text>, 
+                "strength_details": <Markdown text>, 
+                "weakness_concerns": <Markdown text>, 
                 "recommendations": <Markdown text>, 
                 "questions": <Markdown text>, 
                 "conclusion": <Markdown text> 
-
             } 
             **Do not include double quotation mark in a text** 
 
@@ -175,7 +174,7 @@ class ResumeReport:
 
     def build_roadmap(self, analyze_ouput, jd_text):
         chat_input = {
-            "weaknesses": analyze_ouput["weaknesses_concerns"],
+            "weaknesses": analyze_ouput["weakness_concerns"],
             "recommendation": analyze_ouput["recommendations"]
         }
         chat_query = f""" 

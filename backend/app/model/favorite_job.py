@@ -7,8 +7,8 @@ from app.model.base_model import BaseModel
 
 
 class FavoriteJob(BaseModel, table=True):
-    job_id: UUID = Field(primary_key=True, foreign_key="job.id")
-    user_id: UUID = Field(primary_key=True, foreign_key="user.id")
+    job_id: UUID = Field(foreign_key="job.id")
+    user_id: UUID = Field(foreign_key="user.id")
     is_analyze: bool = Field(default=False)
     is_generated_resume: bool = Field(default=False)
     is_favorite: bool = Field(default=False)

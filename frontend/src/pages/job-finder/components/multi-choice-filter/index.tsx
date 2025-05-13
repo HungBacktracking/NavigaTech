@@ -1,6 +1,6 @@
 import { Dropdown, Button, Space, Tag, Typography, Flex, Spin, theme } from 'antd';
 import { DownOutlined, CloseOutlined, CheckOutlined } from '@ant-design/icons';
-import { useState } from 'react';
+import { MouseEvent, useState } from 'react';
 
 const { Text } = Typography;
 
@@ -58,7 +58,7 @@ const MultiChoiceFilter = ({
       <Dropdown
         open={open}
         onOpenChange={handleDropdownVisibleChange}
-        dropdownRender={() => (
+        popupRender={() => (
           <div style={{
             background: 'white',
             borderRadius: '8px',

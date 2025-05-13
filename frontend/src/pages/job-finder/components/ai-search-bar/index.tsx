@@ -19,7 +19,6 @@ interface AISearchBarProps {
 const AISearchBar = ({ searchValue, setSearchValue, handleSearch }: AISearchBarProps) => {
   return (
     <Flex
-      horizontal
       align="center"
       justify="center"
       style={{

@@ -19,6 +19,7 @@ from app.schema.job_schema import JobSearchRequest, JobFavoriteResponse, JobResp
 from app.schema.user_schema import UserDetailResponse
 from app.services import UserService
 from app.services.base_service import BaseService
+from sqlalchemy import select
 
 
 class JobService(BaseService):
@@ -78,7 +79,6 @@ class JobService(BaseService):
                     job_requirement=job_data.get("job_requirement"),
                     benefit=job_data.get("benefit"),
                     is_analyze=fav.is_analyze if fav else False,
-                    resume_url=fav.resume_url if fav else None,
                     is_favorite=fav.is_favorite if fav else False
                 )
             )
@@ -114,18 +114,15 @@ class JobService(BaseService):
             total_pages=total_pages,
         )
 
-    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20):
+    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        offset = (page - 1) * page_size
-
         all_recommendations = self.recommendation.search(resume_text, top_k=100)
+
+        offset = (page - 1) * page_size
         total_count = len(all_recommendations)
-
-        recommendations = self.recommendation.search(resume_text, top_k=offset + page_size)
-
-        paginated_results = recommendations[offset : offset + page_size]
+        paginated_results = all_recommendations[offset : offset + page_size]
 
         results = []
         for item in paginated_results:
@@ -137,12 +134,8 @@ class JobService(BaseService):
             # Get favorite status if job exists
             fav = None
             if job:
-                fav = self.favorite_job_repository.find_by_job_and_user_id(
-                    job.id, user_id
-                )
+                fav = self.favorite_job_repository.find_by_job_and_user_id(job.id, user_id)
 
-            # Create JobResponse object with job data
-            if job:
                 results.append(
                     JobResponse(
                         id=job.id,
@@ -163,7 +156,6 @@ class JobService(BaseService):
                         job_requirement=job.job_requirement,
                         benefit=job.benefit,
                         is_analyze=fav.is_analyze if fav else False,
-                        resume_url=fav.resume_url if fav else None,
                         is_favorite=fav.is_favorite if fav else False
                     )
                 )
@@ -227,7 +219,7 @@ class JobService(BaseService):
 
         return self.scorer.final_score(resume_text, jd_text)
 
-    def add_to_favorite(self, job_id: uuid, user_id: uuid):
+    def add_to_favorite(self, job_id: uuid, user_id: uuid) -> PageResponse[JobFavoriteResponse]:
         job: Job = self.job_repository.find_by_id(job_id)
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
@@ -238,7 +230,7 @@ class JobService(BaseService):
             is_favorite=True
         )
 
-        fav_job = self.favorite_job_repository.find_by_user_id(user_id)
+        fav_job = self.favorite_job_repository.find_by_job_and_user_id(job_id, user_id)
         if fav_job:
             self.favorite_job_repository.update(fav_job.id, request)
         else:
@@ -251,7 +243,7 @@ class JobService(BaseService):
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
 
-        fav_job = self.favorite_job_repository.find_by_user_id(user_id)
+        fav_job = self.favorite_job_repository.find_by_job_and_user_id(job_id, user_id)
         if fav_job:
             request = FavoriteJobRequest(
                 job_id=job_id,
@@ -264,12 +256,73 @@ class JobService(BaseService):
 
         return self.get_user_favorite_jobs_with_analytics(user_id)
 
-    def index_all_jobs(self):
-        """Index all jobs from database to Elasticsearch"""
-        jobs = self.job_repository.get_all()
-        job_dicts = [job.model_dump() for job in jobs]
-
-        # Bulk index
-        self.es_repository.index_bulk_jobs(job_dicts)
+    def index_all_jobs(self, batch_size=500, include_deleted=False):
+        """
+        Index all jobs from database to Elasticsearch
+        
+        Args:
+            batch_size: The number of jobs to process in each batch
+            include_deleted: Whether to include soft-deleted jobs
+        
+        Returns:
+            int: The total number of jobs indexed
+        """
+        # Get total job count
+        if include_deleted:
+            total_jobs = self.job_repository.get_total_count_including_deleted()
+            print(f"Including soft-deleted jobs. Total job count: {total_jobs}")
+        else:
+            total_jobs = self.job_repository.get_total_count()
+            print(f"Only indexing active jobs. Total job count: {total_jobs}")
+        
+        if total_jobs == 0:
+            return 0
+        
+        # Process in batches for better performance and to avoid memory issues
+        total_indexed = 0
+        total_batches = (total_jobs + batch_size - 1) // batch_size  # Ceiling division
+        
+        offset = 0
+        success_count = 0
+        error_count = 0
+        
+        while offset < total_jobs:
+            try:
+                # Get a batch of jobs
+                with self.job_repository.replica_session_factory() as session:
+                    if include_deleted:
+                        statement = select(Job).offset(offset).limit(batch_size)
+                    else:
+                        statement = select(Job).where(Job.deleted_at == None).offset(offset).limit(batch_size)
+                    
+                    jobs_batch = session.execute(statement).scalars().all()
+                    
+                    if not jobs_batch:
+                        break
+                    
+                    # Convert to dictionaries
+                    job_dicts = [job.model_dump() for job in jobs_batch]
+                    
+                    # Bulk index
+                    self.es_repository.index_bulk_jobs(job_dicts)
+                    
+                    # Update counts
+                    batch_count = len(job_dicts)
+                    success_count += batch_count
+                    total_indexed += batch_count
+                    
+                    print(f"Indexed batch {offset//batch_size + 1}/{total_batches}: {batch_count} jobs")
+                
+            except Exception as e:
+                error_count += 1
+                print(f"Error indexing batch starting at offset {offset}: {str(e)}")
+                # Continue with next batch despite errors
             
-        return len(job_dicts)
+            finally:
+                # Move to next batch
+                offset += batch_size
+        
+        # Log results
+        print(f"Indexing complete: {success_count} jobs indexed successfully, {error_count} batches with errors")
+        
+        return total_indexed

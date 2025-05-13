@@ -72,37 +72,20 @@ class ResumeScorer:
                   **Expected Output:**
                   ```json
                   {{
-                    "overall_match": {{"overall": 0.40, "experience": 0.75, "skills": 0.30}},
-                    "missing_or_weak_areas": [
-                      "No React experience.",
-                      "No TypeScript skills.",
-                      "Limited SPA architecture understanding."
-                    ],
-                    "strengths": [
-                      "3 years of HTML/CSS/JavaScript development.",
-                      "Solid Git & GitHub workflow experience."
-                    ]
+                    "match_overall": 0.40,
+                    "match_experience": 0.75,
+                    "match_skills": 0.30,
+                    "weaknesses": "No React experience.<br>No TypeScript skills.<br>Limited SPA architecture understanding.",
+                    "strengths": "3 years of HTML/CSS/JavaScript development.<br>Solid Git & GitHub workflow experience."
                   }}
                   ```
                   ```json
                   {{
-                    "overall_match": {{
-                      "overall": 0.84,
-                      "experience": 0.85,
-                      "skills": 0.88,
-                    }},
-                    "missing_or_weak_areas": [
-                      "No explicit experience with container orchestration tools like Kubernetes.",
-                      "Limited exposure to CI/CD pipeline tools such as Jenkins or CircleCI.",
-                      "No mention of writing technical documentation or API specs."
-                    ],
-                    "strengths": [
-                      "Strong proficiency in Python, matching backend development requirements.",
-                      "Hands-on experience building and deploying REST APIs with Flask and FastAPI.",
-                      "Worked extensively with PostgreSQL and MongoDB for scalable data storage.",
-                      "Familiar with Docker-based development environments.",
-                      "Experience with cloud deployment using AWS EC2 and S3 aligns with job needs."
-                    ]
+                    "match_overall": 0.84,
+                    "match_experience": 0.85,
+                    "match_skills": 0.88,
+                    "weaknesses": "No explicit experience with container orchestration tools like Kubernetes.<br>Limited exposure to CI/CD pipeline tools such as Jenkins or CircleCI.<br>No mention of writing technical documentation or API specs.",
+                    "strengths": "Strong proficiency in Python, matching backend development requirements.<br>Hands-on experience building and deploying REST APIs with Flask and FastAPI.<br>Worked extensively with PostgreSQL and MongoDB for scalable data storage.<br>Familiar with Docker-based development environments.<br>Experience with cloud deployment using AWS EC2 and S3 aligns with job needs."
                   }}
                   ```
                   Now do the task with given data:
@@ -131,6 +114,7 @@ class ResumeScorer:
 
         llm_s = self.llm_grading(resume_text, jd_text)
         se_s = self.semantic_scoring(resume_text, jd_text)
-        llm_s["overall_match"]["overall"] = 0.7 * \
-            llm_s["overall_match"]["overall"] + 0.3*se_s
+        llm_s["match_overall"] = 0.7 * \
+            llm_s["match_overall"] + 0.3*se_s
+
         return llm_s

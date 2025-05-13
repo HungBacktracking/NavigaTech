@@ -2,7 +2,7 @@ import os
 import uuid
 import json
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 from sqlalchemy import create_engine, text
 from dotenv import load_dotenv
 from dateutil.parser import parse
@@ -30,7 +30,7 @@ s3 = boto3.client(
     region_name=aws_region
 )
 
-response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250510.json')
+response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250511.json')
 jobs = json.loads(response['Body'].read())
 
 # database
@@ -60,7 +60,7 @@ engine = create_engine(f'{DATABASE_URI}')
 with engine.connect() as conn:
     for job in jobs:
         job_id = str(uuid.uuid4())
-        now = datetime.utcnow()
+        now = datetime.now(timezone.utc)
 
         created_at = job.get('created_at') or now
         updated_at = job.get('updated_at') or now

@@ -4,7 +4,7 @@ import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card,
 import { ReloadOutlined } from "@ant-design/icons";
 import JobCard from "./components/job-card";
 import { jobApi } from "../../services/job-finder";
-import { Job, JobQueryParams } from "../../lib/types/job";
+import { Job, JobSearchRequest } from "../../lib/types/job";
 import JobDetail from "./components/job-detail";
 import SuggestionItem from "./components/suggestion-item";
 import AIButton from "../../components/ai-button";
@@ -26,15 +26,16 @@ export default function JobFindingPage() {
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [navbarHeight, setNavbarHeight] = useState(0);
-  const [queryParams, setQueryParams] = useState<JobQueryParams>({
+  const [queryParams, setQueryParams] = useState<JobSearchRequest>({
     page: 1,
-    pageSize: 10,
-    search: "",
-    filterByJobLevel: [],
+    page_size: 10,
+    query: "",
+    levels: [],
+    roles: [],
   });
   const [lastPaginationData, setLastPaginationData] = useState({
     page: 1,
-    pageSize: 10,
+    page_size: 10,
     total: 0,
   });
   const [selectedJobTitles, setSelectedJobTitles] = useState<string[]>([]);
@@ -49,23 +50,14 @@ export default function JobFindingPage() {
       : jobApi.getJobs(queryParams),
   });
 
-  const { data: jobDetailData, isLoading: isJobDetailLoading } = useQuery({
-    queryKey: ['jobDetail', selectedJobId],
-    queryFn: () => {
-      if (!selectedJobId) return null;
-      return jobApi.getDetailJob(selectedJobId);
-    },
-    enabled: !!selectedJobId,
-  });
-
   const { data: suggestionItems, isLoading: isSuggestionsLoading, isFetching: isSuggestionsFetching, refetch: refreshSuggestions } = useQuery({
     queryKey: ['suggestions'],
     queryFn: jobApi.getPromptSuggestions,
   });
 
-  const { data: jobLevels, isLoading: isJobLevelsLoading } = useQuery({
+  const { data: jobRoles, isLoading: isJobLevelsLoading } = useQuery({
     queryKey: ['jobLevelOptions'],
-    queryFn: jobApi.getJobLevelOptions,
+    queryFn: jobApi.getJobRoleOptions,
   });
 
   const { data: jobTitles, isLoading: isJobTitlesLoading } = useQuery({
@@ -74,28 +66,24 @@ export default function JobFindingPage() {
   });
 
   const { mutate: toggleFavorite } = useMutation({
-    mutationFn: (jobId: string) => jobApi.toggleFavorite(jobId),
-    onSuccess: ({ jobId, isFavorite }) => {
-      queryClient.setQueryData(["jobs", queryParams], (oldData: any) => {
+    mutationFn: (jobId: string) => {
+      const job = jobsData?.items.find(j => j.id === jobId);
+      return jobApi.toggleFavorite(jobId, job?.is_favorite || false);
+    },
+    onSuccess: (data) => {
+      const { id: jobId, is_favorite: isFavorite } = data;
+      queryClient.setQueryData(["jobs", queryParams, isRecommendationMode], (oldData: any) => {
         if (!oldData) return oldData;
 
-        return {
+        return { 
           ...oldData,
           items: oldData.items.map((job: Job) =>
-            job.id === jobId ? { ...job, isFavorite } : job
+            job.id === jobId ? { ...job, is_favorite: isFavorite } : job
           )
         };
       });
 
       messageApi.success(`Job ${isFavorite ? 'added to' : 'removed from'} favorites`);
-
-      if (jobDetailData && jobDetailData.id === jobId) {
-        queryClient.setQueryData(["jobDetail", jobId], (oldData: any) => {
-          if (!oldData) return oldData;
-          return { ...oldData, isFavorite };
-        });
-      }
-
       queryClient.invalidateQueries({ queryKey: ["favoriteJobs"] });
     },
     onError: () => {
@@ -124,11 +112,16 @@ export default function JobFindingPage() {
     }
   });
 
+  const selectedJob = useMemo(() => {
+    if (!jobsData?.items || !selectedJobId) return null;
+    return jobsData.items.find(job => job.id === selectedJobId) || null;
+  }, [jobsData?.items, selectedJobId]);
+
   useMemo(() => {
     if (jobsData) {
       setLastPaginationData({
         page: jobsData.page,
-        pageSize: jobsData.pageSize,
+        page_size: jobsData.page_size,
         total: jobsData.total,
       });
     }
@@ -148,13 +141,6 @@ export default function JobFindingPage() {
         const stillExists = jobsData.items.some(job => job.id === selectedJobId);
         if (!stillExists) {
           setSelectedJobId(jobsData.items[0]?.id || null);
-        } else {
-          const updatedJob = jobsData.items.find(job => job.id === selectedJobId);
-          if (updatedJob) {
-            setSelectedJobId(updatedJob.id);
-          } else {
-            setSelectedJobId(jobsData.items[0]?.id || null);
-          }
         }
       } else if (jobsData.items.length === 0) {
         setSelectedJobId(null);
@@ -168,7 +154,7 @@ export default function JobFindingPage() {
   };
 
   const handleSearch = () => {
-    setQueryParams(prev => ({ ...prev, page: 1, search: searchValue }));
+    setQueryParams(prev => ({ ...prev, page: 1, query: searchValue }));
   };
 
   const handleLevelFilterChange = (selectedLevels: string[]) => {
@@ -177,10 +163,10 @@ export default function JobFindingPage() {
       setQueryParams(prev => ({
         ...prev,
         page: 1,
-        filterByJobLevel: selectedLevels,
+        levels: selectedLevels,
       }));
-    } else if (selectedLevels.length === 0 && queryParams.filterByJobLevel) {
-      setQueryParams(prev => ({ ...prev, page: 1, filterByJobLevel: [] }));
+    } else if (selectedLevels.length === 0 && queryParams.levels) {
+      setQueryParams(prev => ({ ...prev, page: 1, levels: [] }));
     }
   };
 
@@ -190,11 +176,10 @@ export default function JobFindingPage() {
       setQueryParams(prev => ({
         ...prev,
         page: 1,
-        search: selectedTitles.join(' ')
+        roles: selectedTitles
       }));
-    } else if (selectedTitles.length === 0 && queryParams.search) {
-      setSearchValue('');
-      setQueryParams(prev => ({ ...prev, page: 1, search: '' }));
+    } else if (selectedTitles.length === 0 && queryParams.roles?.length) {
+      setQueryParams(prev => ({ ...prev, page: 1, roles: [] }));
     }
   };
 
@@ -222,7 +207,7 @@ export default function JobFindingPage() {
           Discover opportunities that match your skills and preferences with our <span className="app-gradient-text" style={{ fontWeight: 600 }}>AI-Powered</span> job search
         </Title>
         <Space direction="vertical" size={12} style={{ width: isSuggestionsLoading ? 800 : undefined, maxWidth: "800px", marginTop: 16 }}>
-          <Flex horizontal justify="space-between" align="center" style={{ width: "100%" }}>
+          <Flex justify="space-between" align="center" style={{ width: "100%" }}>
             <Title level={5} style={{ textAlign: "left", margin: 0 }}>
               Suggestions for you:
             </Title>
@@ -257,7 +242,7 @@ export default function JobFindingPage() {
         <Flex vertical gap={16} align="start" style={{ width: "100%" }}>
           <MultiChoiceFilter
             label="Job Levels"
-            options={Array.isArray(jobLevels) ? jobLevels : []}
+            options={Array.isArray(jobRoles) ? jobRoles.map(role => ({ label: role, value: role })) : []}
             selectedValues={selectedJobLevels}
             onChange={handleLevelFilterChange}
             isLoading={isJobLevelsLoading}
@@ -265,7 +250,7 @@ export default function JobFindingPage() {
 
           <MultiChoiceFilter
             label="Job Titles"
-            options={Array.isArray(jobTitles) ? jobTitles : []}
+            options={Array.isArray(jobTitles) ? jobTitles.map(title => ({ label: title, value: title })) : []}
             selectedValues={selectedJobTitles}
             onChange={handleJobTitleFilterChange}
             isLoading={isJobTitlesLoading}
@@ -373,7 +358,6 @@ export default function JobFindingPage() {
                   handleSelectJob={() => setSelectedJobId(job.id)}
                   handleJobAnalysisClick={handleAnalyzeJob}
                   isSelected={selectedJobId === job.id}
-                  isFavorite={job.isFavorite || false}
                   isAnalyzing={analyzingJobIds.includes(job.id)}
                 />
               ))
@@ -394,9 +378,9 @@ export default function JobFindingPage() {
 
             <Pagination
               align="center"
-              current={isJobsLoading ? lastPaginationData.page : jobsData!.page}
-              pageSize={isJobsLoading ? lastPaginationData.pageSize : jobsData!.pageSize}
-              total={isJobsLoading ? lastPaginationData.total : jobsData!.total}
+              current={isJobsLoading ? lastPaginationData.page : jobsData?.page}
+              pageSize={isJobsLoading ? lastPaginationData.page_size : jobsData?.page_size}
+              total={isJobsLoading ? lastPaginationData.total : jobsData?.total}
               onChange={handlePageChange}
               showSizeChanger={false}
               disabled={isJobsLoading}
@@ -413,7 +397,7 @@ export default function JobFindingPage() {
             paddingBottom: 8,
           }}
         >
-          {isJobDetailLoading ? (
+          {isJobsLoading ? (
             <Card
               style={{ padding: '4px', borderRadius: '8px', height: '100%' }}
               title={
@@ -425,16 +409,16 @@ export default function JobFindingPage() {
             >
               <Skeleton active paragraph={{ rows: 10 }} />
             </Card>
-          ) : jobDetailData ? (
+          ) : selectedJob ? (
             <JobDetail
-              job={jobDetailData}
-              isFavorite={jobDetailData.isFavorite || false}
+              job={selectedJob}
+              isFavorite={selectedJob.is_favorite || false}
               handleToggleFavorite={(e: MouseEvent) => {
                 e.stopPropagation();
-                toggleFavorite(jobDetailData.id);
+                toggleFavorite(selectedJob.id);
               }}
               handleJobAnalysisClick={handleAnalyzeJob}
-              isAnalyzing={analyzingJobIds.includes(jobDetailData.id)}
+              isAnalyzing={analyzingJobIds.includes(selectedJob.id)}
             />
           ) : (
             <div style={{ height: '70vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center' }}>
