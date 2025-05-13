@@ -50,7 +50,7 @@ class ElasticsearchRepository:
         query["bool"]["must"].append({
             "multi_match": {
                 "query": request.query,
-                "fields": ["job_name^3", "job_description", "job_requirement^2", "skills^2", "location", "company_name", "benefit"],
+                "fields": ["job_name^3", "job_requirement^2", "skills^2", "location", "company_name", "benefit"],
                 "fuzziness": "AUTO"
             }
         })
@@ -61,7 +61,7 @@ class ElasticsearchRepository:
                 query["bool"]["must"].append({
                     "multi_match": {
                         "query": role,
-                        "fields": ["job_name^3", "job_description^2", "job_requirement"],
+                        "fields": ["job_name^3", "job_requirement"],
                     }
                 })
 
@@ -69,8 +69,8 @@ class ElasticsearchRepository:
             for level in request.levels:
                 query["bool"]["must"].append({
                     "multi_match": {
-                        "query": level,  # Individual string now
-                        "fields": ["job_name^3", "job_level^3", "job_description", "job_requirement^2"],
+                        "query": level,
+                        "fields": ["job_name^3", "job_level^3", "job_requirement"],
                     }
                 })
 
