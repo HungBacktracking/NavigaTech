@@ -4,6 +4,7 @@ from typing import List
 from uuid import UUID
 
 from app.convert.job import to_favorite_job_response
+from app.core.redis_client import RedisClient, redis_cache, cache_invalidate
 from app.exceptions.custom_error import CustomError
 from app.job_report.cv_ai_report import ResumeReport
 from app.job_report.cv_grading import ResumeScorer
@@ -32,6 +33,7 @@ class JobService(BaseService):
         resume_report: ResumeReport,
         resume_scorer: ResumeScorer,
         job_recommendation: JobRecommendation,
+        redis_client: RedisClient,
     ):
         self.job_repository = job_repository
         self.favorite_job_repository = favorite_job_repository
@@ -41,11 +43,32 @@ class JobService(BaseService):
         self.reporter = resume_report
         self.scorer = resume_scorer
         self.recommendation = job_recommendation
+        self.redis_client = redis_client
         super().__init__(job_repository, favorite_job_repository)
 
     def full_text_search_job(
         self, request: JobSearchRequest, user_id: UUID
     ) -> PageResponse[JobResponse]:
+        # Create a more comprehensive cache key including all search parameters
+        roles_str = "_".join(sorted(request.roles)) if request.roles else "none"
+        levels_str = "_".join(sorted(request.levels)) if request.levels else "none"
+        search_term = request.search_term if hasattr(request, 'search_term') else request.query
+        
+        cache_key = f"job_search:{search_term}:{roles_str}:{levels_str}:{request.page}:{request.page_size}:{user_id}"
+        
+        # Try to get from cache with error handling
+        cached_result = None
+        if self.redis_client:
+            try:
+                cached_result = self.redis_client.get(cache_key)
+            except Exception as e:
+                # Log error but continue execution
+                print(f"Redis error while retrieving cache: {str(e)}")
+        
+        if cached_result:
+            return cached_result
+            
+        # Execute the search against Elasticsearch
         es_results, total_count = self.es_repository.search_jobs(request)
 
         job_ids = [UUID(job["id"]) for job in es_results]
@@ -84,15 +107,39 @@ class JobService(BaseService):
             math.ceil(total_count / request.page_size) if total_count > 0 else 1
         )
 
-        return PageResponse(
+        result = PageResponse(
             items=results,
             total=total_count,
             page=request.page,
             page_size=request.page_size,
             total_pages=total_pages,
         )
+        
+        # Cache with error handling
+        if self.redis_client:
+            try:
+                # Cache for 5 minutes - search results should be relatively fresh
+                self.redis_client.set(cache_key, result, 300)
+            except Exception as e:
+                # Log error but continue execution
+                print(f"Redis error while setting cache: {str(e)}")
+        
+        return result
 
     def get_user_favorite_jobs_with_analytics(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobFavoriteResponse]:
+        # This should not be cached for long as favorites can change frequently
+        cache_key = f"user_favorites:{user_id}:{page}:{page_size}"
+        cached_result = None
+        
+        if self.redis_client:
+            try:
+                cached_result = self.redis_client.get(cache_key)
+            except Exception as e:
+                print(f"Redis error while retrieving favorites cache: {str(e)}")
+        
+        if cached_result:
+            return cached_result
+            
         rows, total_count = self.job_repository.find_favorite_job_with_analytics(
             user_id, page, page_size
         )
@@ -103,15 +150,39 @@ class JobService(BaseService):
 
         total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
 
-        return PageResponse(
+        result = PageResponse(
             items=paginated_favorites,
             total=total_count,
             page=page,
             page_size=page_size,
             total_pages=total_pages,
         )
+        
+        # Cache with error handling
+        if self.redis_client:
+            try:
+                # Cache for 1 minute - favorites might change frequently
+                self.redis_client.set(cache_key, result, 60)
+            except Exception as e:
+                print(f"Redis error while setting favorites cache: {str(e)}")
+        
+        return result
 
     def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
+        # Recommendations shouldn't change very often unless the user updates their resume
+        # So this is a good candidate for longer caching
+        cache_key = f"job_recommendations:{user_id}:{page}:{page_size}"
+        cached_result = None
+        
+        if self.redis_client:
+            try:
+                cached_result = self.redis_client.get(cache_key)
+            except Exception as e:
+                print(f"Redis error while retrieving recommendations cache: {str(e)}")
+        
+        if cached_result:
+            return cached_result
+            
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
@@ -159,15 +230,40 @@ class JobService(BaseService):
 
         total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
 
-        return PageResponse(
+        result = PageResponse(
             items=results,
             total=total_count,
             page=page,
             page_size=page_size,
             total_pages=total_pages,
         )
+        
+        # Cache with error handling
+        if self.redis_client:
+            try:
+                # Cache for 1 hour - recommendations don't change often
+                self.redis_client.set(cache_key, result, 3600)
+            except Exception as e:
+                print(f"Redis error while setting recommendations cache: {str(e)}")
+        
+        return result
 
     def analyze_job(self, job_id: UUID, user_id: UUID):
+        # Analysis results don't change frequently - good candidate for longer caching
+        cache_key = f"job_analysis:{job_id}:{user_id}"
+        cached_result = None
+        
+        if self.redis_client:
+            try:
+                cached_result = self.redis_client.get(cache_key)
+            except Exception as e:
+                print(f"Redis error while retrieving job analysis cache: {str(e)}")
+        
+        # If we have cached analysis results and don't need to regenerate, return them
+        if cached_result:
+            return cached_result
+            
+        # If we get here, we need to perform the analysis
         job: Job = self.job_repository.find_by_id(job_id)
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
@@ -188,12 +284,38 @@ class JobService(BaseService):
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        return self.reporter.run(resume_text, jd_text)
+        # Run the analysis
+        result = self.reporter.run(resume_text, jd_text)
+        
+        # Cache the result with error handling - extend to 72 hours since analysis doesn't change much
+        if self.redis_client:
+            try:
+                # Cache for 72 hours - analysis changes very rarely and is computationally expensive
+                self.redis_client.set(cache_key, result, 259200)  # 72 hours in seconds
+            except Exception as e:
+                print(f"Redis error while setting job analysis cache: {str(e)}")
+        
+        return result
 
     def generate_resume(self, job_id: UUID, user_id: UUID):
         pass
 
     def score_job(self, job_id: UUID, user_id: UUID):
+        # Also an expensive computation that changes rarely - good for extended caching
+        cache_key = f"job_score:{job_id}:{user_id}"
+        cached_result = None
+        
+        if self.redis_client:
+            try:
+                cached_result = self.redis_client.get(cache_key)
+            except Exception as e:
+                print(f"Redis error while retrieving job score cache: {str(e)}")
+        
+        # If we have cached results and don't need to regenerate, return them
+        if cached_result:
+            return cached_result
+            
+        # If we get here, we need to calculate the score
         job: Job = self.job_repository.find_by_id(job_id)
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
@@ -214,7 +336,18 @@ class JobService(BaseService):
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        return self.scorer.final_score(resume_text, jd_text)
+        # Run the scoring
+        result = self.scorer.final_score(resume_text, jd_text)
+        
+        # Cache with error handling - extend cache to 72 hours
+        if self.redis_client:
+            try:
+                # Cache for 72 hours - scoring changes very rarely and is computationally expensive
+                self.redis_client.set(cache_key, result, 259200)  # 72 hours in seconds
+            except Exception as e:
+                print(f"Redis error while setting job score cache: {str(e)}")
+        
+        return result
 
     def add_to_favorite(self, job_id: uuid, user_id: uuid) -> PageResponse[JobFavoriteResponse]:
         job: Job = self.job_repository.find_by_id(job_id)
@@ -232,6 +365,17 @@ class JobService(BaseService):
             self.favorite_job_repository.update(fav_job.id, request)
         else:
             self.favorite_job_repository.create(request)
+            
+        # Invalidate affected caches with error handling
+        if self.redis_client:
+            try:
+                # Invalidate cached favorites
+                self.redis_client.flush_by_pattern(f"user_favorites:{user_id}:*")
+                
+                # Invalidate cached search results that might contain this job
+                self.redis_client.flush_by_pattern(f"job_search:*:{user_id}")
+            except Exception as e:
+                print(f"Redis error while invalidating caches after adding favorite: {str(e)}")
 
         return self.get_user_favorite_jobs_with_analytics(user_id)
 
@@ -250,6 +394,17 @@ class JobService(BaseService):
             self.favorite_job_repository.update(fav_job.id, request)
         else:
             raise CustomError.NOT_FOUND.as_exception()
+            
+        # Invalidate affected caches with error handling
+        if self.redis_client:
+            try:
+                # Invalidate cached favorites
+                self.redis_client.flush_by_pattern(f"user_favorites:{user_id}:*")
+                
+                # Invalidate cached search results that might contain this job
+                self.redis_client.flush_by_pattern(f"job_search:*:{user_id}")
+            except Exception as e:
+                print(f"Redis error while invalidating caches after removing favorite: {str(e)}")
 
         return self.get_user_favorite_jobs_with_analytics(user_id)
 

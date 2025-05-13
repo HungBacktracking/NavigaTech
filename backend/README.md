@@ -165,6 +165,25 @@ NavigaTech follows a modular, service-oriented architecture built with FastAPI a
    alembic upgrade head
    ```
 
+### Redis Caching
+
+NavigaTech utilizes Redis for caching to optimize performance and reduce database load. The caching strategy includes:
+
+- **User Profiles**: Caches basic user info (30-min TTL) and detailed profiles (15-min TTL)
+- **Job Search Results**: Caches search results (5-min TTL) and recommendations (1-hour TTL)
+- **Expensive Computations**: Caches job analysis and resume scoring (24-hour TTL)
+
+Cache invalidation occurs automatically when data is updated, and the system gracefully falls back to the database if Redis is unavailable.
+
+Redis can be configured through environment variables in your `.env` file:
+```
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+REDIS_DB=0
+REDIS_DEFAULT_TIMEOUT=3600
+```
+
 ### Running the Application
 
 #### Development Mode

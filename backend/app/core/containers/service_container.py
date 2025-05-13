@@ -8,6 +8,7 @@ from app.services.job_worker import JobWorker
 from app.services.kafka_service import KafkaService
 from app.services.resume_service import ResumeService
 from app.services.s3_service import S3Service
+from app.core.redis_client import RedisClient
 
 
 class ServiceContainer(containers.DeclarativeContainer):
@@ -19,6 +20,7 @@ class ServiceContainer(containers.DeclarativeContainer):
     resume_converter = providers.Dependency()
     job_report = providers.DependenciesContainer()
     recommendation = providers.Dependency()
+    redis_client = providers.Dependency()
 
     # Kafka service for message processing
     kafka_service = providers.Singleton(
@@ -34,7 +36,8 @@ class ServiceContainer(containers.DeclarativeContainer):
         project_repository=repos.project_repository,
         experience_repository=repos.experience_repository,
         education_repository=repos.education_repository,
-        award_repository=repos.award_repository
+        award_repository=repos.award_repository,
+        redis_client=redis_client
     )
     job_service = providers.Factory(
         JobService,
@@ -45,14 +48,16 @@ class ServiceContainer(containers.DeclarativeContainer):
         resume_converter=resume_converter,
         resume_report=job_report.resume_report,
         resume_scorer=job_report.resume_scorer,
-        job_recommendation=recommendation
+        job_recommendation=recommendation,
+        redis_client=redis_client
     )
     
     # Job analytic service
     job_analytic_service = providers.Factory(
         JobAnalyticService,
         job_analytic_repository=repos.job_analytic_repository,
-        favorite_job_repository=repos.favorite_job_repository
+        favorite_job_repository=repos.favorite_job_repository,
+        redis_client=redis_client
     )
     
     # Job task service
@@ -88,7 +93,8 @@ class ServiceContainer(containers.DeclarativeContainer):
         user_repo=repos.user_repository,
         s3_client=s3_client,
         resume_pdf_parser=resume_pdf_parser,
-        bucket_name=config.AWS_S3_BUCKET_NAME
+        bucket_name=config.AWS_S3_BUCKET_NAME,
+        redis_client=redis_client
     )
     chatbot_service = providers.Factory(
         ChatbotService,

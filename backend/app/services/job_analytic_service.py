@@ -1,6 +1,7 @@
 from uuid import UUID
 from typing import Dict, Any, Optional
 
+from app.core.redis_client import RedisClient
 from app.exceptions.custom_error import CustomError
 from app.model.job_analytic import JobAnalytic
 from app.repository.favorite_job_repository import FavoriteJobRepository
@@ -14,21 +15,46 @@ class JobAnalyticService(BaseService):
     def __init__(
             self,
             job_analytic_repository: JobAnalyticRepository,
-            favorite_job_repository: FavoriteJobRepository
+            favorite_job_repository: FavoriteJobRepository,
+            redis_client: RedisClient = None
     ):
         self.repository = job_analytic_repository
         self.favorite_job_repository = favorite_job_repository
+        self.redis_client = redis_client
         super().__init__(job_analytic_repository, favorite_job_repository)
         
     def get_by_job_and_user(self, job_id: UUID, user_id: UUID) -> Optional[JobAnalyticResponse]:
         """
-        Get job analytic by job_id and user_id
+        Get job analytic by job_id and user_id with caching
         """
+        # Try to get from cache first - this is the expensive computation result we want to cache
+        cache_key = f"full_job_analysis:{job_id}:{user_id}"
+        cached_result = None
+        
+        if self.redis_client:
+            try:
+                cached_result = self.redis_client.get(cache_key)
+                if cached_result:
+                    return cached_result
+            except Exception as e:
+                print(f"Redis error while retrieving job analysis cache: {str(e)}")
+        
+        # If not in cache, get from database
         analytic = self.repository.find_by_job_and_user(job_id, user_id)
         if not analytic:
             raise CustomError.NOT_FOUND.as_exception()
 
-        return JobAnalyticResponse.model_validate(analytic)
+        result = JobAnalyticResponse.model_validate(analytic)
+        
+        # Cache the result for a long time since it rarely changes
+        if self.redis_client:
+            try:
+                # Cache for 1 week - analysis is computationally expensive and rarely changes
+                self.redis_client.set(cache_key, result, 604800)  # 7 days in seconds
+            except Exception as e:
+                print(f"Redis error while setting job analysis cache: {str(e)}")
+                
+        return result
 
     def handle_exist_analysis(self, job_id: UUID, user_id: UUID):
         analytic = self.repository.find_by_job_and_user(job_id, user_id)
@@ -84,6 +110,16 @@ class JobAnalyticService(BaseService):
             self.favorite_job_repository.update(fav_job.id, favorite_request)
         else:
             self.favorite_job_repository.create(favorite_request)
+            
+        # Invalidate the cache since we've updated the analysis
+        if self.redis_client:
+            try:
+                # Clear full analysis cache
+                self.redis_client.delete(f"full_job_analysis:{job_id}:{user_id}")
+                
+                # Also invalidate favorite caches because we've updated the favorite status
+                self.redis_client.flush_by_pattern(f"user_favorites:{user_id}:*")
+            except Exception as e:
+                print(f"Redis error while invalidating caches: {str(e)}")
 
         return JobAnalyticResponse.model_validate(analytic)
-

@@ -1,5 +1,6 @@
 from uuid import UUID
 
+from app.core.redis_client import RedisClient
 from app.core.s3_client import S3Client
 from app.exceptions.custom_error import CustomError
 from app.model.user import User
@@ -38,7 +39,8 @@ class ResumeService(BaseService):
         user_service: UserService,
         s3_client: S3Client,
         resume_pdf_parser: ResumePdfParser,
-        bucket_name: str
+        bucket_name: str,
+        redis_client: RedisClient = None
     ):
         self.file_repo = file_repo
         self.user_repo = user_repo
@@ -51,6 +53,7 @@ class ResumeService(BaseService):
         self.s3 = s3_client
         self.resume_pdf_parser = resume_pdf_parser
         self.bucket = bucket_name
+        self.redis_client = redis_client
         super().__init__(
             file_repo,
             user_repo,
@@ -97,8 +100,6 @@ class ResumeService(BaseService):
                     payload[key] = raw
             payload["user_id"] = user_id
             repo.create(request(**payload))
-
-
 
 
     def process_resume(self, user_id: UUID) -> UserDetailResponse:
@@ -165,7 +166,31 @@ class ResumeService(BaseService):
             date_fields={"award_date"}
         )
 
+        # After processing resume and updating user data, invalidate all relevant caches
+        self._invalidate_user_caches(user_id)
+
         return self.user_service.get_detail_by_id(user_id)
+
+    def _invalidate_user_caches(self, user_id: UUID):
+        """
+        Invalidate all caches related to a user after resume processing or profile update
+        """
+        if not self.redis_client:
+            return
+            
+        try:
+            # Invalidate user profile caches
+            self.redis_client.delete(f"user_basic:{user_id}")
+            self.redis_client.delete(f"user_detail:{user_id}")
+            
+            # Since resume/profile data changed, invalidate all job recommendations, analysis, and scores
+            # as they depend on user profile data
+            self.redis_client.flush_by_pattern(f"job_recommendations:{user_id}:*")
+            self.redis_client.flush_by_pattern(f"job_analysis:*:{user_id}")
+            self.redis_client.flush_by_pattern(f"job_score:*:{user_id}")
+        except Exception as e:
+            # Log error but don't interrupt the resume processing flow
+            print(f"Redis error while invalidating caches after resume processing: {str(e)}")
 
 
 

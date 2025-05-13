@@ -9,6 +9,7 @@ from app.core.containers.job_report_container import JobReportContainer
 from app.core.containers.resume_converter_container import ResumeConverterContainer
 from app.core.containers.recommendation_container import RecommendationContainer
 from app.core.containers.service_container import ServiceContainer
+from app.core.containers.redis_container import RedisContainer
 
 
 
@@ -32,6 +33,11 @@ class ApplicationContainer(containers.DeclarativeContainer):
 
     database = providers.Container(
         DatabaseContainer,
+        config=config,
+    )
+    
+    redis = providers.Container(
+        RedisContainer,
         config=config,
     )
 
@@ -78,7 +84,8 @@ class ApplicationContainer(containers.DeclarativeContainer):
         chat_engine=chatbot.chat_engine,
         resume_converter=resume_converter.resume_converter,
         job_report=job_report,
-        recommendation=recommendation.job_recommendation
+        recommendation=recommendation.job_recommendation,
+        redis_client=redis.redis_client,
     )
     
     # Start the job worker when the container is initialized
