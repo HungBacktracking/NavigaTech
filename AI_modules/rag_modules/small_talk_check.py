@@ -3,7 +3,7 @@ from typing import List
 
 
 class AdvancedRuleBasedSmallTalkChecker:
-    def __init__(self, threshold: int = 4):
+    def __init__(self, threshold: int = 3):
         self.threshold = threshold
         self.rule_patterns: List[(re.Pattern, int)] = [
             (re.compile(r'\b(hi|hello|hey|good (morning|afternoon|evening))\b', re.I), 3),
