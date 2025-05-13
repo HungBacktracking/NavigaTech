@@ -1,5 +1,5 @@
 import logging
-from typing import Dict, Any, Optional, List
+from typing import Optional, List
 from uuid import UUID
 
 from app.exceptions.custom_error import CustomError
@@ -14,7 +14,6 @@ class JobTaskService:
         self._logger = logging.getLogger(__name__)
 
     def create_task(self, job_id: UUID, user_id: UUID) -> JobTask:
-        """Create a new job task"""
         task = JobTaskCreate(
             job_id=job_id,
             user_id=user_id

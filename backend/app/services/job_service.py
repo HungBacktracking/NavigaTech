@@ -47,10 +47,8 @@ class JobService(BaseService):
     def full_text_search_job(
         self, request: JobSearchRequest, user_id: UUID
     ) -> PageResponse[JobResponse]:
-        # Use Elasticsearch for searching with pagination
         es_results, total_count = self.es_repository.search_jobs(request)
 
-        # Get favorite status for each job
         job_ids = [UUID(job["id"]) for job in es_results]
         favorites = self.favorite_job_repository.get_favorites_by_job_ids(job_ids, user_id)
         

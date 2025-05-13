@@ -15,7 +15,6 @@ class ElasticsearchRepository:
         self.create_index()
     
     def create_index(self):
-        """Create job index with appropriate mappings"""
         try:
             if not self.es_client.indices.exists(index=self.index_name):
                 mappings = {
@@ -61,15 +60,13 @@ class ElasticsearchRepository:
             self.logger.error(f"Error creating Elasticsearch index: {str(e)}")
 
     def search_jobs(self, request: JobSearchRequest) -> Tuple[List[Dict[str, Any]], int]:
-        """Search for jobs based on search criteria with pagination"""
         query = {
             "bool": {
                 "must": [],
                 "should": []
             }
         }
-        
-        # Add search conditions based on request parameters
+
         if request.query:
             query["bool"]["must"].append({
                 "multi_match": {
@@ -80,8 +77,7 @@ class ElasticsearchRepository:
                     "minimum_should_match": "70%"
                 }
             })
-            
-            # Add exact matches with higher boost
+
             query["bool"]["should"].append({
                 "match_phrase": {
                     "job_name": {
@@ -146,7 +142,6 @@ class ElasticsearchRepository:
             return [], 0
 
     def get_job_by_id(self, job_id: UUID) -> Optional[Dict[str, Any]]:
-        """Get a job by its ID"""
         try:
             response = self.es_client.get(
                 index=self.index_name,
@@ -158,7 +153,6 @@ class ElasticsearchRepository:
             return None
     
     def delete_job(self, job_id: UUID):
-        """Delete a job from the index"""
         try:
             self.es_client.delete(
                 index=self.index_name,
@@ -168,22 +162,18 @@ class ElasticsearchRepository:
             self.logger.error(f"Error deleting job {job_id}: {str(e)}")
         
     def index_bulk_jobs(self, jobs: List[Dict[str, Any]]):
-        """Index multiple jobs at once"""
         if not jobs:
             return
             
         try:
-            # Prepare the actions
             actions = []
             for job in jobs:
                 job_id = str(job.get("id"))
                 if not job_id:
                     continue
-                    
-                # Clean and prepare the job data
+
                 prepared_job = {k: v for k, v in job.items() if v is not None}
-                
-                # Convert dates to string format if needed
+
                 if "date_posted" in prepared_job and prepared_job["date_posted"] is not None:
                     if not isinstance(prepared_job["date_posted"], str):
                         prepared_job["date_posted"] = prepared_job["date_posted"].isoformat()
@@ -196,7 +186,6 @@ class ElasticsearchRepository:
                 })
             
             if actions:
-                # Use the helpers.bulk method for better performance
                 success, failed = helpers.bulk(
                     self.es_client, 
                     actions, 
@@ -211,7 +200,6 @@ class ElasticsearchRepository:
             raise
             
     def refresh_index(self):
-        """Force refresh the index to make newly indexed documents available for search"""
         try:
             self.es_client.indices.refresh(index=self.index_name)
         except Exception as e:

@@ -22,7 +22,6 @@ class KafkaService:
         self._init_producer()
         
     def _init_producer(self):
-        """Initialize Kafka producer with retry logic"""
         try:
             def json_serializer(obj):
                 if isinstance(obj, UUID):
@@ -49,7 +48,6 @@ class KafkaService:
         return self.producer is not None
 
     def send_message(self, topic: str, message: Dict[str, Any]):
-        """Send a message to a Kafka topic"""
         if not self._ensure_producer():
             self._logger.error("Cannot send message: Kafka producer not available")
             return {"status": "error", "message": "Kafka service unavailable"}
@@ -85,14 +83,12 @@ class KafkaService:
         if user_id in self.active_connections:
             try:
                 websocket = self.active_connections[user_id]
-                
-                # Check if the WebSocket is closed
+
                 if websocket.client_state.DISCONNECTED:
                     self._logger.warning(f"WebSocket for user {user_id} is disconnected, removing connection")
                     self.remove_connection(user_id)
                     return False
-                    
-                # Send the notification
+
                 await websocket.send_json(notification)
                 self._logger.info(f"Notification sent to user {user_id} via WebSocket")
                 return True
@@ -113,15 +109,13 @@ class KafkaService:
         return False
 
     def start_consumer(self, topic: str, group_id: str, callback: Callable):
-        """Start a Kafka consumer for a topic in a background thread"""
         consumer_key = f"{topic}:{group_id}"
         
         # Check if already running
         if consumer_key in self._consumers and self._consumers[consumer_key].is_alive():
             self._logger.info(f"Consumer for {topic} with group {group_id} is already running")
             return
-            
-        # Create and start consumer thread
+
         consumer_thread = threading.Thread(
             target=self._consumer_worker,
             args=(topic, group_id, callback),
@@ -133,7 +127,7 @@ class KafkaService:
         
     def _consumer_worker(self, topic: str, group_id: str, callback: Callable):
         """Worker function for consumer threads"""
-        retry_interval = 5  # Initial retry interval in seconds
+        retry_interval = 5
         max_retry_interval = 60
         running = True
         
@@ -168,7 +162,6 @@ class KafkaService:
                 retry_interval = min(retry_interval * 2, max_retry_interval)
     
     def start_notification_consumer(self):
-        """Start the notification consumer if not already running"""
         if self._notification_consumer_running:
             return
             
@@ -181,7 +174,6 @@ class KafkaService:
         self._logger.info("Notification consumer started")
         
     def stop_notification_consumer(self):
-        """Stop the notification consumer"""
         if not self._notification_consumer_running:
             return
             
