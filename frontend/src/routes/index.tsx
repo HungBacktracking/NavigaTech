@@ -17,7 +17,6 @@ const AppRouter = () => {
     <Routes>
       <Route path="auth/*" element={<AuthLayout />}>
         <Route index element={<AuthPage />} />
-        <Route path="upload-cv" element={<UploadCVPage />} />
       </Route>
 
       <Route path="/" element={<AuthGuard />}>
@@ -30,6 +29,7 @@ const AppRouter = () => {
             <Route path=":conversationId" element={<AIAssistantPage />} />
           </Route>
           <Route path="my-profile" element={<MyProfilePage />} />
+          <Route path="upload-cv" element={<UploadCVPage />} />
         </Route>
       </Route>
 
