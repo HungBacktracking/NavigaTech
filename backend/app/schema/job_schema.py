@@ -41,6 +41,9 @@ class FavoriteJobRequest(BaseModel):
     is_generated_resume: Optional[bool] = None
     is_favorite: bool
 
+    class Config:
+        from_attributes = True
+
 
 class JobFavoriteResponse(ModelBaseInfo, BaseJob):
     job_analytics: Optional[JobAnalyticResponse] = None

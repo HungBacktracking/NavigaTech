@@ -7,8 +7,8 @@ from app.model.base_model import BaseModel
 
 
 class JobAnalytic(BaseModel, table=True):
-    job_id: UUID = Field(primary_key=True, foreign_key="job.id")
-    user_id: UUID = Field(primary_key=True, foreign_key="user.id")
+    job_id: UUID = Field(foreign_key="job.id")
+    user_id: UUID = Field(foreign_key="user.id")
     general_score: int = Field()
     general_feedback: str = Field(sa_column=Column(Text))
     skill_feedback: str = Field(sa_column=Column(Text))

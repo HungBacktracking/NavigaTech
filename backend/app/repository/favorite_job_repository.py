@@ -16,9 +16,9 @@ class FavoriteJobRepository(BaseRepository):
     ):
         super().__init__(session_factory, FavoriteJob, replica_session_factory)
 
-    def find_by_user_id(self, user_id: UUID) -> FavoriteJob:
+    def find_by_user_id(self, job_id: UUID, user_id: UUID) -> Optional[FavoriteJob]:
         with self.replica_session_factory() as session:
-            statement = select(FavoriteJob).where(FavoriteJob.user_id == user_id)
+            statement = select(FavoriteJob).where(FavoriteJob.user_id == user_id).where(FavoriteJob.job_id == job_id)
 
             return session.execute(statement).scalars().first()
 

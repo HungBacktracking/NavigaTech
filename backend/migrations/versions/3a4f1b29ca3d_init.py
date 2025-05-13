@@ -1,8 +1,8 @@
 """init
 
-Revision ID: 3a8632321e7c
+Revision ID: 3a4f1b29ca3d
 Revises: 
-Create Date: 2025-05-13 04:35:53.185072
+Create Date: 2025-05-13 19:44:14.683077
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = '3a8632321e7c'
+revision = '3a4f1b29ca3d'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -120,7 +120,7 @@ def upgrade():
     sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['job_id'], ['job.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id', 'job_id', 'user_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('job_tasks',
     sa.Column('id', sa.Uuid(), nullable=False),
@@ -152,7 +152,7 @@ def upgrade():
     sa.Column('deleted_at', sa.DateTime(timezone=True), nullable=True),
     sa.ForeignKeyConstraint(['job_id'], ['job.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
-    sa.PrimaryKeyConstraint('id', 'job_id', 'user_id')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('project',
     sa.Column('id', sa.Uuid(), nullable=False),

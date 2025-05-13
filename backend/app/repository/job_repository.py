@@ -56,8 +56,8 @@ class JobRepository(BaseRepository):
                 .join(FavoriteJob, Job.id == FavoriteJob.job_id)
                 .outerjoin(JobAnalytic, Job.id == JobAnalytic.job_id)
                 .where(FavoriteJob.user_id == user_id)
-                .where(JobAnalytic.user_id == user_id)
-                .where(Job.deleted_at == None)
+                .where(FavoriteJob.is_favorite != False)
+                .where(Job.deleted_at is not None)
                 .order_by(FavoriteJob.created_at.desc())
             )
 

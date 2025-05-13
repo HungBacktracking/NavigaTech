@@ -228,7 +228,7 @@ class JobService(BaseService):
 
         return self.scorer.final_score(resume_text, jd_text)
 
-    def add_to_favorite(self, job_id: uuid, user_id: uuid):
+    def add_to_favorite(self, job_id: uuid, user_id: uuid) -> PageResponse[JobFavoriteResponse]:
         job: Job = self.job_repository.find_by_id(job_id)
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
@@ -239,7 +239,7 @@ class JobService(BaseService):
             is_favorite=True
         )
 
-        fav_job = self.favorite_job_repository.find_by_user_id(user_id)
+        fav_job = self.favorite_job_repository.find_by_user_id(job_id, user_id)
         if fav_job:
             self.favorite_job_repository.update(fav_job.id, request)
         else:
@@ -252,7 +252,7 @@ class JobService(BaseService):
         if not job:
             raise CustomError.NOT_FOUND.as_exception()
 
-        fav_job = self.favorite_job_repository.find_by_user_id(user_id)
+        fav_job = self.favorite_job_repository.find_by_user_id(job_id, user_id)
         if fav_job:
             request = FavoriteJobRequest(
                 job_id=job_id,
