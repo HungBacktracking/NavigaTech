@@ -21,6 +21,7 @@ from llama_index.llms.gemini import Gemini
 
 from app.chatbot.small_talk_checker import SmallTalkChecker
 import nest_asyncio
+import json
 
 nest_asyncio.apply()
 
@@ -37,10 +38,10 @@ class ChatEngine:
             token_limit: int = 20000,
             job_collection: str = 'job_description',
             course_db_path: str = "app/courses_db",
-            top_k: int = 15,
+            top_k: int = 20,
             temperature: float = 0.6,
-            max_tokens: int = 5000,
-            memory: Optional[object] = None,
+            max_tokens: int = 10000,
+            memory: list = [],
             resume: str = "default"
     ):
         # Load environment variables
@@ -63,14 +64,16 @@ class ChatEngine:
         # Setup persistent memory
         self.memory = memory
         self.chat_store = SimpleChatStore()
-        # load if exists
+
         if memory:
+            json_memory = self.process_history()
             try:
                 self.chat_store = SimpleChatStore.from_json(
-                    memory
+                    json_memory
                 )
             except Exception:
                 pass
+
         self.chat_memory = ChatMemoryBuffer.from_defaults(
             token_limit=token_limit,
             chat_store=self.chat_store,
@@ -126,7 +129,7 @@ class ChatEngine:
                                  description="Useful for retrieving Handles course and learning path queries. context")
 
         # Build small talk engine
-        smalltalk_prompt = 'You are a helpful assistant.'
+        smalltalk_prompt = f'You are a helpful assistant. and here is user resume: \n {self.resume}'
         prefix = [ChatMessage(role='system', content=smalltalk_prompt)]
         self.smalltalk_engine = SimpleChatEngine(
             llm=self.llm,
@@ -187,6 +190,19 @@ class ChatEngine:
         self.context_prompt = f""" 
         USER RESUME: 
         {self.resume} 
+        
+        
+        The following is a friendly conversation between a user and an AI assistant. 
+        The assistant is talkative and provides lots of specific details from its context. 
+        If the assistant does not know the answer to a question, it truthfully says it 
+        does not know. 
+ 
+        Here are the relevant documents for the context: 
+ 
+        {{context_str}} 
+ 
+        Instruction: Based on the above documents, provide a detailed answer for the user question below. 
+        Answer "don't know" if not present in the document.
         """
 
         self.rag_engine = CondensePlusContextChatEngine(
@@ -199,6 +215,27 @@ class ChatEngine:
         )
 
         self.checker = SmallTalkChecker()
+
+    def process_history(self):
+        chat_history = {
+            "store": {
+                "default": []
+            },
+            "class_name": "SimpleChatStore"
+        }
+        for chat_turn in self.memory:
+            message = {
+                "role": chat_turn["role"],
+                'additional_kwargs': {},
+                "blocks": [
+                    {
+                        "block_type": "text",
+                        "text": chat_turn["content"]
+                    }
+                ]
+            }
+            chat_history["store"]["default"].append(message)
+        return json.dumps(chat_history)
 
     def chat(self, user_input: str) -> str:
         """

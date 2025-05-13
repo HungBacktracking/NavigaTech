@@ -57,7 +57,11 @@ class ChatbotService(BaseService):
 
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
-        chat_engine = ChatEngine(session_id=session_id, resume=resume_text)
+        history = await self.get_messages(user_id, session_id)
+
+        history = [message.model_dump() for message in history]
+
+        chat_engine = ChatEngine(session_id=session_id, resume=resume_text, memory=history)
 
         return chat_engine.chat(message)
 

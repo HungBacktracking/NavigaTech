@@ -3,7 +3,7 @@ from typing import List
 
 
 class SmallTalkChecker:
-    def __init__(self, threshold: int = 4):
+    def __init__(self, threshold: int = 3):
         self.threshold = threshold
         self.rule_patterns: List[(re.Pattern, int)] = [
             (re.compile(r'\b(hi|hello|hey|good (morning|afternoon|evening))\b', re.I), 3),
@@ -23,6 +23,12 @@ class SmallTalkChecker:
             (re.compile(r"\b(i('m| am)|my name is|this is|call me|who am i)\b", re.I), 3),
             (re.compile(r'\b(you\'re (awesome|amazing|cool|funny|smart))\b', re.I), 3),
             (re.compile(r'\b(i feel (happy|sad|angry|confused|excited))\b', re.I), 4),
+            (re.compile(r'\b(old|years|age|how old (are you|am i|is he|is she))\b', re.I), 3),
+            (re.compile(r'\b(current time|what\'s the date|today\'s date|day of the week)\b', re.I), 1),
+            (re.compile(r'\b(what year is it|year|month)\b', re.I), 1),
+            (re.compile(r'\b(how long|how many years|how much time|since when)\b', re.I), 2),
+            (re.compile(r'\b(time zone|what\'s the timezone|gmt|utc)\b', re.I), 1),
+            (re.compile(r'\b(hour|minute|second|what\'s the hour)\b', re.I), 1)
         ]
 
         self.fallback_classifier = None
