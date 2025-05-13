@@ -45,6 +45,7 @@ class ChatEngine:
             resume: str = "default"
     ):
         # Load environment variables
+        self.session_id = session_id
         self.resume = resume
         self.top_k = top_k
         self.course_db_path = course_db_path
@@ -219,7 +220,7 @@ class ChatEngine:
     def process_history(self):
         chat_history = {
             "store": {
-                "default": []
+                self.session_id: []
             },
             "class_name": "SimpleChatStore"
         }
@@ -234,7 +235,7 @@ class ChatEngine:
                     }
                 ]
             }
-            chat_history["store"]["default"].append(message)
+            chat_history["store"][self.session_id].append(message)
         return json.dumps(chat_history)
 
     def chat(self, user_input: str) -> str:
