@@ -37,11 +37,11 @@ class MultiPipelineChatbot:
         env_path: str,
         session_id: str = 'default',
         token_limit: int = 20000,
-        job_collection: str = 'job_collection',
+        job_collection: str = 'job_description',
         course_db_path: str = r'C:\Users\leduc\OneDrive\Desktop\NLP\grab-capstone-project\NavigaTech\AI_modules\rag_modules\courses_db',
-        top_k: int = 15,
+        top_k: int = 20,
         temperature: float = 0.6,
-        max_tokens: int = 5000,
+        max_tokens: int = 10000,
         resume: str = "default",
         memory: list = [],
     ):
@@ -68,7 +68,6 @@ class MultiPipelineChatbot:
         self.chat_store = SimpleChatStore()
         # load if exists
         if memory:
-            print(memory)
             json_memory = self.process_history()
             try:
                 self.chat_store = SimpleChatStore.from_json(
@@ -169,7 +168,6 @@ class MultiPipelineChatbot:
 
             3. **Job Recommendations:**  
             - If the query involves job recommendations, respond in **bullet points** with the following format:
-
             ## Data Engineer
 
             **Company Name:** Digital Intellect 
@@ -194,6 +192,18 @@ class MultiPipelineChatbot:
         self.context_prompt = f"""
         USER RESUME:
         {self.resume}
+
+        The following is a friendly conversation between a user and an AI assistant.
+        The assistant is talkative and provides lots of specific details from its context.
+        If the assistant does not know the answer to a question, it truthfully says it
+        does not know.
+
+        Here are the relevant documents for the context:
+
+        {{context_str}}
+
+        Instruction: Based on the above documents, provide a detailed answer for the user question below.
+        Answer "don't know" if not present in the document.
         """
 
         self.rag_engine = CondensePlusContextChatEngine(
