@@ -50,7 +50,7 @@ class ElasticsearchRepository:
         query["bool"]["must"].append({
             "multi_match": {
                 "query": request.query,
-                "fields": ["job_name^3", "job_requirement^2", "skills^2", "location", "company_name", "benefit"],
+                "fields": ["job_name^3", "job_requirement", "skills^2", "location", "company_name", "benefit"],
                 "fuzziness": "AUTO"
             }
         })

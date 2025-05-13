@@ -34,10 +34,11 @@ def search_job(
 def get_recommendations(
         page: int = Query(1, ge=1),
         page_size: int = Query(20, ge=1, le=100),
+        query: str = Query(None),
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
-    return service.get_job_recommendation(current_user.id, page, page_size)
+    return service.get_job_recommendation(current_user.id, page, page_size, query)
 
 
 @router.get("/favorite", response_model=PageResponse[JobFavoriteResponse])

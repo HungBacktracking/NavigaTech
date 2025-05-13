@@ -52,12 +52,12 @@ class JobService(BaseService):
         # Get favorite status for each job
         job_ids = [UUID(job["id"]) for job in es_results]
         favorites = self.favorite_job_repository.get_favorites_by_job_ids(job_ids, user_id)
-        
+
         results: List[JobResponse] = []
         for job_data in es_results:
             job_id = UUID(job_data["id"])
             fav = favorites.get(job_id)
-            
+
             results.append(
                 JobResponse(
                     id=job_id,
@@ -114,68 +114,68 @@ class JobService(BaseService):
             total_pages=total_pages,
         )
 
-    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20):
+    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20, query: str = None) -> PageResponse[JobResponse]:
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        offset = (page - 1) * page_size
+        # offset = (page - 1) * page_size
 
-        all_recommendations = self.recommendation.search(resume_text, top_k=100)
+        all_recommendations = self.recommendation.search(query, top_k=100)
         total_count = len(all_recommendations)
 
-        recommendations = self.recommendation.search(resume_text, top_k=offset + page_size)
+        # recommendations = self.recommendation.search(resume_text, top_k=offset + page_size)
 
-        paginated_results = recommendations[offset : offset + page_size]
+        # paginated_results = recommendations[offset : offset + page_size]
 
-        results = []
-        for item in paginated_results:
-            # Check if job exists in our database
-            job = self.job_repository.find_by_url(
-                item.get("metadata", {}).get("link", "")
-            )
+        # results = []
+        # for item in paginated_results:
+        #     # Check if job exists in our database
+        #     job = self.job_repository.find_by_url(
+        #         item.get("metadata", {}).get("link", "")
+        #     )
 
-            # Get favorite status if job exists
-            fav = None
-            if job:
-                fav = self.favorite_job_repository.find_by_job_and_user_id(
-                    job.id, user_id
-                )
+        #     # Get favorite status if job exists
+        #     fav = None
+        #     if job:
+        #         fav = self.favorite_job_repository.find_by_job_and_user_id(
+        #             job.id, user_id
+        #         )
 
-            # Create JobResponse object with job data
-            if job:
-                results.append(
-                    JobResponse(
-                        id=job.id,
-                        job_url=job.job_url,
-                        from_site=job.from_site,
-                        logo_url=job.logo_url,
-                        job_name=job.job_name,
-                        job_level=job.job_level,
-                        company_name=job.company_name,
-                        company_type=job.company_type,
-                        company_address=job.company_address,
-                        company_description=job.company_description,
-                        job_type=job.job_type,
-                        skills=job.skills,
-                        location=job.location,
-                        date_posted=job.date_posted,
-                        job_description=job.job_description,
-                        job_requirement=job.job_requirement,
-                        benefit=job.benefit,
-                        is_analyze=fav.is_analyze if fav else False,
-                        resume_url=fav.resume_url if fav else None,
-                        is_favorite=fav.is_favorite if fav else False
-                    )
-                )
+        #     # Create JobResponse object with job data
+        #     if job:
+        #         results.append(
+        #             JobResponse(
+        #                 id=job.id,
+        #                 job_url=job.job_url,
+        #                 from_site=job.from_site,
+        #                 logo_url=job.logo_url,
+        #                 job_name=job.job_name,
+        #                 job_level=job.job_level,
+        #                 company_name=job.company_name,
+        #                 company_type=job.company_type,
+        #                 company_address=job.company_address,
+        #                 company_description=job.company_description,
+        #                 job_type=job.job_type,
+        #                 skills=job.skills,
+        #                 location=job.location,
+        #                 date_posted=job.date_posted,
+        #                 job_description=job.job_description,
+        #                 job_requirement=job.job_requirement,
+        #                 benefit=job.benefit,
+        #                 is_analyze=fav.is_analyze if fav else False,
+        #                 resume_url=fav.resume_url if fav else None,
+        #                 is_favorite=fav.is_favorite if fav else False
+        #             )
+        #         )
 
-        total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
+        # total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
 
         return PageResponse(
-            items=results,
+            items=all_recommendations,
             total=total_count,
             page=page,
-            page_size=page_size,
-            total_pages=total_pages,
+            page_size=total_count,
+            total_pages=total_count,
         )
 
     def analyze_job(self, job_id: UUID, user_id: UUID):
@@ -271,5 +271,5 @@ class JobService(BaseService):
 
         # Bulk index
         self.es_repository.index_bulk_jobs(job_dicts)
-            
+
         return len(job_dicts)
