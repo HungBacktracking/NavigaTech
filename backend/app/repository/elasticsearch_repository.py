@@ -50,7 +50,7 @@ class ElasticsearchRepository:
         query["bool"]["must"].append({
             "multi_match": {
                 "query": request.query,
-                "fields": ["job_name^3", "job_description^2", "job_requirement^2", "skills^2", "location^2", "company_name^2", "benefit"],
+                "fields": ["job_name^3", "job_description", "job_requirement^2", "skills^2", "location", "company_name", "benefit"],
                 "fuzziness": "AUTO"
             }
         })
@@ -70,7 +70,7 @@ class ElasticsearchRepository:
                 query["bool"]["must"].append({
                     "multi_match": {
                         "query": level,  # Individual string now
-                        "fields": ["job_name^3", "job_level^3", "job_description^2", "job_requirement"],
+                        "fields": ["job_name^3", "job_level^3", "job_description", "job_requirement^2"],
                     }
                 })
 
