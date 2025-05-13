@@ -1,5 +1,5 @@
 from elasticsearch import Elasticsearch
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from uuid import UUID
 
 from app.schema.job_schema import JobSearchRequest
@@ -38,9 +38,8 @@ class ElasticsearchRepository:
                 mappings=mappings
             )
 
-    
-    def search_jobs(self, request: JobSearchRequest) -> List[Dict[str, Any]]:
-        """Search for jobs based on search criteria"""
+    def search_jobs(self, request: JobSearchRequest) -> Tuple[List[Dict[str, Any]], int]:
+        """Search for jobs based on search criteria with pagination"""
         query = {
             "bool": {
                 "must": []
@@ -74,18 +73,23 @@ class ElasticsearchRepository:
                         "fields": ["job_name^3", "job_level^3", "job_description^2", "job_requirement"],
                     }
                 })
+
+        from_val = (request.page - 1) * request.page_size if request.page > 0 else 0
         
-        # Execute search
         response = self.es_client.search(
             index=self.index_name,
             query=query,
             sort=[{"date_posted": {"order": "desc"}}],
-            size=50
+            from_=from_val,
+            size=request.page_size,
+            track_total_hits=True,
         )
-        
-        # Extract results
-        return [hit["_source"] for hit in response["hits"]["hits"]]
-    
+
+        hits = [hit["_source"] for hit in response["hits"]["hits"]]
+        total = response["hits"]["total"]["value"]
+
+        return hits, total
+
     def get_job_by_id(self, job_id: UUID) -> Optional[Dict[str, Any]]:
         """Get a job by its ID"""
         try:

@@ -1,7 +1,8 @@
 from datetime import date
 from typing import Optional, List
+from uuid import UUID
 from pydantic import BaseModel
-from app.schema.base_schema import ModelBaseInfo
+from app.schema.base_schema import ModelBaseInfo, PageRequest
 from app.schema.job_analytic_schema import JobAnalyticResponse
 
 
@@ -29,32 +30,23 @@ class BaseJob(BaseModel):
     class Config:
         from_attributes = True
 
+
 class JobResponse(ModelBaseInfo, BaseJob): ...
 
+
 class FavoriteJobRequest(BaseModel):
-    job_id: str
-    user_id: str
+    job_id: UUID
+    user_id: UUID
     is_analyze: Optional[bool] = None
     is_generated_resume: Optional[bool] = None
     is_favorite: bool
+
 
 class JobFavoriteResponse(ModelBaseInfo, BaseJob):
     job_analytics: Optional[JobAnalyticResponse] = None
 
 
-
-class JobSearchRequest(BaseModel):
+class JobSearchRequest(PageRequest):
     query: str
     roles: Optional[List[str]] = None
     levels: Optional[List[str]] = None
-
-
-
-
-
-
-
-
-
-
-

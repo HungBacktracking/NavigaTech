@@ -60,11 +60,3 @@ class S3Service(BaseService):
             return file
         except Exception as e:
             raise CustomError.INTERNAL_SERVER_ERROR.as_exception()
-
-
-
-
-
-
-
-

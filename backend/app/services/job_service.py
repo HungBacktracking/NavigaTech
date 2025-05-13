@@ -1,5 +1,6 @@
+import math
 import uuid
-from typing import List, Dict
+from typing import List
 from uuid import UUID
 
 from app.convert.job import to_favorite_job_response
@@ -13,6 +14,7 @@ from app.repository.elasticsearch_repository import ElasticsearchRepository
 from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_repository import JobRepository
 from app.resume_building.resume_convert import ResumeConverter
+from app.schema.base_schema import PageResponse
 from app.schema.job_schema import JobSearchRequest, JobFavoriteResponse, JobResponse, FavoriteJobRequest
 from app.schema.user_schema import UserDetailResponse
 from app.services import UserService
@@ -29,7 +31,7 @@ class JobService(BaseService):
         resume_converter: ResumeConverter,
         resume_report: ResumeReport,
         resume_scorer: ResumeScorer,
-        job_recommendation: JobRecommendation
+        job_recommendation: JobRecommendation,
     ):
         self.job_repository = job_repository
         self.favorite_job_repository = favorite_job_repository
@@ -41,10 +43,12 @@ class JobService(BaseService):
         self.recommendation = job_recommendation
         super().__init__(job_repository, favorite_job_repository)
 
-    def full_text_search_job(self, request: JobSearchRequest, user_id: UUID) -> list[JobResponse]:
-        # Use Elasticsearch for searching
-        es_results = self.es_repository.search_jobs(request)
-        
+    def full_text_search_job(
+        self, request: JobSearchRequest, user_id: UUID
+    ) -> PageResponse[JobResponse]:
+        # Use Elasticsearch for searching with pagination
+        es_results, total_count = self.es_repository.search_jobs(request)
+
         # Get favorite status for each job
         job_ids = [UUID(job["id"]) for job in es_results]
         favorites = self.favorite_job_repository.get_favorites_by_job_ids(job_ids, user_id)
@@ -73,30 +77,106 @@ class JobService(BaseService):
                     job_description=job_data.get("job_description"),
                     job_requirement=job_data.get("job_requirement"),
                     benefit=job_data.get("benefit"),
-
                     is_analyze=fav.is_analyze if fav else False,
                     resume_url=fav.resume_url if fav else None,
                     is_favorite=fav.is_favorite if fav else False
                 )
             )
 
-        return results
-    
+        total_pages = (
+            math.ceil(total_count / request.page_size) if total_count > 0 else 1
+        )
 
+        return PageResponse(
+            items=results,
+            total=total_count,
+            page=request.page,
+            page_size=request.page_size,
+            total_pages=total_pages,
+        )
 
-    def get_user_favorite_jobs_with_analytics(self, user_id: UUID) -> List[JobFavoriteResponse]:
-        rows = self.job_repository.find_favorite_job_with_analytics(user_id)
+    def get_user_favorite_jobs_with_analytics(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobFavoriteResponse]:
+        rows, total_count = self.job_repository.find_favorite_job_with_analytics(
+            user_id, page, page_size
+        )
 
-        return [
-            to_favorite_job_response(job, fav, analytic)
-            for job, fav, analytic in rows
+        paginated_favorites = [
+            to_favorite_job_response(job, fav, analytic) for job, fav, analytic in rows
         ]
 
-    def get_job_recommendation(self, user_id: UUID):
+        total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
+
+        return PageResponse(
+            items=paginated_favorites,
+            total=total_count,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
+
+    def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20):
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        return self.recommendation.search(resume_text)
+        offset = (page - 1) * page_size
+
+        all_recommendations = self.recommendation.search(resume_text, top_k=100)
+        total_count = len(all_recommendations)
+
+        recommendations = self.recommendation.search(resume_text, top_k=offset + page_size)
+
+        paginated_results = recommendations[offset : offset + page_size]
+
+        results = []
+        for item in paginated_results:
+            # Check if job exists in our database
+            job = self.job_repository.find_by_url(
+                item.get("metadata", {}).get("link", "")
+            )
+
+            # Get favorite status if job exists
+            fav = None
+            if job:
+                fav = self.favorite_job_repository.find_by_job_and_user_id(
+                    job.id, user_id
+                )
+
+            # Create JobResponse object with job data
+            if job:
+                results.append(
+                    JobResponse(
+                        id=job.id,
+                        job_url=job.job_url,
+                        from_site=job.from_site,
+                        logo_url=job.logo_url,
+                        job_name=job.job_name,
+                        job_level=job.job_level,
+                        company_name=job.company_name,
+                        company_type=job.company_type,
+                        company_address=job.company_address,
+                        company_description=job.company_description,
+                        job_type=job.job_type,
+                        skills=job.skills,
+                        location=job.location,
+                        date_posted=job.date_posted,
+                        job_description=job.job_description,
+                        job_requirement=job.job_requirement,
+                        benefit=job.benefit,
+                        is_analyze=fav.is_analyze if fav else False,
+                        resume_url=fav.resume_url if fav else None,
+                        is_favorite=fav.is_favorite if fav else False
+                    )
+                )
+
+        total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
+
+        return PageResponse(
+            items=results,
+            total=total_count,
+            page=page,
+            page_size=page_size,
+            total_pages=total_pages,
+        )
 
     def analyze_job(self, job_id: UUID, user_id: UUID):
         job: Job = self.job_repository.find_by_id(job_id)
@@ -184,8 +264,6 @@ class JobService(BaseService):
 
         return self.get_user_favorite_jobs_with_analytics(user_id)
 
-
-        
     def index_all_jobs(self):
         """Index all jobs from database to Elasticsearch"""
         jobs = self.job_repository.get_all()
@@ -195,9 +273,3 @@ class JobService(BaseService):
         self.es_repository.index_bulk_jobs(job_dicts)
             
         return len(job_dicts)
-
-
-
-
-
-

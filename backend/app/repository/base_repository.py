@@ -31,7 +31,7 @@ class BaseRepository:
             return model_db
 
     def find_by_id(self, model_id: UUID):
-        with self.replica_session_factory() as session:
+        with self.session_factory() as session:
             model = session.get(self.model, model_id)
 
             return model
