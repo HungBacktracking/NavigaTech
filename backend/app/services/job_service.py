@@ -79,7 +79,6 @@ class JobService(BaseService):
                     job_requirement=job_data.get("job_requirement"),
                     benefit=job_data.get("benefit"),
                     is_analyze=fav.is_analyze if fav else False,
-                    resume_url=fav.resume_url if fav else None,
                     is_favorite=fav.is_favorite if fav else False
                 )
             )

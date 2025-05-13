@@ -11,7 +11,6 @@ const { Text, Title } = Typography;
 
 interface JobCardProps {
   job: Job;
-  isFavorite: boolean;
   handleToggleFavorite: (e: MouseEvent) => void;
   handleSelectJob: (job: Job) => void;
   handleJobAnalysisClick: (id: string) => void;
@@ -21,7 +20,6 @@ interface JobCardProps {
 
 const JobCard = ({
   job,
-  isFavorite,
   handleSelectJob,
   handleToggleFavorite,
   handleJobAnalysisClick,
@@ -36,42 +34,41 @@ const JobCard = ({
       hoverable
       title={
         <Flex
-          horizontal
           justify="space-between"
           align="center"
         >
           <Flex
-            horizontal
             gap="middle"
             align="center"
             justify="start"
             style={{ padding: 0 }}>
             <div style={{ padding: 2, borderRadius: 4, backgroundColor: '#fafafa' }}>
               <Image
-                src={job.companyLogo}
-                alt={`${job.companyName} logo`}
-                fallback={`https://placehold.co/100x100?text=${job.companyName[0]}`}
+                src={job.logo_url}
+                alt={`${job.company_name} logo`}
+                fallback={`https://placehold.co/100x100/?text=${job.company_name[0]}`}
                 style={{
                   width: 40,
                   height: 40,
+                  borderRadius: 8,
                 }}
                 preview={false}
               />
             </div>
             <Flex vertical>
               <Title level={4} style={{ color: token.colorPrimary, margin: 0, fontWeight: 500, textWrap: "wrap" }}>
-                {job.title}
+                {job.job_name}
               </Title>
               <Text type="secondary">
-                {job.companyName}
+                {job.company_name}
               </Text>
             </Flex>
           </Flex>
-          <Tooltip title={isFavorite ? "Remove from favorites" : "Add to favorites"} color={blueDark[3]}>
+          <Tooltip title={job.is_favorite ? "Remove from favorites" : "Add to favorites"} color={blueDark[3]}>
             <Button
               type="text"
               shape="circle"
-              icon={isFavorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ fontSize: 20, color: token.colorIcon }} />}
+              icon={job.is_favorite ? <StarFilled style={{ color: orange.primary, fontSize: 20 }} /> : <StarOutlined style={{ fontSize: 20, color: token.colorIcon }} />}
               onClick={handleToggleFavorite}
               style={{ marginLeft: "auto" }}
             />
@@ -110,47 +107,53 @@ const JobCard = ({
       )}
       <Space direction="vertical" size="middle" style={{ width: "100%" }}>
         <Flex vertical gap="small">
-          <Space>
-            <EnvironmentOutlined />
-            {job.location}
-          </Space>
-          <Flex horizontal gap="large" wrap="wrap">
-            {job.type && (
+          {job.location && (
+            <Space>
+              <EnvironmentOutlined />
+              {job.location}
+            </Space>
+          )}
+          <Flex gap="large" wrap="wrap">
+            {job.job_type && (
               <Space>
                 <AuditOutlined />
-                {job.type}
+                {job.job_type}
               </Space>
             )}
-            {job.salary && <span>{job.salary}</span>}
+            {job && <span>{job.benefit}</span>}
           </Flex>
-          {job.datePosted && (
+          {job.date_posted && (
             <Space>
               <ClockCircleOutlined />
-              {formatDateToEngPeriodString(job.datePosted)}
+              {formatDateToEngPeriodString(job.date_posted)}
             </Space>
           )}
         </Flex>
+        {job.job_level && (
+          <Tag color={token.colorWarningBg} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8, borderColor: token.colorWarningBorder }}>
+            <Text>{job.job_level.toUpperCase()}</Text>
+          </Tag>
+        )}
         <Space wrap>
-          {job.skills.map((skill, index) => (
+          {job.skills && job.skills.split(",").map((skill, index) => (
             <Tag key={index} color={token.colorInfoBg} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8 }}>
               <Text>{skill}</Text>
             </Tag>
           ))}
         </Space>
         <Flex
-          horizontal={!isTablet}
           vertical={isTablet}
           gap="small"
           justify="space-between"
           align="center"
           style={{ margin: "4px 0 0 0" }}>
           <a
-            href={job.originalUrl}
+            href={job.job_url}
             target="_blank"
             rel="noopener noreferrer"
             onClick={(e) => e.stopPropagation()}
           >
-            {extractDomainFromUrl(job.originalUrl)}
+            {extractDomainFromUrl(job.job_url)}
           </a>
 
           <Space>
@@ -163,7 +166,7 @@ const JobCard = ({
               }}
               disabled={isAnalyzing}
             >
-              {isAnalyzing ? "Analyzing..." : "Analysis"}
+              {isAnalyzing ? "Analyzing..." : job.is_analyze ? "Re-Analyze" : "Analyze"}
             </AIButton>
           </Space>
         </Flex>

@@ -10,18 +10,18 @@ import {
   GlobalOutlined,
   DollarOutlined,
 } from "@ant-design/icons";
-import { DetailJob } from "../../../../lib/types/job";
 import { blueDark, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
 import ReactMarkdown from 'react-markdown';
 import { MouseEvent } from "react";
+import { Job } from "../../../../lib/types/job";
 
 const { Text, Title } = Typography;
 
 interface JobDetailProps {
-  job: DetailJob;
+  job: Job;
   isFavorite: boolean;
   handleToggleFavorite?: (e: MouseEvent) => void;
   handleJobAnalysisClick?: (id: string) => void;
@@ -70,30 +70,31 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
       }}
       title={
         <Flex vertical style={{ padding: '8px 0' }}>
-          <Flex horizontal justify="space-between" align="center">
-            <Flex horizontal gap="small" align="center" justify="start">
+          <Flex justify="space-between" align="center">
+            <Flex gap="small" align="center" justify="start">
               <div style={{
                 borderRadius: 4,
                 backgroundColor: '#fafafa',
                 padding: 2,
               }}>
                 <Image
-                  src={job.company.logo}
-                  alt={`${job.company.name} logo`}
-                  fallback={`https://placehold.co/100x100?text=${job.company.name[0]}`}
+                  src={job.logo_url}
+                  alt={`${job.company_name} logo`}
+                  fallback={`https://placehold.co/160x160?text=${job.company_name[0]}`}
                   style={{
                     width: 60,
                     height: 60,
+                    borderRadius: 8,
                     objectFit: "contain"
                   }}
                 />
               </div>
               <Flex vertical>
                 <Title level={3} style={{ margin: 0, fontWeight: 600 }}>
-                  {job.title}
+                  {job.job_name}
                 </Title>
                 <Text strong>
-                  {job.company.name}
+                  {job.company_name}
                 </Text>
               </Flex>
             </Flex>
@@ -106,15 +107,14 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
                   onClick={handleToggleFavorite}
                 />
               </Tooltip>
-              {job.datePosted && (
+              {job.date_posted && (
                 <Text type="secondary" style={{ fontSize: 13 }}>
-                  <ClockCircleOutlined /> {formatDateToEngPeriodString(job.datePosted)}
+                  <ClockCircleOutlined /> {formatDateToEngPeriodString(job.date_posted)}
                 </Text>
               )}
             </Flex>
           </Flex>
           <Flex
-            horizontal={!isTablet}
             vertical={isTablet}
             align="center"
             gap="small"
@@ -128,10 +128,10 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
               }}
               onClick={(e: React.MouseEvent) => {
                 e.stopPropagation();
-                window.open(job.originalUrl, "_blank");
+                window.open(job.job_url, "_blank");
               }}
             >
-              Apply on {extractDomainFromUrl(job.originalUrl)}
+              Apply on {extractDomainFromUrl(job.job_url)}
             </Button>
 
             <Space>
@@ -171,22 +171,22 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
               <EnvironmentOutlined />
               <Text>{job.location}</Text>
             </Space>
-            {job.type && (
+            {job.job_type && (
               <Space>
                 <AuditOutlined />
-                <Text>{job.type}</Text>
+                <Text>{job.job_type}</Text>
               </Space>
             )}
-            {job.salary && (
+            {job.benefit && (
               <Space>
                 <DollarOutlined />
-                <Text>{job.salary}</Text>
+                <Text>{job.benefit}</Text>
               </Space>
             )}
           </Flex>
 
           <Space wrap style={{ width: '100%' }}>
-            {job.skills.map((skill, index) => (
+            {job.skills && job.skills.split(",").map((skill, index) => (
               <Tag key={index} color={token.colorInfoBg} style={{ padding: "4px 12px", borderRadius: 8, borderColor: token.colorInfoBorder }}>
                 <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
               </Tag>
@@ -195,18 +195,20 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
         </Space>
 
         <Space direction="vertical" size="middle">
-          <div>
-            <Title level={3} style={{ margin: 0 }}>Description</Title>
-            <div className="markdown-content">
-              {renderContent(job.jobDescription)}
+          {job.job_description && (
+            <div>
+              <Title level={3} style={{ margin: 0 }}>Description</Title>
+              <div className="markdown-content">
+                {renderContent(job.job_description)}
+              </div>
             </div>
-          </div>
+          )}
 
-          {job.jobRequirements && (
+          {job.job_requirement && (
             <div>
               <Title level={3} style={{ margin: 0 }}>Requirements</Title>
               <div className="markdown-content">
-                {renderContent(job.jobRequirements)}
+                {renderContent(job.job_requirement)}
               </div>
             </div>
           )}
@@ -220,11 +222,11 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
             </div>
           )}
 
-          {job.company.description && (
+          {job.company_description && (
             <div>
               <Title level={3} style={{ margin: 0 }}>About Company</Title>
               <div className="markdown-content" style={{ lineHeight: 1.6 }}>
-                {renderContent(job.company.description)}
+                {renderContent(job.company_description)}
               </div>
             </div>
           )}
