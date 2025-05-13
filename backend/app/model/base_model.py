@@ -1,3 +1,4 @@
+from typing import Optional
 from uuid import uuid4, UUID
 from sqlmodel import Field, SQLModel
 

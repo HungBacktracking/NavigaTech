@@ -20,8 +20,18 @@ class AppCreator:
             self.container.init_resources()
             # self.db.create_database()
             await self.mongo.init_mongo()
+            
+            # Initialize and start the job worker
+            job_worker = self.container.services.job_worker()
+            job_worker.start()
+            
             yield
+            
             # Shutdown
+            # Stop the job worker before shutting down
+            if hasattr(self, 'job_worker'):
+                job_worker.stop()
+                
             self.container.shutdown_resources()
 
         # set app default
