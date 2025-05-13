@@ -19,16 +19,11 @@ RUN apt-get update && \
     chmod +x /usr/local/bin/chromedriver && \
     rm -rf /tmp/chromedriver*
 
-
-# 1. Tạo venv tại /opt/venvs/job_loader_env
-RUN python -m venv /opt/venvs/venv
-
-# 2. Copy requirements và wheels
+USER airflow
+# Install Python dependencies from the requirements.txt
 COPY wheels/ /wheels/
 COPY requirements.txt /requirements.txt
+RUN pip install --find-links=/wheels -r /requirements.txt
 
-# 3. Cài đặt dependencies vào venv
-RUN /opt/venvs/venv/bin/pip install --no-cache-dir --find-links=/wheels -r /requirements.txt
- 
-# 4. Giữ nguyên user airflow
-USER airflow
+
+

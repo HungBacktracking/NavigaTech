@@ -85,33 +85,32 @@ def upload_to_s3(file_path, bucket_name, s3_key, aws_access_key_id=None, aws_sec
         print(f"Upload to S3 failed: {e}")
 
 # --- MAIN ---
-def main():
-    all_jobs_df = scrape_all_keywords(keywords)
+all_jobs_df = scrape_all_keywords(keywords)
 
-    if not all_jobs_df.empty:
-        if 'job_url' in all_jobs_df.columns:
-            all_jobs_df = all_jobs_df.drop_duplicates(subset=['job_url'], keep='first')
-        else:
-            url_columns = [col for col in all_jobs_df.columns if 'url' in col.lower()]
-            if url_columns:
-                all_jobs_df = all_jobs_df.drop_duplicates(subset=[url_columns[0]], keep='first')
-
-        timestamp = datetime.datetime.now().strftime("%Y%m%d")
-        json_output = f"/opt/airflow/data/raw/linkedin_indeed_jobs_{timestamp}.json"
-        os.makedirs(os.path.dirname(json_output), exist_ok=True)
-        clean_df = all_jobs_df.replace({np.nan: None, pd.NaT: None})
-        jobs_json = clean_df.to_dict(orient='records')
-
-        with open(json_output, 'w', encoding='utf-8') as f:
-            json.dump(jobs_json, f, ensure_ascii=False, indent=2, default=str)
-
-        bucket_name = os.getenv("AWS_S3_BUCKET")
-        s3_key = f"raw/linkedin_indeed_jobs_{timestamp}.json"
-        aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
-        aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
-        region_name = os.getenv("AWS_REGION")
-
-        print(f"Uploading {json_output} to s3://{bucket_name}/{s3_key}...")
-        upload_to_s3(json_output, bucket_name, s3_key, aws_access_key_id, aws_secret_access_key, region_name)
+if not all_jobs_df.empty:
+    if 'job_url' in all_jobs_df.columns:
+        all_jobs_df = all_jobs_df.drop_duplicates(subset=['job_url'], keep='first')
     else:
-        print("No data scraped, skipping JSON export and upload.")
+        url_columns = [col for col in all_jobs_df.columns if 'url' in col.lower()]
+        if url_columns:
+            all_jobs_df = all_jobs_df.drop_duplicates(subset=[url_columns[0]], keep='first')
+
+    timestamp = datetime.datetime.now().strftime("%Y%m%d")
+    json_output = f"/opt/airflow/data/raw/linkedin_indeed_jobs_{timestamp}.json"
+    os.makedirs(os.path.dirname(json_output), exist_ok=True)
+    clean_df = all_jobs_df.replace({np.nan: None, pd.NaT: None})
+    jobs_json = clean_df.to_dict(orient='records')
+
+    with open(json_output, 'w', encoding='utf-8') as f:
+        json.dump(jobs_json, f, ensure_ascii=False, indent=2, default=str)
+
+    bucket_name = os.getenv("AWS_S3_BUCKET")
+    s3_key = f"raw/linkedin_indeed_jobs_{timestamp}.json"
+    aws_access_key_id = os.getenv("AWS_ACCESS_KEY_ID")
+    aws_secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY")
+    region_name = os.getenv("AWS_REGION")
+
+    print(f"Uploading {json_output} to s3://{bucket_name}/{s3_key}...")
+    upload_to_s3(json_output, bucket_name, s3_key, aws_access_key_id, aws_secret_access_key, region_name)
+else:
+    print("No data scraped, skipping JSON export and upload.")

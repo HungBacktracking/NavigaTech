@@ -150,3 +150,5 @@ def main():
     save_jobs_to_local(normalized_jobs, local_file_path)
     upload_local_file_to_s3(local_file_path, output_key)
 
+if __name__ == "__main__":
+    main()

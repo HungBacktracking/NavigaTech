@@ -191,9 +191,9 @@ def process_json_from_s3(s3_key):
     content = response['Body'].read().decode('utf-8')
     data = json.loads(content)
     jobs = data if isinstance(data, list) else [data]
-    for job in jobs:
-        job['description'] = clean_text(job.get('description', ''))
-        job['company_description'] = clean_text(job.get('company_description', ''))
+    # for job in jobs:
+    #     job['description'] = clean_text(job.get('description', ''))
+    #     job['company_description'] = clean_text(job.get('company_description', ''))
     return pd.DataFrame(jobs)
 
 def write_json_to_s3(data_list, s3_key):

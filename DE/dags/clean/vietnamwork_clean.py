@@ -23,32 +23,61 @@ bucket_name = os.getenv("AWS_S3_BUCKET")
 input_key = f"raw/vietnamworks_jobs_{timestamp}.json"
 output_key = f"clean1/vietnamworks_jobs_cleaned_{timestamp}.json"
 
-# --- Download JSON file from S3 ---
-print(f"Downloading s3://{bucket_name}/{input_key}...")
-input_obj = s3.get_object(Bucket=bucket_name, Key=input_key)
-jobs = json.load(input_obj['Body'])
+
 
 # --- Helper functions ---
 def remove_special_chars(text):
     """Remove special characters (keep letters, numbers, spaces)."""
     return re.sub(r'[^a-zA-Z0-9À-ỹà-ỹ\s]', '', text)
 
-def jd_to_markdown(jd_raw):
-    """Convert job description to simple markdown (bold + bullet points)."""
-    jd = jd_raw.replace("\\n", "\n").strip()
+# def jd_to_markdown(jd_raw):
+#     """Convert job description to simple markdown (bold + bullet points)."""
+#     jd = jd_raw.replace("\\n", "\n").strip()
 
-    # Add bold section titles
-    jd = re.sub(r"(Job Description)", r"\n**\1**", jd, flags=re.I)
-    jd = re.sub(r"(Job Requirements)", r"\n**\1**", jd, flags=re.I)
-    jd = re.sub(r"(Benefit & Perks)", r"\n**\1**", jd, flags=re.I)
+#     # Add bold section titles
+#     jd = re.sub(r"(Job Description)", r"\n**\1**", jd, flags=re.I)
+#     jd = re.sub(r"(Job Requirements)", r"\n**\1**", jd, flags=re.I)
+#     jd = re.sub(r"(Benefit & Perks)", r"\n**\1**", jd, flags=re.I)
 
-    # Replace bullet symbols
-    jd = re.sub(r"•\t?", "- ", jd)
+#     # Replace bullet symbols
+#     jd = re.sub(r"•\t?", "- ", jd)
 
-    # Collapse extra newlines
-    jd = re.sub(r"\n{3,}", "\n\n", jd)
+#     # Collapse extra newlines
+#     jd = re.sub(r"\n{3,}", "\n\n", jd)
 
-    return jd.strip()
+#     return jd.strip()
+
+
+
+def jd_to_markdown(jd_text):
+    # Thay thế \\n thành newline thực (nếu dữ liệu gốc là chuỗi từ JSON)
+    jd_text = jd_text.replace("\\n", "\n").strip()
+
+    # Tách các phần theo dòng mới mà dòng sau bắt đầu bằng chữ cái hoặc số
+    sections = re.split(r'\n(?=\w)', jd_text)
+
+    markdown_lines = []
+
+    for section in sections:
+        # Tách tiêu đề là dòng đầu tiên
+        lines = section.strip().split('\n', 1)
+        title = lines[0].strip()
+        content = lines[1].strip() if len(lines) > 1 else ''
+
+        # Thêm tiêu đề được bôi đậm
+        markdown_lines.append(f"**{title}**")
+
+        # Chuyển các dòng có đầu dòng là bullet (• hoặc - hoặc tab) thành dấu markdown
+        content = re.sub(r'^[\t•\-]+\s*', '- ', content, flags=re.MULTILINE)
+
+        # Thêm nội dung (nếu có)
+        if content:
+            markdown_lines.append(content)
+
+        markdown_lines.append('')  # thêm dòng trống giữa các phần
+
+    # Kết hợp lại thành chuỗi markdown
+    return '\n'.join(markdown_lines).strip()
 
 def clean_job(job):
     """Clean and normalize a single job entry."""
@@ -90,10 +119,20 @@ def clean_job(job):
     else:
         job["Expiration Date"] = None
 
+    for logo in job.get("Logo công ty", []):
+        if logo == "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7":
+            job["Logo công ty"] = None
+
     return job
 
 def main():
     # --- Apply cleaning to all jobs ---
+    # --- Download JSON file from S3 ---
+    print(f"Downloading s3://{bucket_name}/{input_key}...")
+    input_obj = s3.get_object(Bucket=bucket_name, Key=input_key)
+    jobs = json.load(input_obj['Body'])
+
+
     cleaned_jobs = [clean_job(job) for job in jobs]
 
     # --- Write cleaned data to JSON in-memory ---
@@ -107,3 +146,6 @@ def main():
     s3.upload_fileobj(output_buffer, bucket_name, output_key)
 
     print(f"✅ Cleaning and upload completed: s3://{bucket_name}/{output_key}")
+
+if __name__ == "__main__":
+    main()

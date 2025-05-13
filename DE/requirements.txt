@@ -1,5 +1,4 @@
 chromedriver
-sqlalchemy==2.0.*
 selenium
 beautifulsoup4
 requests
@@ -10,8 +9,4 @@ tqdm
 google-generativeai
 boto3
 llama-index-embeddings-huggingface
-qdrant-client[fastembed] 
-fastembed-gpu
-llama-index-embeddings-huggingface-api
-googletrans
-python-dotenv
+dotenv
