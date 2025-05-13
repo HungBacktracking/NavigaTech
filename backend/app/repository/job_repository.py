@@ -26,8 +26,8 @@ class JobRepository(BaseRepository):
             return None
 
         with self.replica_session_factory() as session:
-            statement = select(Job).where(Job.job_url == job_url)
-            return session.exec(statement).first()
+            statement = select(Job).where(Job.job_url == job_url, Job.deleted_at == None)
+            return session.execute(statement).scalars().first()
 
     def search_job(
         self, request: JobSearchRequest, user_id: UUID
@@ -41,10 +41,11 @@ class JobRepository(BaseRepository):
                 )
                 .where(Job.name.ilike(f"%{request.name}%"))
                 .where(Job.company.ilike(f"%{request.company}%"))
+                .where(Job.deleted_at == None)
                 .order_by(Job.end_date.desc())
             )
 
-            return list(session.exec(select_statement).all())
+            return list(session.execute(select_statement).all())
 
     def find_favorite_job_with_analytics(
         self, user_id: UUID, page: int = None, page_size: int = None
@@ -56,22 +57,50 @@ class JobRepository(BaseRepository):
                 .outerjoin(JobAnalytic, Job.id == JobAnalytic.job_id)
                 .where(FavoriteJob.user_id == user_id)
                 .where(JobAnalytic.user_id == user_id)
+                .where(Job.deleted_at == None)
                 .order_by(FavoriteJob.created_at.desc())
             )
 
             count_statement = select(func.count()).select_from(statement.subquery())
-            total_count = session.exec(count_statement).one()
+            total_count = session.execute(count_statement).scalar_one()
 
             if page is not None and page_size is not None:
                 offset = (page - 1) * page_size
                 statement = statement.offset(offset).limit(page_size)
 
-            results = list(session.exec(statement).all())
+            results = list(session.execute(statement).all())
             return results, total_count
 
     def get_all(self) -> List[Job]:
         with self.replica_session_factory() as session:
+            statement = select(Job).where(Job.deleted_at == None)
+            jobs = session.execute(statement).scalars().all()
+            return jobs
+            
+    def get_all_including_deleted(self) -> List[Job]:
+        """Get all jobs including soft-deleted ones"""
+        with self.replica_session_factory() as session:
             statement = select(Job)
             jobs = session.execute(statement).scalars().all()
-
             return jobs
+
+    def get_total_count(self) -> int:
+        """Get the total count of non-deleted jobs in the database"""
+        with self.replica_session_factory() as session:
+            statement = select(func.count(Job.id)).where(Job.deleted_at == None)
+            count = session.execute(statement).scalar_one()
+            return count
+            
+    def get_total_count_including_deleted(self) -> int:
+        """Get the total count of all jobs in the database including soft-deleted ones"""
+        with self.replica_session_factory() as session:
+            statement = select(func.count(Job.id))
+            count = session.execute(statement).scalar_one()
+            return count
+
+    def get_all_job_ids(self) -> List[UUID]:
+        """Get all non-deleted job IDs from the database"""
+        with self.replica_session_factory() as session:
+            statement = select(Job.id).where(Job.deleted_at == None)
+            job_ids = session.execute(statement).scalars().all()
+            return job_ids

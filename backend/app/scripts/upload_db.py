@@ -30,7 +30,7 @@ s3 = boto3.client(
     region_name=aws_region
 )
 
-response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250510.json')
+response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250511.json')
 jobs = json.loads(response['Body'].read())
 
 # database

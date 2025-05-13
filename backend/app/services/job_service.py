@@ -19,6 +19,7 @@ from app.schema.job_schema import JobSearchRequest, JobFavoriteResponse, JobResp
 from app.schema.user_schema import UserDetailResponse
 from app.services import UserService
 from app.services.base_service import BaseService
+from sqlalchemy import select
 
 
 class JobService(BaseService):
@@ -264,12 +265,73 @@ class JobService(BaseService):
 
         return self.get_user_favorite_jobs_with_analytics(user_id)
 
-    def index_all_jobs(self):
-        """Index all jobs from database to Elasticsearch"""
-        jobs = self.job_repository.get_all()
-        job_dicts = [job.model_dump() for job in jobs]
-
-        # Bulk index
-        self.es_repository.index_bulk_jobs(job_dicts)
+    def index_all_jobs(self, batch_size=500, include_deleted=False):
+        """
+        Index all jobs from database to Elasticsearch
+        
+        Args:
+            batch_size: The number of jobs to process in each batch
+            include_deleted: Whether to include soft-deleted jobs
+        
+        Returns:
+            int: The total number of jobs indexed
+        """
+        # Get total job count
+        if include_deleted:
+            total_jobs = self.job_repository.get_total_count_including_deleted()
+            print(f"Including soft-deleted jobs. Total job count: {total_jobs}")
+        else:
+            total_jobs = self.job_repository.get_total_count()
+            print(f"Only indexing active jobs. Total job count: {total_jobs}")
+        
+        if total_jobs == 0:
+            return 0
+        
+        # Process in batches for better performance and to avoid memory issues
+        total_indexed = 0
+        total_batches = (total_jobs + batch_size - 1) // batch_size  # Ceiling division
+        
+        offset = 0
+        success_count = 0
+        error_count = 0
+        
+        while offset < total_jobs:
+            try:
+                # Get a batch of jobs
+                with self.job_repository.replica_session_factory() as session:
+                    if include_deleted:
+                        statement = select(Job).offset(offset).limit(batch_size)
+                    else:
+                        statement = select(Job).where(Job.deleted_at == None).offset(offset).limit(batch_size)
+                    
+                    jobs_batch = session.execute(statement).scalars().all()
+                    
+                    if not jobs_batch:
+                        break
+                    
+                    # Convert to dictionaries
+                    job_dicts = [job.model_dump() for job in jobs_batch]
+                    
+                    # Bulk index
+                    self.es_repository.index_bulk_jobs(job_dicts)
+                    
+                    # Update counts
+                    batch_count = len(job_dicts)
+                    success_count += batch_count
+                    total_indexed += batch_count
+                    
+                    print(f"Indexed batch {offset//batch_size + 1}/{total_batches}: {batch_count} jobs")
+                
+            except Exception as e:
+                error_count += 1
+                print(f"Error indexing batch starting at offset {offset}: {str(e)}")
+                # Continue with next batch despite errors
             
-        return len(job_dicts)
+            finally:
+                # Move to next batch
+                offset += batch_size
+        
+        # Log results
+        print(f"Indexing complete: {success_count} jobs indexed successfully, {error_count} batches with errors")
+        
+        return total_indexed

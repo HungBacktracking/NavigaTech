@@ -20,7 +20,7 @@ class FavoriteJobRepository(BaseRepository):
         with self.replica_session_factory() as session:
             statement = select(FavoriteJob).where(FavoriteJob.user_id == user_id)
 
-            return session.scalars(statement).first()
+            return session.execute(statement).scalars().first()
 
     def find_by_job_and_user_id(
         self, job_id: UUID, user_id: UUID
@@ -33,7 +33,7 @@ class FavoriteJobRepository(BaseRepository):
                 .where(FavoriteJob.user_id == user_id)
             )
 
-            return session.scalars(statement).first()
+            return session.execute(statement).scalars().first()
 
     def get_favorites_by_job_ids(self, job_ids: List[UUID], user_id: UUID) -> Dict[UUID, FavoriteJob]:
         favorites = {}
