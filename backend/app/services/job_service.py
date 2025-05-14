@@ -160,8 +160,7 @@ class JobService(BaseService):
         
         return result
 
-    def get_job_recommendation(self, user_id: UUID) -> List[JobResponse]:
-        cache_key = f"job_recommendations:{user_id}"
+
     def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
         cache_key = f"job_recommendations:{user_id}:{page}:{page_size}"
         cached_result = None
