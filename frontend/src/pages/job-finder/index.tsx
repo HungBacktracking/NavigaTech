@@ -66,12 +66,17 @@ export default function JobFindingPage() {
   });
 
   const { mutate: toggleFavorite } = useMutation({
+<<<<<<< Updated upstream
     mutationFn: (jobId: string) => {
       const job = jobsData?.items.find(j => j.id === jobId);
       return jobApi.toggleFavorite(jobId, job?.is_favorite || false);
     },
     onSuccess: (data) => {
       const { id: jobId, is_favorite: isFavorite } = data;
+=======
+    mutationFn: (jobId: string) => jobApi.toggleFavorite(jobId),
+    onSuccess: ({ jobId, isFavorite }) => {
+>>>>>>> Stashed changes
       queryClient.setQueryData(["jobs", queryParams, isRecommendationMode], (oldData: any) => {
         if (!oldData) return oldData;
 

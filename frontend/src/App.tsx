@@ -5,6 +5,7 @@ import { Suspense } from 'react';
 import queryClient from './lib/clients/query-client';
 import AuthProvider from './contexts/auth/auth-provider';
 import FullscreenLoader from './components/fullscreen-loader';
+import NotificationsProvider from './components/notifications';
 import './App.css';
 
 function App() {
@@ -12,9 +13,11 @@ function App() {
     <Suspense fallback={<FullscreenLoader />}>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <AppRouter />
+          <NotificationsProvider>
+            <AppRouter />
+          </NotificationsProvider>
         </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       </QueryClientProvider>
     </Suspense>
   );
