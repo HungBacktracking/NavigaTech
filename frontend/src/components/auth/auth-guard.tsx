@@ -12,10 +12,8 @@ const AuthGuard = () => {
     if (!isLoading) {
       if (!isAuthenticated) {
         navigate('/auth', { replace: true });
-      } else if (!user) {
-        navigate('/auth', { replace: true });
-      } else if (user && !user.uploaded_resume && location.pathname !== '/auth/upload-cv') {
-        navigate('/auth/upload-cv', { replace: true });
+      } else if (user && !user.uploaded_resume && location.pathname !== '/upload-cv') {
+        navigate('/upload-cv', { replace: true });
       }
     }
   }, [isAuthenticated, isLoading, user, navigate, location.pathname]);

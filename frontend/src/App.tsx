@@ -1,5 +1,4 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import AppRouter from './routes';
 import { Suspense } from 'react';
 import queryClient from './lib/clients/query-client';
@@ -14,7 +13,7 @@ function App() {
         <AuthProvider>
           <AppRouter />
         </AuthProvider>
-        <ReactQueryDevtools initialIsOpen={false} />
+        {/* <ReactQueryDevtools initialIsOpen={false} /> */}
       </QueryClientProvider>
     </Suspense>
   );

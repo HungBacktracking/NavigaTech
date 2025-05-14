@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Steps, Typography, theme, Flex, message, List } from 'antd';
 import { motion } from 'framer-motion';
 import { authApi } from '../../services/auth';
@@ -8,6 +8,8 @@ import {
   SuccessStep,
 } from './components/processing-cv-steps';
 import uploadIllustration from '../../assets/upload-illustration.svg';
+import { useAuth } from '../../contexts/auth/auth-context';
+import { useNavigate } from 'react-router-dom';
 
 const { Title, Text } = Typography;
 
@@ -15,6 +17,14 @@ const UploadCVPage = () => {
   const [messageApi, contextHolder] = message.useMessage();
   const { token } = theme.useToken();
   const [currentStep, setCurrentStep] = useState(0);
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (user && user.uploaded_resume) {
+      navigate('/home', { replace: true });
+    }
+  }, [user]);
 
   const handleUpload = async (file: File) => {
     try {

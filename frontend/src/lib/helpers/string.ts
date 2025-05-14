@@ -7,7 +7,8 @@ export const extractDomainFromUrl = (url: string) => {
   }
 };
 
-export const formatDateToEngPeriodString = (date: string) => {
+export const formatDateToEngPeriodString = (date: string | undefined) => {
+  if (!date) return "";
   const parsedDate = new Date(date);
   const now = new Date();
   const diffTime = Math.abs(now.getTime() - parsedDate.getTime());

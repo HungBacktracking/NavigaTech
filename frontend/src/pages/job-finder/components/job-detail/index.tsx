@@ -5,7 +5,6 @@ import {
   StarFilled,
   StarOutlined,
   AuditOutlined,
-  BookOutlined,
   BarChartOutlined,
   GlobalOutlined,
   DollarOutlined,
@@ -32,10 +31,10 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
   const { isMobile: isTablet } = useMobile(1024);
   const { token } = theme.useToken();
 
-  const handleCreateCVClick = (id: string) => {
-    console.log(`Create CV for job ID: ${id}`);
-    // TODO: Implement create CV logic here
-  };
+  // const handleCreateCVClick = (id: string) => {
+  //   console.log(`Create CV for job ID: ${id}`);
+  //   // TODO: Implement create CV logic here
+  // };
 
   const renderContent = (content: string) => {
     return (
@@ -78,7 +77,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
                 padding: 2,
               }}>
                 <Image
-                  src={job.logo_url}
+                  src={job.logo_url || undefined}
                   alt={`${job.company_name} logo`}
                   fallback={`https://placehold.co/160x160?text=${job.company_name[0]}`}
                   style={{
@@ -149,7 +148,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
                 {isAnalyzing ? "Analyzing..." : "Job Analysis"}
               </AIButton>
 
-              <AIButton
+              {/* <AIButton
                 icon={<BookOutlined />}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
@@ -157,7 +156,7 @@ const JobDetail = ({ job, isFavorite, handleToggleFavorite, handleJobAnalysisCli
                 }}
               >
                 Create CV
-              </AIButton>
+              </AIButton> */}
             </Space>
           </Flex>
         </Flex>

@@ -5,22 +5,21 @@ import {
   CheckCircleFilled,
   AuditOutlined,
   DollarCircleOutlined,
-  SettingOutlined,
   CloseCircleFilled
 } from '@ant-design/icons';
 import { useEffect, useState, useRef, useCallback } from 'react';
-import { JobAnalysisDetail as JobAnalysisDetailType } from '../../../../lib/types/job';
 import { blue, green, red, yellow } from '@ant-design/colors';
 import ReactMarkdown from 'react-markdown';
+import { JobAnalytic } from '../../../../lib/types/job';
 
 const { Title, Text, Paragraph } = Typography;
 const { useToken } = theme;
 
 interface JobAnalysisDetailProps {
-  job: JobAnalysisDetailType;
+  analytic: JobAnalytic | null;
 }
 
-const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
+const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
   const { token } = useToken();
   const [activeTab, setActiveTab] = useState('1');
   const [activeAnchor, setActiveAnchor] = useState('general');
@@ -30,47 +29,56 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
   const isManualScrollRef = useRef(false);
   const sectionRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
+  if (!analytic) {
+    return null;
+  }
+
   const feedbackSections = [
     {
-      key: 'general',
-      title: 'General Overview',
-      content: job.generalFeedback
+      key: 'overall',
+      title: 'Overall Assessment',
+      content: analytic.overall_assessment
     },
     {
-      key: 'role',
-      title: 'Role Fit',
-      content: job.roleFeedback
+      key: 'strengths',
+      title: 'Strengths',
+      content: analytic.strength_details
     },
     {
-      key: 'skills',
-      title: 'Technical Skills',
-      content: job.skillsFeedback
+      key: 'weaknesses',
+      title: 'Weaknesses',
+      content: analytic.weakness_concerns
     },
     {
-      key: 'experience',
-      title: 'Work Experience',
-      content: job.workExperienceFeedback
+      key: 'recommendations',
+      title: 'Recommendations',
+      content: analytic.recommendations
     },
     {
-      key: 'education',
-      title: 'Education',
-      content: job.educationFeedback
+      key: 'questions',
+      title: 'Interview Questions',
+      content: analytic.questions
     },
     {
-      key: 'language',
-      title: 'Language Skills',
-      content: job.languageFeedback
+      key: 'roadmap',
+      title: 'Career Roadmap',
+      content: analytic.roadmap
+    },
+    {
+      key: 'conclusion',
+      title: 'Conclusion',
+      content: analytic.conclusion
     }
-  ];
+  ].filter(section => section.content && section.content.trim().length > 0);
 
   useEffect(() => {
     if (activeTab === '1') {
       const timer = setTimeout(() => {
-        setProgressAnimation(job.matchScore);
+        setProgressAnimation(analytic.match_overall);
       }, 200);
       return () => clearTimeout(timer);
     }
-  }, [activeTab, job.matchScore]);
+  }, [activeTab]);
 
   useEffect(() => {
     if (!containerReady) return;
@@ -101,7 +109,7 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
-  }, [containerReady]);
+  }, [containerReady, feedbackSections]);
 
   const setContentRef = useCallback((node: HTMLDivElement) => {
     contentRef.current = node;
@@ -109,7 +117,7 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
       setContainerReady(true);
     }
   }, []);
-  
+
   const getMatchScoreColor = (score: number) => {
     if (score >= 75) return green.primary;
     if (score >= 50) return blue.primary;
@@ -142,13 +150,13 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
             <Title level={5}>Overall</Title>
             <Progress
               percent={progressAnimation}
-              strokeColor={getMatchScoreColor(job.matchScore)}
+              strokeColor={getMatchScoreColor(analytic.match_overall)}
               status="active"
             />
             <Text>
-              {job.matchScore > 75 ? 'Excellent match for your profile!' :
-                job.matchScore > 50 ? 'Good match for your profile' :
-                  job.matchScore > 25 ? 'Moderate match for your profile' :
+              {analytic.match_overall > 75 ? 'Excellent match for your profile!' :
+                analytic.match_overall > 50 ? 'Good match for your profile' :
+                  analytic.match_overall > 25 ? 'Moderate match for your profile' :
                     'Consider improving your skills or looking for better matches'}
             </Text>
           </Flex>
@@ -157,7 +165,7 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
             <Flex vertical style={{ flex: 1 }}>
               <Title level={4} style={{ color: token.colorSuccessActive, margin: 0 }}>Strengths</Title>
               <List
-                dataSource={job.strengths}
+                dataSource={analytic.strengths.split(',')}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
@@ -175,7 +183,7 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
               <Title level={4} style={{ color: token.colorErrorActive, margin: 0 }}>Weaknesses</Title>
               <List
                 itemLayout="horizontal"
-                dataSource={job.weaknesses}
+                dataSource={analytic.weaknesses.split(',')}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
@@ -266,13 +274,13 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
   return (
     <Flex vertical>
       <Flex vertical>
-        <Title level={3} style={{ margin: 0 }}>{job.title}</Title>
+        <Title level={3} style={{ margin: 0 }}>{analytic.job_name}</Title>
         <Space>
-          <Text type="secondary" style={{ fontSize: 16, fontWeight: 600 }}>{job.companyName}</Text>
+          <Text type="secondary" style={{ fontSize: 16, fontWeight: 600 }}>{analytic.company_name}</Text>
           <Button
             type="text"
             icon={<LinkOutlined />}
-            href={job.originalUrl}
+            href={analytic.job_url}
             target="_blank"
             style={{
               color: token.colorPrimary,
@@ -283,36 +291,71 @@ const JobAnalysisDetail = ({ job }: JobAnalysisDetailProps) => {
         </Space>
       </Flex>
 
-
       <Flex gap="middle" wrap="wrap" style={{ marginTop: 8 }}>
         <Space size="small">
           <Space>
             <EnvironmentOutlined />
-            {job.location}
+            {analytic.location || 'Remote'}
           </Space>
-          {job.type && (
+          {analytic.job_type && (
             <Space>
               <AuditOutlined />
-              {job.type}
+              {analytic.job_type}
             </Space>
           )}
-          {job.salary && (
+          {analytic.benefit && analytic.benefit.includes('$') && (
             <Space>
               <DollarCircleOutlined />
-              {job.salary}
+              {analytic.benefit}
             </Space>
           )}
         </Space>
-        <Space>
+        {/* <Space>
           <SettingOutlined />
-          <span>Analyzed on {job.analyzedAt.toLocaleString()}</span>
-        </Space>
+          <span>Analyzed on {analytic.analyzedAt.toLocaleString()}</span>
+        </Space> */}
         <Space wrap>
-          {job.skills.map((skill, index) => (
+          {analytic.skills.split(',').map((skill, index) => (
             <Tag key={index} color={token.colorInfoBg} style={{ padding: '2px 8px', fontSize: 12, borderRadius: 8, borderColor: token.colorInfoBorder }}>
               <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
             </Tag>
           ))}
+        </Space>
+        <Space wrap>
+          {analytic.match_skills > 0 && (
+            <div style={{ textAlign: 'center', minWidth: 100, marginRight: 16 }}>
+              <Progress
+                type="circle"
+                percent={analytic.match_skills}
+                strokeColor={getMatchScoreColor(analytic.match_skills)}
+                status="active"
+                size={100}
+                format={(percent) => (
+                  <Text style={{ color: getMatchScoreColor(analytic.match_skills) }}>
+                    {percent}%
+                  </Text>
+                )}
+              />
+              <div style={{ marginTop: 4, fontWeight: 500 }}>Skills Matched</div>
+            </div>
+          )}
+          {analytic.match_experience > 0 && (
+            <div style={{ textAlign: 'center', minWidth: 100, marginRight: 16 }}>
+              <Progress
+                type="circle"
+                percent={analytic.match_experience}
+                strokeColor={getMatchScoreColor(analytic.match_experience)}
+                status="active"
+                size={100}
+                format={(percent) => (
+                  <Text style={{ color: getMatchScoreColor(analytic.match_experience) }}>
+                    {percent}%
+                  </Text>
+                )}
+              />
+              <div style={{ marginTop: 4, fontWeight: 500 }}>Experience Matched</div>
+            </div>
+          )}
         </Space>
       </Flex>
 

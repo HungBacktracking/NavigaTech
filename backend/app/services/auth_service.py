@@ -45,6 +45,8 @@ class AuthService(BaseService):
     def sign_up(self, user_info: SignUp):
         user_info.password = get_password_hash(user_info.password)
 
+        user_info = User.model_validate(user_info)
+
         try:
             created_user = self.user_repository.create(user_info)
         except IntegrityError as e:
