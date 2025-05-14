@@ -1,4 +1,3 @@
-import { get } from "react-hook-form";
 import api from "../lib/clients/axios/api";
 import { JobAnalytic, JobAnalyticSearchRequest } from "../lib/types/job";
 import { PageResponse } from "../lib/types/pagination";

@@ -101,7 +101,7 @@ export default function JobFindingPage() {
     },
     onSuccess: (result) => {
       if (result) {
-        messageApi.success("Job analysis is being processed in the background. Please check back later.");
+        messageApi.success("Job is being processed in the background. You will be notified when it is ready.");
         queryClient.invalidateQueries({ queryKey: ['jobAnalyses'] });
       } else {
         messageApi.error("Failed to analyze job. The job may be already analyzed!");
