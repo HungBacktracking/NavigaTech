@@ -30,7 +30,7 @@ s3 = boto3.client(
     region_name=aws_region
 )
 
-response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250513.json')
+response = s3.get_object(Bucket=bucket_name, Key='clean2/final_final.json')
 jobs = json.loads(response['Body'].read())
 
 # database
@@ -94,13 +94,11 @@ with engine.connect() as conn:
             INSERT INTO job (
                 id, job_url, logo_url, job_name, job_level, job_type, from_site,
                 company_name, company_type, company_address, company_description,
-                skills, location, date_posted, job_description, job_requirement,
-                benefit, created_at, updated_at, deleted_at
+                skills, location, date_posted, salary, job_description, created_at, updated_at, deleted_at
             ) VALUES (
                 :id, :job_url, :logo_url, :job_name, :job_level, :job_type, :from_site,
                 :company_name, :company_type, :company_address, :company_description,
-                :skills, :location, :date_posted, :job_description, :job_requirement,
-                :benefit, :created_at, :updated_at, :deleted_at
+                :skills, :location, :date_posted, :salary, :job_description, :created_at, :updated_at, :deleted_at
             )
             ON CONFLICT (id) DO NOTHING
         """)
@@ -120,9 +118,8 @@ with engine.connect() as conn:
             "skills": job.get("skills"),
             "location": job.get("location"),
             "date_posted": date_posted,
-            "job_description": job.get("job_description"),
-            "job_requirement": job.get("qualifications & skills"),
-            "benefit": job.get("benefit"),
+            "salary": job.get("salary"),
+            "job_description": job.get("description"),
             "created_at": created_at,
             "updated_at": updated_at,
             "deleted_at": deleted_at

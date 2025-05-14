@@ -20,9 +20,8 @@ class BaseJob(BaseModel):
     skills: Optional[str] = None
     location: Optional[str] = None
     date_posted: Optional[date] = None
+    salary: Optional[str] = None
     job_description: Optional[str] = None
-    job_requirement: str
-    benefit: Optional[str] = None
     is_analyze: bool
     is_favorite: bool
 

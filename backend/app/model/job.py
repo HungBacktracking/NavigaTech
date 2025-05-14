@@ -23,9 +23,8 @@ class Job(BaseModel, table=True):
     skills: str = Field(sa_column=Column(Text))
     location: Optional[str] = Field(default=None, nullable=True)
     date_posted: Optional[date] = Field(default=None, nullable=True)
+    salary: Optional[str] = Field(default=None, nullable=True)
     job_description: str = Field(sa_column=Column(Text))
-    job_requirement: str = Field(sa_column=Column(Text))
-    benefit: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))
 
     created_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now()))
     updated_at: Optional[datetime] = Field(default=None, sa_column=Column(DateTime(timezone=True), default=func.now(), onupdate=func.now()))

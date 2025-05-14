@@ -29,9 +29,8 @@ class ElasticsearchRepository:
                         "job_type": {"type": "keyword"},
                         "skills": {"type": "text", "analyzer": "standard"},
                         "location": {"type": "keyword"},
+                        "salary": {"type": "keyword"},
                         "job_description": {"type": "text", "analyzer": "standard"},
-                        "job_requirement": {"type": "text", "analyzer": "standard"},
-                        "benefit": {"type": "text", "analyzer": "standard"},
                         "date_posted": {"type": "date"}
                     }
                 }
@@ -72,7 +71,7 @@ class ElasticsearchRepository:
             query["bool"]["must"].append({
                 "multi_match": {
                     "query": request.query,
-                    "fields": ["job_name^3", "job_requirement^2", "skills^2", "location", "company_name", "benefit", "job_description"],
+                    "fields": ["job_name^3", "skills^2", "location", "company_name", "job_description"],
                     "fuzziness": "AUTO",
                     "operator": "or",
                     "minimum_should_match": "70%"
@@ -104,7 +103,7 @@ class ElasticsearchRepository:
                 role_queries.append({
                     "multi_match": {
                         "query": role,
-                        "fields": ["job_name^3", "job_requirement", "job_description"],
+                        "fields": ["job_name^3", "job_description"],
                         "type": "phrase_prefix"
                     }
                 })
@@ -116,7 +115,7 @@ class ElasticsearchRepository:
                 level_queries.append({
                     "multi_match": {
                         "query": level,
-                        "fields": ["job_name^3", "job_level^3", "job_requirement"],
+                        "fields": ["job_name^3", "job_level^3", "job_description"],
                         "type": "phrase_prefix"
                     }
                 })

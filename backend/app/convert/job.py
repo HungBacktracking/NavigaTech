@@ -31,9 +31,8 @@ def to_favorite_job_response(
         skills=job.skills,
         location=job.location,
         date_posted=job.date_posted,
+        salary=job.salary,
         job_description=job.job_description,
-        job_requirement=job.job_requirement,
-        benefit=job.benefit,
         is_analyze=fav.is_analyze,
         is_favorite=fav.is_favorite,
 

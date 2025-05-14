@@ -91,9 +91,8 @@ class JobService(BaseService):
                     skills=job_data.get("skills"),
                     location=job_data.get("location"),
                     date_posted=job_data.get("date_posted"),
+                    salary=job_data.get("salary"),
                     job_description=job_data.get("job_description"),
-                    job_requirement=job_data.get("job_requirement"),
-                    benefit=job_data.get("benefit"),
                     is_analyze=fav.is_analyze if fav else False,
                     is_favorite=fav.is_favorite if fav else False
                 )
@@ -213,9 +212,8 @@ class JobService(BaseService):
                         skills=job.skills,
                         location=job.location,
                         date_posted=job.date_posted,
+                        salary=job.salary,
                         job_description=job.job_description,
-                        job_requirement=job.job_requirement,
-                        benefit=job.benefit,
                         is_analyze=fav.is_analyze if fav else False,
                         is_favorite=fav.is_favorite if fav else False
                     )
@@ -267,9 +265,7 @@ class JobService(BaseService):
                 Working type: {job_dict.get("job_type", "")}
                 Company: {job_dict.get("company_name", "")}
 
-                Description: {job_dict.get("job_description", "")}\
-                Benefit: {job_dict.get("benefit", "")}\
-                Requirements: {job_dict.get("job_requirement", "")}\\
+                Description: {job_dict.get("job_description", "")}\\
                 Skills: {job_dict.get("skills", "")}
             """
 
@@ -318,9 +314,7 @@ class JobService(BaseService):
             Working type: {job_dict.get("job_type", "")}
             Company: {job_dict.get("company_name", "")}
             
-            Description: {job_dict.get("job_description", "")}\
-            Benefit: {job_dict.get("benefit", "")}\
-            Requirements: {job_dict.get("job_requirement", "")}\\
+            Description: {job_dict.get("job_description", "")}\\
             Skills: {job_dict.get("skills", "")}
         """
 
