@@ -88,7 +88,7 @@ def normalize_linkedin_indeed_job(job):
 
 
 def normalize_job(job):
-    if "Tiêu đề" in job:
+    if "title" in job:
         raw = normalize_vietnamworks_job(job)
     else:
         raw = normalize_linkedin_indeed_job(job)
