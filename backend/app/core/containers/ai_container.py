@@ -1,7 +1,6 @@
 import cohere
 from dependency_injector import containers, providers
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.postprocessor.cohere_rerank import CohereRerank
 import google.generativeai as genai
 from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 from llama_index.llms.gemini import Gemini
