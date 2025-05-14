@@ -12,6 +12,7 @@ from kafka import KafkaProducer, KafkaConsumer
 from kafka.errors import KafkaError, NoBrokersAvailable
 from fastapi import WebSocket
 from starlette.websockets import WebSocketState
+from app.exceptions.custom_error import CustomError
 
 class KafkaService:
     def __init__(self, bootstrap_servers=None):
@@ -40,7 +41,7 @@ class KafkaService:
                 def json_serializer(obj):
                     if isinstance(obj, UUID):
                         return str(obj)
-                    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+                    raise CustomError.INTERNAL_SERVER_ERROR.as_exception()
                     
                 self.producer = KafkaProducer(
                     bootstrap_servers=self.bootstrap_servers,
@@ -73,7 +74,7 @@ class KafkaService:
     def send_message(self, topic: str, message: Dict[str, Any]):
         if not self._ensure_producer():
             self._logger.error("Cannot send message: Kafka producer not available")
-            return {"status": "error", "message": "Kafka service unavailable"}
+            raise CustomError.SERVICE_UNAVAILABLE.as_exception()
             
         try:
             future = self.producer.send(topic, message)
@@ -82,10 +83,10 @@ class KafkaService:
             return {"status": "success", "message": f"Message sent to {topic}"}
         except KafkaError as e:
             self._logger.error(f"Kafka error sending message: {str(e)}")
-            return {"status": "error", "message": f"Kafka error: {str(e)}"}
+            raise CustomError.MESSAGE_DELIVERY_FAILED.as_exception()
         except Exception as e:
             self._logger.error(f"Error sending message to Kafka: {str(e)}")
-            return {"status": "error", "message": str(e)}
+            raise CustomError.INTERNAL_SERVER_ERROR.as_exception()
 
     async def register_connection(self, user_id: str, websocket: WebSocket):
         """Register a WebSocket connection for a user"""

@@ -10,6 +10,9 @@ class CustomError(Enum):
     DUPLICATE_RESOURCE = (status.HTTP_409_CONFLICT, "11", "The resource already exists")
     INVALID_FILE_TYPE = (status.HTTP_400_BAD_REQUEST, "12", "Invalid file type")
     EXISTING_RESOURCE = (status.HTTP_409_CONFLICT, "13", "The resource already exists")
+    INVALID_CREDENTIALS = (status.HTTP_401_UNAUTHORIZED, "14", "Incorrect email or password")
+    SERVICE_UNAVAILABLE = (status.HTTP_503_SERVICE_UNAVAILABLE, "15", "Service temporarily unavailable")
+    MESSAGE_DELIVERY_FAILED = (status.HTTP_500_INTERNAL_SERVER_ERROR, "16", "Failed to deliver message")
     # …
 
     def __init__(self, http_status: int, code: str, message: str):

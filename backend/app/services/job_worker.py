@@ -11,6 +11,7 @@ from app.services.job_service import JobService
 from app.services.job_task_service import JobTaskService
 from app.services.job_analytic_service import JobAnalyticService
 from app.services.kafka_service import KafkaService
+from app.exceptions.custom_error import CustomError
 
 
 class JobWorker:
@@ -202,22 +203,21 @@ class JobWorker:
             retry_delay = 1  # Initial delay in seconds
             
             for attempt in range(max_retries):
-                result = self.kafka_service.send_message(
-                    "user_notifications",
-                    {
-                        "user_id": user_id,
-                        "notification": notification
-                    }
-                )
-                
-                if result.get("status") == "success":
+                try:
+                    self.kafka_service.send_message(
+                        "user_notifications",
+                        {
+                            "user_id": user_id,
+                            "notification": notification
+                        }
+                    )
                     self._logger.info(f"Successfully queued notification for user {user_id}")
                     return
-                    
-                self._logger.warning(f"Failed to send notification (attempt {attempt+1}/{max_retries}): {result.get('message')}")
-                if attempt < max_retries - 1:
-                    time.sleep(retry_delay)
-                    retry_delay *= 2  # Exponential backoff
+                except Exception as e:
+                    self._logger.warning(f"Failed to send notification (attempt {attempt+1}/{max_retries}): {str(e)}")
+                    if attempt < max_retries - 1:
+                        time.sleep(retry_delay)
+                        retry_delay *= 2  # Exponential backoff
             
             self._logger.error(f"Failed to send notification after {max_retries} attempts")
                 

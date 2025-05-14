@@ -4,6 +4,7 @@ from uuid import UUID
 import logging
 
 from app.schema.job_schema import JobSearchRequest
+from app.exceptions.custom_error import CustomError
 
 
 class ElasticsearchRepository:
@@ -197,7 +198,7 @@ class ElasticsearchRepository:
                 self.logger.info(f"Bulk indexing complete: {success} successful, {failed} failed")
         except Exception as e:
             self.logger.error(f"Error bulk indexing jobs: {str(e)}")
-            raise
+            raise CustomError.INTERNAL_SERVER_ERROR.as_exception()
             
     def refresh_index(self):
         try:

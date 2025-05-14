@@ -21,10 +21,10 @@ class AuthService(BaseService):
     def sign_in(self, sign_in_info: SignIn):
         user: User = self.user_repository.find_by_email(sign_in_info.email)
         if not user:
-            raise AuthError(detail="Incorrect email or password")
+            raise CustomError.INVALID_CREDENTIALS.as_exception()
 
         if not verify_password(sign_in_info.password, user.password):
-            raise AuthError(detail="Incorrect email or password")
+            raise CustomError.INVALID_CREDENTIALS.as_exception()
 
         payload = Payload(
             id=str(user.id),
