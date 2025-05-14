@@ -76,26 +76,6 @@ export const jobApi = {
     }
   },
   
-  analyzeJob: async (jobId: string): Promise<void> => {
-    try {
-      await api.post(`/jobs/${jobId}/analyze`);
-      return Promise.resolve();
-    } catch (error) {
-      console.error("Error analyzing job:", error);
-      throw error;
-    }
-  },
-  
-  scoreJob: async (jobId: string): Promise<void> => {
-    try {
-      await api.post(`/jobs/${jobId}/scoring`);
-      return Promise.resolve();
-    } catch (error) {
-      console.error("Error scoring job:", error);
-      throw error;
-    }
-  },
-  
   getPromptSuggestions: async (): Promise<string[]> => {
     const mockPromptSuggestions = [
       "Find Java Developer jobs in Ho Chi Minh City",

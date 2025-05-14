@@ -19,7 +19,6 @@ export interface Job {
   job_requirement: string;
   benefit?: string;
   is_analyze: boolean;
-  resume_url?: string;
   is_favorite: boolean;
 }
 
@@ -31,14 +30,21 @@ export interface FavoriteJobRequest {
   is_favorite: boolean;
 }
 
-export interface JobAnalytic {
-  general_score: number;
-  general_feedback: string;
-  skill_feedback: string;
-  role_feedback: string;
-  experience_feedback: string;
-  benefit_feedback: string;
-  education_feedback: string;
+export interface JobAnalytic extends Job {
+  id: string;
+  job_id: string;
+  match_overall: number;
+  match_experience: number;
+  match_skills: number;
+  weaknesses: string;
+  strengths: string;
+  overall_assessment: string;
+  strength_details: string;
+  weakness_concerns: string;
+  recommendations: string;
+  questions: string;
+  roadmap: string;
+  conclusion: string;
 }
 
 export interface JobFavoriteResponse extends Job {
@@ -49,4 +55,8 @@ export interface JobSearchRequest extends PageRequest {
   query: string;
   roles?: string[];
   levels?: string[];
+}
+
+export interface JobAnalyticSearchRequest extends PageRequest {
+  search?: string;
 }

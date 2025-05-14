@@ -92,7 +92,7 @@ export default function JobFindingPage() {
   });
 
   const { mutate: analyzeJobMutation } = useMutation({
-    mutationFn: (jobId: string) => jobAnalysisApi.createAnalysisFromJobId(jobId),
+    mutationFn: (jobId: string) => jobAnalysisApi.analyzeJob(jobId),
     onMutate: (jobId) => {
       setAnalyzingJobIds(prev => [...prev, jobId]);
     },

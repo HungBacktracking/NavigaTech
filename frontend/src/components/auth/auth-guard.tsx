@@ -10,10 +10,10 @@ const AuthGuard = () => {
 
   useEffect(() => {
     if (!isLoading) {
-      if (!isAuthenticated || !user) {
+      if (!isAuthenticated) {
         navigate('/auth', { replace: true });
       } else if (user && !user.uploaded_resume && location.pathname !== '/upload-cv') {
-        navigate('/auth/upload-cv', { replace: true });
+        navigate('/upload-cv', { replace: true });
       }
     }
   }, [isAuthenticated, isLoading, user, navigate, location.pathname]);

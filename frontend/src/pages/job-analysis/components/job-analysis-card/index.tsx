@@ -6,9 +6,8 @@ import {
   DollarCircleOutlined,
   EyeOutlined,
   ArrowsAltOutlined,
-  SettingOutlined
 } from "@ant-design/icons";
-import { JobAnalysis } from "../../../../lib/types/job";
+import { JobAnalytic } from "../../../../lib/types/job";
 import { blue, green, red, yellow } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
@@ -19,22 +18,22 @@ import { BoxArrowUpRight } from "react-bootstrap-icons";
 const { Text, Title } = Typography;
 
 interface JobAnalysisCardProps {
-  jobAnalysis: JobAnalysis;
-  isDeletingJob: boolean;
-  handleDeleteJob: (jobId: string) => void;
-  handleToggleCV: (jobId: string) => void;
+  jobAnalytic: JobAnalytic;
+  isDeletingJobAnalytic: boolean;
+  handleDeleteJobAnalytic: (jobId: string) => void;
+  // handleToggleCV: (jobId: string) => void;
   handleViewDetail: (jobId: string) => void;
 }
 
 const JobAnalysisCard = ({
-  jobAnalysis,
-  isDeletingJob,
-  handleDeleteJob,
-  handleToggleCV,
+  jobAnalytic,
+  isDeletingJobAnalytic,
+  handleDeleteJobAnalytic,
   handleViewDetail,
 }: JobAnalysisCardProps) => {
   const { isMobile: isTablet } = useMobile(1024);
   const { token } = theme.useToken();
+
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 75) return green.primary;
@@ -48,21 +47,19 @@ const JobAnalysisCard = ({
       hoverable
       title={
         <Flex
-          horizontal
           justify="space-between"
           align="center"
         >
           <Flex
-            horizontal
             gap="middle"
             align="center"
             justify="start"
             style={{ padding: 0 }}>
             <div style={{ padding: 2, borderRadius: 4, backgroundColor: '#fafafa' }}>
               <Image
-                src={jobAnalysis.companyLogo}
-                alt={`${jobAnalysis.companyName} logo`}
-                fallback={`https://placehold.co/100x100?text=${jobAnalysis.companyName[0]}`}
+                src={jobAnalytic.logo_url || undefined}
+                alt={`${jobAnalytic.company_name} logo`}
+                fallback={`https://placehold.co/100x100?text=${jobAnalytic.company_name[0]}`}
                 style={{
                   width: 48,
                   height: 48,
@@ -71,17 +68,17 @@ const JobAnalysisCard = ({
             </div>
             <Flex vertical>
               <Title level={4} style={{ margin: 0, fontWeight: 500, textWrap: "wrap" }}>
-                {jobAnalysis.title}
+                {jobAnalytic.job_name}
               </Title>
               <Text type="secondary">
-                {jobAnalysis.companyName}
+                {jobAnalytic.company_name}
               </Text>
             </Flex>
           </Flex>
           <Button
             type="text"
             icon={<BoxArrowUpRight />}
-            href={jobAnalysis.originalUrl}
+            href={jobAnalytic.job_url}
             target="_blank"
             onClick={(e: MouseEvent) => e.stopPropagation()}
             style={{
@@ -89,7 +86,7 @@ const JobAnalysisCard = ({
               fontWeight: 600,
             }}
           >
-            {extractDomainFromUrl(jobAnalysis.originalUrl)}
+            {extractDomainFromUrl(jobAnalytic.job_url)}
           </Button>
         </Flex>
       }
@@ -116,31 +113,31 @@ const JobAnalysisCard = ({
             <Flex wrap="wrap" gap={isTablet ? "small" : "large"}>
               <Space>
                 <EnvironmentOutlined />
-                {jobAnalysis.location}
+                {jobAnalytic.location || 'Remote'}
               </Space>
-              {jobAnalysis.type && (
+              {jobAnalytic.job_type && (
                 <Space>
                   <AuditOutlined />
-                  {jobAnalysis.type}
+                  {jobAnalytic.job_type}
                 </Space>
               )}
-              {jobAnalysis.salary && (
+              {jobAnalytic.benefit && jobAnalytic.benefit.includes('$') && (
                 <Space>
                   <DollarCircleOutlined />
-                  {jobAnalysis.salary}
+                  {jobAnalytic.benefit}
                 </Space>
               )}
             </Flex>
             <Space style={{ fontWeight: 500 }}>
               <ClockCircleOutlined />
-              <span>{formatDateToEngPeriodString(jobAnalysis.datePosted)}</span>
+              <span>{formatDateToEngPeriodString(jobAnalytic.date_posted)}</span>
             </Space>
-            <Space style={{ fontWeight: 500 }}>
+            {/* <Space style={{ fontWeight: 500 }}>
               <SettingOutlined />
-              <span>Analyzed on {jobAnalysis.analyzedAt.toLocaleString()}</span>
-            </Space>
+              <span>Analyzed on {analyzedAt.toLocaleString()}</span>
+            </Space> */}
             <Space wrap>
-              {jobAnalysis.skills.map((skill, index) => (
+              {jobAnalytic.skills.split(",").map((skill, index) => (
                 <Tag key={index} color={token.colorInfoBg} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8, borderColor: token.colorInfoBorder }}>
                   <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
                 </Tag>
@@ -151,11 +148,11 @@ const JobAnalysisCard = ({
           <div style={{ textAlign: 'center', minWidth: 100, marginRight: 16 }}>
             <Progress
               type="circle"
-              percent={jobAnalysis.matchScore}
+              percent={jobAnalytic.match_overall}
               size={100}
-              strokeColor={getMatchScoreColor(jobAnalysis.matchScore)}
+              strokeColor={getMatchScoreColor(jobAnalytic.match_overall)}
               format={(percent) => (
-                <div style={{ fontSize: 24, color: getMatchScoreColor(jobAnalysis.matchScore) }}>
+                <div style={{ fontSize: 24, color: getMatchScoreColor(jobAnalytic.match_overall) }}>
                   {percent}%
                 </div>
               )}
@@ -172,13 +169,13 @@ const JobAnalysisCard = ({
           <Flex align="center" gap="small" style={{ flex: 1 }}>
             <CheckCircleFilled style={{ color: token.colorSuccess }} />
             <Text>
-              {jobAnalysis.strengths[0]}
+              {jobAnalytic.strengths.split(",").slice(0, 1)}
             </Text>
           </Flex>
           <Flex align="center" gap="small" style={{ flex: 1 }}>
             <CloseCircleFilled style={{ color: token.colorError }} />
             <Text>
-              {jobAnalysis.weaknesses[0]}
+              {jobAnalytic.weaknesses.split(",").slice(0, 1)}
             </Text>
           </Flex>
         </Flex>
@@ -191,22 +188,22 @@ const JobAnalysisCard = ({
         >
           <Space>
             <Tag
-              color={jobAnalysis.isCreatedCV ? token.colorSuccessBg : token.colorErrorBg}
+              color={job.resume_url ? token.colorSuccessBg : token.colorErrorBg}
               style={{
                 borderRadius: 16,
                 padding: "4px 12px",
-                borderColor: jobAnalysis.isCreatedCV ? token.colorSuccessBorder : token.colorErrorBorder,
-                color: jobAnalysis.isCreatedCV ? token.colorSuccessActive : token.colorErrorActive,
+                borderColor: job.resume_url ? token.colorSuccessBorder : token.colorErrorBorder,
+                color: job.resume_url ? token.colorSuccessActive : token.colorErrorActive,
               }}
             >
-              {jobAnalysis.isCreatedCV ? "CV Created" : "No CV Created"}
+              {job.resume_url ? "CV Created" : "No CV Created"}
             </Tag>
-            {jobAnalysis.isCreatedCV ? (
+            {!job.resume_url ? (
               <AIButton
                 icon={<BookOutlined />}
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
-                  handleToggleCV(jobAnalysis.id);
+                  handleToggleCV(analytics.id);
                 }}
               >
                 Create CV
@@ -218,7 +215,7 @@ const JobAnalysisCard = ({
                 shape="round"
                 onClick={(e: MouseEvent) => {
                   e.stopPropagation();
-                  handleToggleCV(jobAnalysis.id);
+                  handleToggleCV(analytics.id);
                 }}
               >
                 View CV
@@ -229,7 +226,7 @@ const JobAnalysisCard = ({
             <Popconfirm
               title="Are you sure to delete this job analysis?"
               description="This action cannot be undone."
-              onConfirm={() => handleDeleteJob(jobAnalysis.id)}
+              onConfirm={() => handleDeleteJobAnalytic(jobAnalytic.id)}
               okText="Yes"
               cancelText="No"
               placement="topRight"
@@ -240,9 +237,9 @@ const JobAnalysisCard = ({
                 type="primary"
                 shape="round"
                 color="danger"
-                loading={isDeletingJob}
+                loading={isDeletingJobAnalytic}
               >
-                {isDeletingJob ? "Deleting..." : "Delete"}
+                {isDeletingJobAnalytic ? "Deleting..." : "Delete"}
               </Button>
             </Popconfirm>
             <Button
@@ -251,7 +248,7 @@ const JobAnalysisCard = ({
               shape="round"
               onClick={(e: MouseEvent) => {
                 e.stopPropagation();
-                handleViewDetail(jobAnalysis.id);
+                handleViewDetail(jobAnalytic.id);
               }}
             >
               Detail

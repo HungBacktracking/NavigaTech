@@ -44,7 +44,7 @@ const JobCard = ({
             style={{ padding: 0 }}>
             <div style={{ padding: 2, borderRadius: 4, backgroundColor: '#fafafa' }}>
               <Image
-                src={job.logo_url}
+                src={job.logo_url || undefined}
                 alt={`${job.company_name} logo`}
                 fallback={`https://placehold.co/100x100/?text=${job.company_name[0]}`}
                 style={{
