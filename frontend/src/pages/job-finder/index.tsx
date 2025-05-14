@@ -1,6 +1,6 @@
 import { MouseEvent, useEffect, useMemo, useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image, theme, Switch } from "antd";
+import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card, Image, theme } from "antd";
 import { ReloadOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import JobCard from "./components/job-card";
@@ -56,9 +56,13 @@ export default function JobFindingPage() {
 
   const { data: jobsData, isLoading: isJobsLoading } = useQuery({
     queryKey: ['jobs', queryParams, isRecommendationMode],
-    queryFn: () => isRecommendationMode
-      ? jobApi.getRecommendedJobs()
-      : jobApi.getJobs(queryParams),
+    queryFn: () => {
+      if (isRecommendationMode) {
+        return jobApi.getRecommendedJobs();
+      } else {
+        return jobApi.getJobs(queryParams);
+      }
+    }
   });
 
   const { data: suggestionItems, isLoading: isSuggestionsLoading, isFetching: isSuggestionsFetching, refetch: refreshSuggestions } = useQuery({
@@ -392,7 +396,7 @@ export default function JobFindingPage() {
           )}
         </AnimatePresence>
 
-        <div style={{ padding: '16px', width: '100%' }}>
+        <div style={{ padding: '16px 16px 4px 8px', width: '100%' }}>
           <Typography.Text strong>
             {isJobsLoading
               ? <Skeleton.Node active style={{ width: 100, height: 16 }} />
@@ -403,7 +407,7 @@ export default function JobFindingPage() {
         </div>
       </Flex>
 
-      <Row gutter={16} style={{ height: "100%", marginTop: 8 }}>
+      <Row gutter={16} style={{ height: "100%" }}>
         <Col span={9}>
           <Space direction="vertical" size={12} style={{ width: "100%", borderRadius: 8 }}>
             {isJobsLoading ? (

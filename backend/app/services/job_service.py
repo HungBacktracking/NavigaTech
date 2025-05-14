@@ -160,6 +160,8 @@ class JobService(BaseService):
         
         return result
 
+    def get_job_recommendation(self, user_id: UUID) -> List[JobResponse]:
+        cache_key = f"job_recommendations:{user_id}"
     def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
         cache_key = f"job_recommendations:{user_id}:{page}:{page_size}"
         cached_result = None
@@ -176,21 +178,15 @@ class JobService(BaseService):
         user_detail: UserDetailResponse = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
 
-        all_recommendations = self.recommendation.search(resume_text, top_k=100)
-
-        offset = (page - 1) * page_size
-        total_count = len(all_recommendations)
-        paginated_results = all_recommendations[offset : offset + page_size]
+        all_recommendations = self.recommendation.search(resume_text, top_k=20)
 
         results = []
-        for item in paginated_results:
-            # Check if job exists in our database
+        for item in all_recommendations:
             job = self.job_repository.find_by_url(
                 item.get("metadata", {}).get("link", "")
             )
 
             # Get favorite status if job exists
-            fav = None
             if job:
                 fav = self.favorite_job_repository.find_by_job_and_user_id(job.id, user_id)
 
@@ -216,25 +212,15 @@ class JobService(BaseService):
                         is_favorite=fav.is_favorite if fav else False
                     )
                 )
-
-        total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
-
-        result = PageResponse(
-            items=results,
-            total=total_count,
-            page=page,
-            page_size=page_size,
-            total_pages=total_pages,
-        )
         
         if self.redis_client:
             try:
                 # Cache for 1 hour - recommendations don't change often
-                self.redis_client.set(cache_key, result, 3600)
+                self.redis_client.set(cache_key, results, 3600)
             except Exception as e:
                 print(f"Redis error while setting recommendations cache: {str(e)}")
-        
-        return result
+    
+        return results
 
     def analyze_job(self, job_id: UUID, user_id: UUID):
         # Analysis results don't change frequently - good candidate for longer caching
