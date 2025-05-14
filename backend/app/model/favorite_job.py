@@ -1,12 +1,16 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, Field, func, DateTime
+from sqlmodel import Column, Field, func, DateTime, Index
 from app.model.base_model import BaseModel
 
 
 
 class FavoriteJob(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_job_favorite", "job_id", "user_id", unique=True),
+    )
+
     job_id: UUID = Field(foreign_key="job.id")
     user_id: UUID = Field(foreign_key="user.id")
     is_analyze: bool = Field(default=False)

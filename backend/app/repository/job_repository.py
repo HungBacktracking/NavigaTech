@@ -21,7 +21,6 @@ class JobRepository(BaseRepository):
         super().__init__(session_factory, Job, replica_session_factory)
 
     def find_by_url(self, job_url: str) -> Optional[Job]:
-        """Find a job by its URL"""
         if not job_url:
             return None
 

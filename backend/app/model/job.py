@@ -1,12 +1,15 @@
 from datetime import datetime, date
-from typing import List, Optional, TYPE_CHECKING
-from sqlmodel import Column, Field, Text, String, ARRAY, DateTime, func, Relationship
+from typing import Optional
+from sqlmodel import Column, Field, Text, DateTime, func, Index
 from app.model.base_model import BaseModel
 
-if TYPE_CHECKING:
-    from app.model.job_task import JobTask
+
 
 class Job(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_job", "id", "job_url", unique=True),
+    )
+
     from_site: str = Field()
     job_url: str = Field()
     logo_url: str = Field()

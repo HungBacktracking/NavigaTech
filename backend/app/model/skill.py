@@ -1,11 +1,16 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, DateTime, Field, func
+from sqlmodel import Column, DateTime, Field, func, Index
 from app.model.base_model import BaseModel
 
 
+
 class Skill(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_user_skill", "id", "user_id", unique=True),
+    )
+
     user_id: UUID = Field(foreign_key="user.id")
     name: str = Field()
 

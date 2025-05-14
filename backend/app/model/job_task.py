@@ -4,7 +4,7 @@ from typing import Optional
 from uuid import UUID
 
 from pydantic import ConfigDict
-from sqlmodel import Column, Field, func, DateTime, JSON
+from sqlmodel import Column, Field, func, DateTime, JSON, Index
 
 from app.model.base_model import BaseModel
 
@@ -18,6 +18,11 @@ class TaskStatus(str, Enum):
 
 class JobTask(BaseModel, table=True):
     __tablename__ = "job_tasks"
+
+    __table_args__ = (
+        Index("ix_job_task", "job_id", "user_id", unique=True),
+    )
+
     model_config = ConfigDict(arbitrary_types_allowed=True)
 
     job_id: UUID = Field(foreign_key="job.id")

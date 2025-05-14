@@ -1,12 +1,16 @@
 from datetime import datetime, date
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, Field, func, Text, DateTime, Date
+from sqlmodel import Column, Field, func, Text, DateTime, Date, Index
 from app.model.base_model import BaseModel
 
 
 
 class Project(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_user_project", "id", "user_id", unique=True),
+    )
+
     user_id: UUID = Field(foreign_key="user.id")
     project_name: str = Field()
     role: Optional[str] = Field(default=None, nullable=True)

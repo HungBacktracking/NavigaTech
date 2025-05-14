@@ -1,11 +1,15 @@
 from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, DateTime, Field, func, Text, Date
+from sqlmodel import Column, DateTime, Field, func, Text, Date, Index
 from app.model.base_model import BaseModel
 
 
 class Award(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_user_award", "id", "user_id", unique=True),
+    )
+
     user_id: UUID = Field(foreign_key="user.id")
     name: str = Field()
     description: Optional[str] = Field(default=None, sa_column=Column(Text, nullable=True))

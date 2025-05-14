@@ -1,11 +1,15 @@
 from datetime import datetime, date
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, Field, func, Boolean, Text, Date, DateTime, Double
+from sqlmodel import Column, Field, func, Boolean, Text, Date, DateTime, Index
 from app.model.base_model import BaseModel
 
 
 class Education(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_user_education", "id", "user_id", unique=True),
+    )
+
     user_id: UUID = Field(foreign_key="user.id")
     major: str = Field()
     school_name: str = Field()

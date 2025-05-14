@@ -1,11 +1,15 @@
 from datetime import datetime, date
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, Field, func, Boolean, Text, Date, DateTime
+from sqlmodel import Column, Field, func, Boolean, Text, Date, DateTime, Index
 from app.model.base_model import BaseModel
 
 
 class Experience(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_user_experience", "id", "user_id", unique=True),
+    )
+
     user_id: UUID = Field(foreign_key="user.id")
     company_name: str = Field()
     title: str = Field()

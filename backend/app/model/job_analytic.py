@@ -1,12 +1,16 @@
 from datetime import datetime
 from typing import Optional
 from uuid import UUID
-from sqlmodel import Column, Field, Text, DateTime, func
+from sqlmodel import Column, Field, Text, DateTime, func, Index
 from app.model.base_model import BaseModel
 
 
 
 class JobAnalytic(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_job_analytic", "job_id", "user_id", unique=True),
+    )
+
     job_id: UUID = Field(foreign_key="job.id")
     user_id: UUID = Field(foreign_key="user.id")
     match_overall: float = Field()

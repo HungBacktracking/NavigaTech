@@ -1,11 +1,15 @@
 from datetime import datetime
-from typing import Optional, List, TYPE_CHECKING
+from typing import Optional
 
-from sqlmodel import Column, DateTime, Field, func, Relationship
+from sqlmodel import Column, DateTime, Field, func, Index
 from app.model.base_model import BaseModel
 from sqlalchemy import Text
 
 class User(BaseModel, table=True):
+    __table_args__ = (
+        Index("ix_user", "id", "email", unique=True),
+    )
+
     email: str = Field(unique=True)
     password: str = Field()
     name: Optional[str] = Field(default=None, nullable=True)
