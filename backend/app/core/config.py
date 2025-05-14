@@ -94,7 +94,8 @@ class Configs(BaseSettings):
     GEMINI_TOKEN: str = os.getenv("GEMINI_TOKEN")
     MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", 10240))
     TEMPERATURE: float = float(os.getenv("TEMPERATURE", 0.7))
-    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
+    EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "BAAI/bge-large-en-v1.5")
+    SCORING_MODEL_NAME: str = os.getenv("SCORING_MODEL_NAME", "all-mpnet-base-v2")
 
     TOP_K: int = int(os.getenv("TOP_K", 15))
     TOKEN_LIMIT: int = int(os.getenv("TOKEN_LIMIT", 2048))

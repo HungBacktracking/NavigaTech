@@ -11,16 +11,15 @@ from app.services.job_service import JobService
 from app.services.job_task_service import JobTaskService
 from app.services.job_analytic_service import JobAnalyticService
 from app.services.kafka_service import KafkaService
-from app.exceptions.custom_error import CustomError
 
 
 class JobWorker:
     def __init__(
-        self,
-        job_service: JobService,
-        job_task_service: JobTaskService,
-        kafka_service: KafkaService,
-        job_analytic_service: Optional[JobAnalyticService] = None
+            self,
+            job_service: JobService,
+            job_task_service: JobTaskService,
+            kafka_service: KafkaService,
+            job_analytic_service: Optional[JobAnalyticService] = None
     ):
         self.job_service = job_service
         self.job_task_service = job_task_service
@@ -48,7 +47,7 @@ class JobWorker:
         if not self._running:
             self._logger.info("JobWorker already stopped, ignoring stop request")
             return
-            
+
         self._logger.info("Stopping job worker...")
         self._running = False
         if self._worker_thread:
@@ -61,32 +60,32 @@ class JobWorker:
     def _process_tasks(self):
         """Process job tasks from Kafka"""
         self._logger.info("Task processor thread started")
-        
+
         def callback(message: Dict[str, Any]):
             task_id = None
             try:
                 self._logger.info(f"Received message: {message}")
-                
+
                 job_id = message.get("job_id")
                 user_id = message.get("user_id")
-                
+
                 if not all([job_id, user_id]):
                     self._logger.error(f"Invalid task message, missing required fields: {message}")
                     return
-                
+
                 # Create a task record
                 task = self.job_task_service.create_task(
                     job_id=UUID(job_id) if isinstance(job_id, str) else job_id,
                     user_id=UUID(user_id) if isinstance(user_id, str) else user_id
                 )
-                
+
                 task_id = task.id
                 self._logger.info(f"Created task record {task_id} for job {job_id}, user {user_id}")
-                
+
                 # Update task to processing
                 self.job_task_service.update_task_status(task.id, TaskStatus.PROCESSING)
                 self._logger.info(f"Task {task_id} status updated to PROCESSING")
-                
+
                 # Send processing notification
                 processing_notification = {
                     "task_id": str(task.id),
@@ -95,10 +94,10 @@ class JobWorker:
                     "message": "Job analysis is processing"
                 }
                 self._send_notification(user_id, processing_notification)
-                
+
                 result = None
                 error = None
-                
+
                 try:
                     if not self.job_analytic_service:
                         error = "JobAnalyticService not initialized"
@@ -138,7 +137,7 @@ class JobWorker:
                     error = str(e)
                     stack_trace = traceback.format_exc()
                     self._logger.exception(f"Error processing task {task.id}: {error}\n{stack_trace}")
-                
+
                 # Update task status
                 if error:
                     self.job_task_service.update_task_status(
@@ -150,7 +149,7 @@ class JobWorker:
                         task.id, TaskStatus.COMPLETED, result=result
                     )
                     self._logger.info(f"Task {task.id} completed successfully")
-                
+
                 # Send notification to user
                 notification = {
                     "task_id": str(task.id),
@@ -159,14 +158,14 @@ class JobWorker:
                     "result": result,
                     "error": error
                 }
-                
+
                 # Use a separate thread to avoid blocking
                 self._send_notification(user_id, notification)
-                
+
             except Exception as e:
                 stack_trace = traceback.format_exc()
                 self._logger.exception(f"Unhandled error in task processor: {str(e)}\n{stack_trace}")
-                
+
                 # Try to update task status if we have a task_id
                 if task_id:
                     try:
@@ -175,52 +174,54 @@ class JobWorker:
                         )
                     except Exception as update_error:
                         self._logger.error(f"Failed to update task status: {str(update_error)}")
-        
+
         # Start the consumer in a separate thread through the KafkaService
         self._logger.info("Starting Kafka consumer for job tasks")
         self.kafka_service.start_consumer("job_tasks", "job_worker_group", callback)
-        
+
         # Keep the worker thread alive
         while self._running:
             time.sleep(1)
-        
+
         self._logger.info("Task processor thread exiting")
-    
+
     def _send_notification(self, user_id: str, notification: Dict[str, Any]):
         """Send notification to user via Kafka"""
         try:
             self._logger.info(f"Sending notification to user {user_id} via Kafka")
-            
+
             # Ensure notification has proper formatting
             if isinstance(notification.get("task_id"), UUID):
                 notification["task_id"] = str(notification["task_id"])
-            
+
             if isinstance(notification.get("job_id"), UUID):
                 notification["job_id"] = str(notification["job_id"])
-                
+
             # Retry logic for sending notifications
             max_retries = 3
             retry_delay = 1  # Initial delay in seconds
-            
+
             for attempt in range(max_retries):
-                try:
-                    self.kafka_service.send_message(
-                        "user_notifications",
-                        {
-                            "user_id": user_id,
-                            "notification": notification
-                        }
-                    )
+                result = self.kafka_service.send_message(
+                    "user_notifications",
+                    {
+                        "user_id": user_id,
+                        "notification": notification
+                    }
+                )
+
+                if result.get("status") == "success":
                     self._logger.info(f"Successfully queued notification for user {user_id}")
                     return
-                except Exception as e:
-                    self._logger.warning(f"Failed to send notification (attempt {attempt+1}/{max_retries}): {str(e)}")
-                    if attempt < max_retries - 1:
-                        time.sleep(retry_delay)
-                        retry_delay *= 2  # Exponential backoff
-            
+
+                self._logger.warning(
+                    f"Failed to send notification (attempt {attempt + 1}/{max_retries}): {result.get('message')}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+
             self._logger.error(f"Failed to send notification after {max_retries} attempts")
-                
+
         except Exception as e:
             stack_trace = traceback.format_exc()
             self._logger.exception(f"Error sending notification: {str(e)}\n{stack_trace}") 

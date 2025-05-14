@@ -19,7 +19,7 @@ class AIContainer(containers.DeclarativeContainer):
 
     scoring_model = providers.Singleton(
         SentenceTransformer,
-        'all-mpnet-base-v2'
+        config.SCORING_MODEL_NAME
     )
 
     llm_model = providers.Singleton(
