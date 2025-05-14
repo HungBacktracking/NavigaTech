@@ -7,11 +7,10 @@ from app.core.config import configs
 
 
 class ResumeScorer:
-    def __init__(self):
+    def __init__(self, scoring_model, llm_model):
         self.hf_token = configs.HF_TOKEN
-        self.model = SentenceTransformer('all-mpnet-base-v2')
-        genai.configure(api_key=configs.GEMINI_TOKEN)
-        self.ge_model = genai.GenerativeModel("gemini-2.0-flash")
+        self.model = scoring_model
+        self.llm_model = llm_model
 
     def clean_resume(self, text):
         text = text.lower()
@@ -93,7 +92,7 @@ class ResumeScorer:
                   Candidate Resume: {resume_text}
         """
 
-        res = self.ge_model.generate_content(
+        res = self.llm_model.generate_content(
             gemini_input,
             generation_config={
                 "temperature": 0.2,

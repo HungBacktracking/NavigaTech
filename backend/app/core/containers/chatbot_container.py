@@ -1,7 +1,6 @@
 from dependency_injector import containers, providers
 
 from app.chatbot.chat_engine import ChatEngine
-from app.chatbot.prompt import RAGPrompt
 from app.chatbot.small_talk_checker import SmallTalkChecker
 from llama_index.core import VectorStoreIndex, load_index_from_storage, StorageContext
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -17,7 +16,6 @@ class ChatbotContainer(containers.DeclarativeContainer):
     qdrant_client = database.qdrant_client
     async_qdrant_client = database.async_qdrant_client
     llm = AI.llm_gemini
-    cohere_reranker = AI.cohere_reranker
     embed_model = AI.embed_model
 
     course_storage = providers.Singleton(

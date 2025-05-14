@@ -7,9 +7,9 @@ class JobRecommendation:
     DENSE_MODEL = "BAAI/bge-large-en-v1.5"
     SPARSE_MODEL = "prithivida/Splade_PP_en_v1"
 
-    def __init__(self, collection_name, client=None, reranker=None):
+    def __init__(self, collection_name, qdrant_client=None, reranker=None):
         self.collection_name = collection_name
-        self.qdrant_client = client or QdrantClient(
+        self.qdrant_client = qdrant_client or QdrantClient(
             url=configs.QDRANT_URL,
             api_key=configs.QDRANT_API_TOKEN,
         )

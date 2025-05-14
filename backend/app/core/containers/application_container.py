@@ -58,11 +58,14 @@ class ApplicationContainer(containers.DeclarativeContainer):
     )
     
     job_report = providers.Container(
-        JobReportContainer
+        JobReportContainer,
+        AI=AI
     )
     
     recommendation = providers.Container(
-        RecommendationContainer
+        RecommendationContainer,
+        AI=AI,
+        database=database
     )
 
     chatbot = providers.Container(

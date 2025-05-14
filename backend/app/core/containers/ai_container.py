@@ -1,11 +1,11 @@
+import cohere
 from dependency_injector import containers, providers
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.postprocessor.cohere_rerank import CohereRerank
 import google.generativeai as genai
 from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
 from llama_index.llms.gemini import Gemini
-
-
+from sentence_transformers import SentenceTransformer
 
 
 def create_llm_model(api_key: str, model_name: str = "gemini-2.0-flash"):
@@ -16,6 +16,11 @@ def create_llm_model(api_key: str, model_name: str = "gemini-2.0-flash"):
 
 class AIContainer(containers.DeclarativeContainer):
     config = providers.Configuration()
+
+    scoring_model = providers.Singleton(
+        SentenceTransformer,
+        'all-mpnet-base-v2'
+    )
 
     llm_model = providers.Singleton(
         create_llm_model,
@@ -45,8 +50,6 @@ class AIContainer(containers.DeclarativeContainer):
     )
 
     cohere_reranker = providers.Singleton(
-        CohereRerank,
-        model="rerank-v3.5",
-        api_key=config.COHERE_API_TOKEN,
-        top_n=config.TOP_K,
+        cohere.Client,
+        api_key=config.COHERE_API_TOKEN
     )

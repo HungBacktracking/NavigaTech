@@ -4,6 +4,16 @@ from app.job_report.cv_grading import ResumeScorer
 
 
 class JobReportContainer(containers.DeclarativeContainer):
-    # No external dependencies for these components
-    resume_report = providers.Singleton(ResumeReport)
-    resume_scorer = providers.Singleton(ResumeScorer) 
+    AI = providers.DependenciesContainer()
+
+    resume_report = providers.Singleton(
+        ResumeReport,
+        llm_chat=AI.llm_model,
+        embedding_model=AI.embed_model,
+        llm_gemini=AI.llm_gemini
+    )
+    resume_scorer = providers.Singleton(
+        ResumeScorer,
+        llm_model=AI.llm_model,
+        scoring_model=AI.scoring_model
+    )

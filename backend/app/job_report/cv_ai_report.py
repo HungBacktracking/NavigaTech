@@ -18,22 +18,19 @@ class ResumeReport:
         turns: int = 2,
         temperature: float = 0.5,
         db_path: str = "app/courses_db",
+        llm_chat = None,
+        embedding_model = None,
+        llm_gemini = None
     ):
 
         genai.configure(api_key=configs.GEMINI_TOKEN)
         self.db_path = db_path
-        self.chat = genai.GenerativeModel("gemini-2.0-flash")
-        self.model = "gemini-2.0-flash"
-        self.embbeding_model = HuggingFaceEmbedding(
-            model_name="BAAI/bge-large-en-v1.5")
-        self.llm = Gemini(
-            model_name='models/gemini-2.0-flash',
-            api_key=configs.GEMINI_TOKEN,
-            max_tokens=9000,
-            temperature=0.6,
-        )
-        Settings.llm = self.llm
-        Settings.embed_model = self.embbeding_model
+        self.llm_chat = llm_chat
+        self.embedding_model = embedding_model
+        self.llm_gemini = llm_gemini
+
+        Settings.llm = self.llm_gemini
+        Settings.embed_model = self.embedding_model
         self.turns = turns
         self.temperature = temperature
         self.config = {
@@ -91,7 +88,7 @@ class ResumeReport:
         self.storage_context = StorageContext.from_defaults(
             persist_dir=self.db_path)
         self.course_index = load_index_from_storage(
-            storage_context=self.storage_context, embed_model=self.embbeding_model)
+            storage_context=self.storage_context, embed_model=self.embedding_model)
         self.course_retriever = VectorIndexRetriever(
             index=self.course_index,
             similarity_top_k=25
@@ -109,7 +106,7 @@ class ResumeReport:
             max_output_tokens=10000
         )
 
-        res = self.chat.generate_content(
+        res = self.llm_chat.generate_content(
             contents=messages, generation_config=gen_config)
 
         return res.text
