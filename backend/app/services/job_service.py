@@ -183,7 +183,7 @@ class JobService(BaseService):
 
         offset = (page - 1) * page_size
         total_count = len(all_recommendations)
-        paginated_results = all_recommendations[offset: offset + page_size]
+        paginated_results = all_recommendations[offset: max(offset + page_size, total_count)]
 
         results = []
         for item in paginated_results:
