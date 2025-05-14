@@ -220,10 +220,7 @@ class ChatEngine:
         return resp.response.replace("\n", "\n\n")
         
     async def stream_chat(self, user_input: str):
-        """
-        Streams the response from the chat engine.
-        Yields chunks of the response as they are generated.
-        """
+
         if self.checker.is_small_talk(user_input):
             response = self.smalltalk_engine.stream_chat(user_input)
         else:

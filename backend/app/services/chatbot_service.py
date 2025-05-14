@@ -13,10 +13,6 @@ from app.services.base_service import BaseService
 
 # Helper function to adapt different types of generators to async generator
 async def async_generator_adapter(generator):
-    """
-    Adapts any type of generator (sync or async) to be used with async for.
-    """
-    # If it's already an async generator
     if hasattr(generator, '__aiter__'):
         async for item in generator:
             yield item
