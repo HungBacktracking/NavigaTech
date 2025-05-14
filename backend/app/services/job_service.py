@@ -161,8 +161,6 @@ class JobService(BaseService):
         return result
 
     def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
-        # Recommendations shouldn't change very often unless the user updates their resume
-        # So this is a good candidate for longer caching
         cache_key = f"job_recommendations:{user_id}:{page}:{page_size}"
         cached_result = None
         

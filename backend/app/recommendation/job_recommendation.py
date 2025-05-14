@@ -74,7 +74,7 @@ class JobRecommendation:
                 "level": point.get("level"),
                 "title": point.get("title"),
                 "company": point.get("company"),
-                "link": point.get("link"),
+                "link": point.get("job_url"),
                 "job_type": point.get("job_type"),
                 "location": point.get("location"),
                 "keyword": point.get("keyword"),

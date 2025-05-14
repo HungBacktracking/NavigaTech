@@ -30,7 +30,7 @@ def process_job_analysis(
 
     job_task_service.handle_active_task(job_id, current_user.id)
     job_analytic_service.handle_exist_analysis(job_id, current_user.id)
-    
+
     kafka_service.create_job_task(
         job_id=job_id,
         user_id=current_user.id
