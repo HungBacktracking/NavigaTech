@@ -8,7 +8,7 @@ import {
   Flex,
   theme,
 } from 'antd';
-import { UserOutlined, RedoOutlined, EditOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
+import { UserOutlined, CopyOutlined, CheckOutlined } from '@ant-design/icons';
 import { ChatMessage as ChatMessageType, ChatRole } from '../../../../lib/types/ai-assistant';
 import { motion } from 'framer-motion';
 import { blueDark } from '@ant-design/colors';
@@ -20,11 +20,11 @@ const { useToken } = theme;
 
 interface ChatMessageProps {
   message: ChatMessageType;
-  onRegenerateResponse?: () => void;
-  onEditMessage?: () => void;
+  // onRegenerateResponse?: () => void;
+  // onEditMessage?: () => void;
 }
 
-const ChatMessage = ({ message, onRegenerateResponse, onEditMessage }: ChatMessageProps) => {
+const ChatMessage = ({ message }: ChatMessageProps) => {
   const { token } = useToken();
   const [copied, setCopied] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
@@ -97,22 +97,6 @@ const ChatMessage = ({ message, onRegenerateResponse, onEditMessage }: ChatMessa
               <Text type="secondary">
                 {formatDate(message.timestamp)}
               </Text>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: isHovered ? 1 : 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ display: 'flex', gap: '4px' }}
-              >
-                <Tooltip title="Edit message" color={blueDark[2]}>
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    onClick={onEditMessage}
-                    size="small"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  />
-                </Tooltip>
-              </motion.div>
             </Flex>
           </div>
         ) : (
@@ -142,15 +126,6 @@ const ChatMessage = ({ message, onRegenerateResponse, onEditMessage }: ChatMessa
                     type="text"
                     icon={copied ? <CheckOutlined style={{ color: token.colorSuccess  }}/> : <CopyOutlined />}
                     onClick={() => copyToClipboard(message.content)}
-                    size="small"
-                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                  />
-                </Tooltip>
-                <Tooltip title="Regenerate response" color={blueDark[2]}>
-                  <Button
-                    type="text"
-                    icon={<RedoOutlined />}
-                    onClick={onRegenerateResponse}
                     size="small"
                     style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                   />

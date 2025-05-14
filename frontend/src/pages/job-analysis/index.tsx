@@ -1,18 +1,18 @@
 import { ChangeEvent, MouseEvent, useMemo, useState } from 'react';
-import { Typography, Space, Input, Empty, Flex, message, Modal, Skeleton, Card, Button, Image, Pagination } from 'antd';
+import { Typography, Space, Input, Empty, Flex, message, Skeleton, Card, Button, Image, Pagination } from 'antd';
 import { SearchOutlined, StarOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Splitter } from 'antd';
 
 import { jobAnalysisApi } from '../../services/job-analysis';
 import { jobApi } from '../../services/job-finder';
-import JobAnalysisDetail from './components/job-analysis-detail';
 import JobAnalysisCard from './components/job-analysis-card';
 import MiniFavoriteJobCard from './components/mini-favorite-job-card';
 import emptyStateSvg from '../../assets/empty-state.svg';
 import { Link } from 'react-router-dom';
 import { orange } from '@ant-design/colors';
 import { JobAnalytic, JobAnalyticSearchRequest } from '../../lib/types/job';
+import { useJobAnalysis } from '../../contexts/job-analysis/job-analysis-context';
 
 const { Title, Text } = Typography;
 const { Search } = Input;
@@ -22,6 +22,7 @@ const JobAnalysisPage = () => {
   const [messageApi, contextHolder] = message.useMessage({
     top: 50,
   });
+  const { showJobAnalysis } = useJobAnalysis();
   const [searchValue, setSearchValue] = useState('');
   const [selectedJob, setSelectedJob] = useState<JobAnalytic | null>(null);
   const [analysesQueryParams, setAnalysesQueryParams] = useState<JobAnalyticSearchRequest>({
@@ -43,7 +44,6 @@ const JobAnalysisPage = () => {
     pageSize: 10,
     total: 0,
   });
-  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [isFavoritePanelOpen, setIsFavoritePanelOpen] = useState(false);
   const [favoritePanelWidth, setFavoritePanelWidth] = useState([0, 100]);
   const [analyzingJobIds, setAnalyzingJobIds] = useState<string[]>([]);
@@ -71,7 +71,6 @@ const JobAnalysisPage = () => {
 
         if (selectedJob?.id === jobId) {
           setSelectedJob(null);
-          setIsDetailModalOpen(false);
         }
 
         queryClient.invalidateQueries({ queryKey: ['jobAnalyses', analysesQueryParams] });
@@ -94,15 +93,14 @@ const JobAnalysisPage = () => {
     },
     onSuccess: (analysisJobResponse) => {
       if (analysisJobResponse) {
-        messageApi.success('Job analysis created successfully');
+        messageApi.success('Job is being processed in the background. You will be notified when it is ready.');
         queryClient.invalidateQueries({ queryKey: ['jobAnalyses', analysesQueryParams] });
-        setIsDetailModalOpen(true);
       } else {
-        messageApi.error('Failed to create job analysis. The job may not exist.');
+        messageApi.error("Failed to analyze job. The job may be already analyzed!")
       }
     },
     onError: () => {
-      messageApi.error('Failed to create job analysis');
+      messageApi.error("Failed to analyze job. The job may be already analyzed!");
     },
     onSettled: (_, __, jobId) => {
       setAnalyzingJobIds(prev => prev.filter(id => id !== jobId));
@@ -316,8 +314,7 @@ const JobAnalysisPage = () => {
                           handleViewDetail={(jobId) => {
                             const job = jobAnalyses.items.find(item => item.id === jobId);
                             if (job) {
-                              setSelectedJob(job);
-                              setIsDetailModalOpen(true);
+                              showJobAnalysis(job);
                             }
                           }}
                         />
@@ -352,23 +349,6 @@ const JobAnalysisPage = () => {
           </Splitter.Panel>
         </Splitter>
       </Flex>
-
-      <Modal
-        title={null}
-        open={isDetailModalOpen}
-        footer={null}
-        onCancel={() => setIsDetailModalOpen(false)}
-        destroyOnHidden
-        width={1000}
-        style={{
-          top: 20,
-          borderRadius: 16,
-        }}
-      >
-        <JobAnalysisDetail
-          analytic={selectedJob}
-        />
-      </Modal>
     </>
   );
 };

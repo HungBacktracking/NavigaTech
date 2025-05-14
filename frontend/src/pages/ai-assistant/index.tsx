@@ -1,9 +1,9 @@
-import { useState, useEffect, useRef, ChangeEvent, KeyboardEvent } from 'react';
-import { Flex, Spin, Alert, message, Input, Button } from 'antd';
+import { useState, useEffect, useRef } from 'react';
+import { Flex, Spin, Alert, message } from 'antd';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChatMessage as ChatMessageType, ChatRole } from '../../lib/types/ai-assistant';
+import { AnimatePresence } from 'framer-motion';
+import { ChatRole } from '../../lib/types/ai-assistant';
 import ChatSidebar from './components/chat-sidebar';
 import ChatMessage from './components/chat-message';
 import MessageInput from './components/message-input';
@@ -20,8 +20,6 @@ const AIAssistant = () => {
   const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
-  const [editingMessageId, setEditingMessageId] = useState<string | null>(null);
-  const [editMessageContent, setEditMessageContent] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: conversations, isLoading: isLoadingConversations } = useQuery({
@@ -40,7 +38,7 @@ const AIAssistant = () => {
     error,
   } = useQuery({
     queryKey: ['conversation', conversationId],
-    queryFn: () => conversationId ? aiAssistantApi.getConversation(conversationId) : null,
+    queryFn: () => conversationId ? aiAssistantApi.getConversation(conversationId) : undefined,
     enabled: !!conversationId,
   });
 
@@ -102,128 +100,16 @@ const AIAssistant = () => {
     }
   });
 
-  const { mutate: regenerateResponse } = useMutation({
-    mutationFn: ({ messageId, conversationId }: { messageId: string, conversationId: string }) => {
-      queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        const messageIndex = oldData.messages.findIndex((message: any) => message.id === messageId);
-        if (messageIndex === -1) return oldData;
-
-        const userMessageIndex = messageIndex - 1;
-        const newMessages = userMessageIndex >= 0 ? oldData.messages.slice(0, userMessageIndex + 1) : oldData.messages;
-
-        return {
-          ...oldData,
-          messages: newMessages
-        };
-      });
-      return aiAssistantApi.regenerateResponse(messageId, conversationId);
-    },
-    onSuccess: (aiMessage) => {
-      setIsThinking(false);
-      queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        return {
-          ...oldData,
-          messages: [...oldData.messages, aiMessage]
-        };
-      });
-      scrollToBottom();
-    },
-    onError: () => {
-      setIsThinking(false);
-      messageApi.error("Failed to regenerate response");
-    }
-  });
-
-  const { mutate: editMessage } = useMutation({
-    mutationFn: ({ conversationId, messageId, content }: { conversationId: string, messageId: string, content: string }) => {
-      setIsThinking(true);
-      return aiAssistantApi.editUserMessage(conversationId, messageId, content);
-    },
-    onSuccess: ({ editedMessage, deletedMessageIds }) => {
-      queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        const updatedMessages = oldData.messages
-          .filter((msg: any) => !deletedMessageIds.includes(msg.id))
-          .map((msg: any) => msg.id === editedMessage.id ? editedMessage : msg);
-
-        return {
-          ...oldData,
-          messages: updatedMessages
-        };
-      });
-
-      setEditingMessageId(null);
-      setEditMessageContent('');
-
-      if (conversationId) {
-        setIsThinking(true);
-        aiAssistantApi.sendMessage(conversationId, editedMessage.content)
-          .then(({ aiMessage }) => {
-            queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
-              if (!oldData) return oldData;
-
-              return {
-                ...oldData,
-                messages: [...oldData.messages, aiMessage]
-              };
-            });
-
-            setIsThinking(false);
-            scrollToBottom();
-          })
-          .catch(() => {
-            setIsThinking(false);
-            messageApi.error("Error generating response after edit");
-          });
-      }
-    },
-    onError: () => {
-      setIsThinking(false);
-      messageApi.error("Failed to edit message");
-    }
-  });
-
   useEffect(() => {
-    if (conversation?.messages?.length) {
+    if (conversation?.length) {
       scrollToBottom();
     }
-  }, [conversation?.messages]);
+  }, [conversation]);
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || !conversationId) return;
 
     sendMessage({ conversationId, content });
-  };
-
-  const handleRegenerateResponse = (messageId: string) => {
-    if (conversationId) {
-      regenerateResponse({ messageId, conversationId });
-    }
-  };
-
-  const handleStartEditMessage = (message: ChatMessageType) => {
-    setEditingMessageId(message.id);
-    setEditMessageContent(message.content);
-  };
-
-  const handleSaveEditedMessage = () => {
-    if (!editingMessageId || !conversationId || !editMessageContent.trim()) return;
-
-    editMessage({
-      conversationId,
-      messageId: editingMessageId,
-      content: editMessageContent
-    });
-  };
-
-  const handleCancelEditMessage = () => {
-    setEditingMessageId(null);
-    setEditMessageContent('');
   };
 
   const scrollToBottom = () => {
@@ -241,7 +127,7 @@ const AIAssistant = () => {
   return (
     <>
       {contextHolder}
-      <Flex horizontal align="center" justify="center">
+      <Flex align="center" justify="center">
         <ChatSidebar
           conversations={conversations ?? []}
           isLoading={isLoadingConversations}
@@ -271,7 +157,7 @@ const AIAssistant = () => {
               showIcon
               style={{ margin: '0 auto 20%' }}
             />
-          ) : conversationId && conversation?.messages?.length === 0 ? (
+          ) : conversationId && conversation?.length === 0 ? (
             <>
               <EmptyChat
                 onSelectSamplePrompt={handleSendSamplePrompt}
@@ -293,7 +179,7 @@ const AIAssistant = () => {
                 <MessageInput
                   onSendMessage={handleSendMessage}
                   isLoading={isThinking || isSendingMessage}
-                  disabled={!conversationId || isThinking || isSendingMessage || !!editingMessageId}
+                  disabled={!conversationId || isThinking || isSendingMessage}
                 />
               </Flex>
             </>
@@ -320,60 +206,14 @@ const AIAssistant = () => {
                   />
                 ) : (
                   <>
-                    {conversation?.messages?.map((message) => (
+                    {conversation?.map((message) => (
                       <div key={message.id}>
                         <AnimatePresence>
-                          {editingMessageId === message.id ? (
-                            <motion.div
-                              initial={{ opacity: 0, y: -5 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <Flex vertical style={{ width: '90%', margin: '0 auto' }}>
-                                <Input.TextArea
-                                  value={editMessageContent}
-                                  onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setEditMessageContent(e.target.value)}
-                                  onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
-                                    if (e.key === 'Enter' && !e.shiftKey) {
-                                      e.preventDefault();
-                                      handleSaveEditedMessage();
-                                    }
-                                  }}
-                                  placeholder="Type your message here..."
-                                  autoSize={{ minRows: 2, maxRows: 4 }}
-                                  disabled={isThinking || isSendingMessage}
-                                  style={{
-                                    borderRadius: '8px',
-                                    padding: '8px',
-                                  }}
-                                  className="scrollbar-custom"
-                                />
-
-                                <Flex gap="small" justify="flex-end" style={{ marginTop: '10px' }}>
-                                  <Button
-                                    onClick={handleCancelEditMessage}
-                                    disabled={isThinking || isSendingMessage}
-                                  >
-                                    Cancel
-                                  </Button>
-                                  <Button
-                                    type="primary"
-                                    onClick={handleSaveEditedMessage}
-                                    loading={isLoading}
-                                    disabled={isThinking || isSendingMessage || !editMessageContent.trim()}
-                                  >
-                                    Save
-                                  </Button>
-                                </Flex>
-                              </Flex>
-                            </motion.div>
-                          ) : (
-                            <ChatMessage
-                              message={message}
-                              onRegenerateResponse={() => handleRegenerateResponse(message.id)}
-                              onEditMessage={() => handleStartEditMessage(message)}
-                            />
-                          )}
+                          <ChatMessage
+                            message={message}
+                            // onRegenerateResponse={() => handleRegenerateResponse(message.id)}
+                            // onEditMessage={() => handleStartEditMessage(message)}
+                          />
                         </AnimatePresence>
                       </div>
                     ))}
@@ -408,7 +248,7 @@ const AIAssistant = () => {
                 <MessageInput
                   onSendMessage={handleSendMessage}
                   isLoading={isThinking || isSendingMessage}
-                  disabled={!conversationId || isThinking || isSendingMessage || !!editingMessageId}
+                  disabled={!conversationId || isThinking || isSendingMessage}
                 />
               </Flex>
             </Flex>
