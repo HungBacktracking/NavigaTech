@@ -26,25 +26,19 @@ async def websocket_endpoint(
         await websocket.close(code=4000)
         return
     
-    # Register connection
     try:
         await kafka_service.register_connection(str(user_id), websocket)
         logger.info(f"WebSocket connection established for user {user_id}")
         
-        # Send a connection confirmation message
         await websocket.send_json({"type": "connection", "status": "connected", "user_id": str(user_id)})
         
-        # Start heartbeat task
         heartbeat_task = asyncio.create_task(send_heartbeat(websocket, user_id))
         
         try:
-            # Keep connection open
             while True:
-                # Wait for any client messages
                 data = await websocket.receive_text()
                 logger.debug(f"Received message from client {user_id}: {data}")
                 
-                # If message is a heartbeat response, log it
                 if data == "pong":
                     logger.debug(f"Received heartbeat response from user {user_id}")
                 
@@ -53,26 +47,23 @@ async def websocket_endpoint(
         except Exception as e:
             logger.error(f"Error in WebSocket connection for user {user_id}: {str(e)}")
         finally:
-            # Cancel heartbeat task
             heartbeat_task.cancel()
             try:
                 await heartbeat_task
             except asyncio.CancelledError:
                 pass
             
-            # Always ensure connection is removed on any disconnection
             kafka_service.remove_connection(str(user_id))
             logger.info(f"WebSocket connection removed for user {user_id}")
             
     except Exception as e:
         logger.error(f"Failed to establish WebSocket connection for user {user_id}: {str(e)}")
-        await websocket.close(code=1011)  # Internal server error
+        await websocket.close(code=1011)
 
 async def send_heartbeat(websocket: WebSocket, user_id: UUID):
-    """Send heartbeat messages to keep the connection alive"""
     try:
         while True:
-            await asyncio.sleep(30)  # Send heartbeat every 30 seconds
+            await asyncio.sleep(30)
             try:
                 await websocket.send_json({"type": "heartbeat", "timestamp": time.time()})
                 logger.debug(f"Heartbeat sent to user {user_id}")

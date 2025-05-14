@@ -10,7 +10,6 @@ ENV: str = ""
 
 
 class Configs(BaseSettings):
-    # base
     ENV: str = os.getenv("ENV", "dev")
     API: str = "/api"
     API_V1_STR: str = "/api/v1"
@@ -29,18 +28,14 @@ class Configs(BaseSettings):
 
     PROJECT_ROOT: str = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    # date
     DATETIME_FORMAT: str = "%Y-%m-%dT%H:%M:%S"
     DATE_FORMAT: str = "%Y-%m-%d"
 
-    # auth
     SECRET_KEY: str = os.getenv("SECRET_KEY", "")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 30  # 60 minutes * 24 hours * 30 days = 30 days
 
-    # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["*"]
 
-    # database
     DB: str = os.getenv("DB", "postgresql")
     DB_USER: str = os.getenv("DB_USER")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD")
@@ -59,7 +54,6 @@ class Configs(BaseSettings):
         database=ENV_DATABASE_MAPPER[ENV]
     )
 
-    # replica database
     REPLICA_DB_USER: str = os.getenv("REPLICA_DB_USER", DB_USER)
     REPLICA_DB_PASSWORD: str = os.getenv("REPLICA_DB_PASSWORD", DB_PASSWORD)
     REPLICA_DB_HOST: str = os.getenv("REPLICA_DB_HOST")
@@ -78,26 +72,21 @@ class Configs(BaseSettings):
     MONGO_DB_URI: str = os.getenv("MONGO_DB_URI")
     MONGO_DB_NAME: str = os.getenv("MONGO_DB_NAME")
 
-    # redis
     REDIS_HOST: str = os.getenv("REDIS_HOST", "localhost")
     REDIS_PORT: str = os.getenv("REDIS_PORT", "6379")
     REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
     REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
-    REDIS_DEFAULT_TIMEOUT: int = int(os.getenv("REDIS_DEFAULT_TIMEOUT", "3600"))  # 1 hour default
+    REDIS_DEFAULT_TIMEOUT: int = int(os.getenv("REDIS_DEFAULT_TIMEOUT", "3600"))
 
-    # Qdrant
     QDRANT_URL: str = os.getenv("QDRANT_URL")
     QDRANT_API_TOKEN: str = os.getenv("QDRANT_API_TOKEN")
     QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "job_description")
 
-    # Elasticsearch
     ELASTICSEARCH_URL: str = os.getenv("ELASTICSEARCH_URL", "http://elasticsearch:9200")
 
-    # Kafka
     KAFKA_BOOTSTRAP_SERVERS: str = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
     KAFKA_CONSUMER_GROUP: str = os.getenv("KAFKA_CONSUMER_GROUP", "navigatech-app")
 
-    # LLM + Embeddings
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
     GEMINI_TOKEN: str = os.getenv("GEMINI_TOKEN")
@@ -110,14 +99,12 @@ class Configs(BaseSettings):
 
     COHERE_API_TOKEN: str = os.getenv("COHERE_API_TOKEN")
 
-    # AWS
     AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_REGION: str = os.getenv("AWS_REGION")
     AWS_S3_BUCKET_NAME: str = os.getenv("AWS_S3_BUCKET_NAME")
     AWS_S3_BUCKET_URL: str = os.getenv("AWS_S3_BUCKET_URL")
 
-    # find query
     PAGE: int = 1
     PAGE_SIZE: int = 20
     ORDERING: str = "-id"

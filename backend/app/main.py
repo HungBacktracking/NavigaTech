@@ -12,7 +12,6 @@ from app.exceptions.exception_handlers import register_exception_handlers
 from app.util.class_object import singleton
 
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -22,12 +21,10 @@ logging.basicConfig(
     ]
 )
 
-# Set specific module log levels
 logging.getLogger("app.services.kafka_service").setLevel(logging.DEBUG)
 logging.getLogger("app.api.endpoints.ws").setLevel(logging.DEBUG)
 logging.getLogger("app.services.job_worker").setLevel(logging.DEBUG)
 
-# Suppress verbose logs from other libraries
 logging.getLogger("kafka").setLevel(logging.WARNING)
 logging.getLogger("urllib3").setLevel(logging.WARNING)
 
@@ -37,29 +34,23 @@ class AppCreator:
     def __init__(self):
         @asynccontextmanager
         async def lifespan(app: FastAPI):
-            # Startup
             logging.info("Starting application...")
             self.container.init_resources()
-            # self.db.create_database()
             await self.mongo.init_mongo()
             
-            # Initialize and start the job worker
             job_worker = self.container.services.job_worker()
             job_worker.start()
             logging.info("Job worker started")
             
             yield
             
-            # Shutdown
             logging.info("Shutting down application...")
-            # Stop the job worker before shutting down
             if hasattr(self, 'job_worker'):
                 job_worker.stop()
                 
             self.container.shutdown_resources()
             logging.info("Application shutdown complete")
 
-        # set app default
         self.app = FastAPI(
             title=configs.PROJECT_NAME,
             openapi_url=f"{configs.API}/openapi.json",
@@ -68,13 +59,11 @@ class AppCreator:
         )
         register_exception_handlers(self.app)
 
-        # set db and container
         self.container = ApplicationContainer()
 
         self.db = self.container.database().db()
         self.mongo = self.container.database().mongo_db()
 
-        # set cors
         if configs.BACKEND_CORS_ORIGINS:
             self.app.add_middleware(
                 CORSMiddleware,
@@ -84,7 +73,6 @@ class AppCreator:
                 allow_headers=["*"],
             )
 
-        # set routes
         @self.app.get("/", include_in_schema=False)
         def health() -> JSONResponse:
             return JSONResponse({"message": "Server is working!"})

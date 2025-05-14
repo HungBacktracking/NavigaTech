@@ -49,26 +49,22 @@ class JobService(BaseService):
     def full_text_search_job(
         self, request: JobSearchRequest, user_id: UUID
     ) -> PageResponse[JobResponse]:
-        # Create a more comprehensive cache key including all search parameters
         roles_str = "_".join(sorted(request.roles)) if request.roles else "none"
         levels_str = "_".join(sorted(request.levels)) if request.levels else "none"
         search_term = request.search_term if hasattr(request, 'search_term') else request.query
         
         cache_key = f"job_search:{search_term}:{roles_str}:{levels_str}:{request.page}:{request.page_size}:{user_id}"
         
-        # Try to get from cache with error handling
         cached_result = None
         if self.redis_client:
             try:
                 cached_result = self.redis_client.get(cache_key)
             except Exception as e:
-                # Log error but continue execution
                 print(f"Redis error while retrieving cache: {str(e)}")
         
         if cached_result:
             return cached_result
             
-        # Execute the search against Elasticsearch
         es_results, total_count = self.es_repository.search_jobs(request)
 
         job_ids = [UUID(job["id"]) for job in es_results]
@@ -115,13 +111,11 @@ class JobService(BaseService):
             total_pages=total_pages,
         )
         
-        # Cache with error handling
         if self.redis_client:
             try:
                 # Cache for 5 minutes - search results should be relatively fresh
                 self.redis_client.set(cache_key, result, 300)
             except Exception as e:
-                # Log error but continue execution
                 print(f"Redis error while setting cache: {str(e)}")
         
         return result
@@ -158,7 +152,6 @@ class JobService(BaseService):
             total_pages=total_pages,
         )
         
-        # Cache with error handling
         if self.redis_client:
             try:
                 # Cache for 1 minute - favorites might change frequently
@@ -238,7 +231,6 @@ class JobService(BaseService):
             total_pages=total_pages,
         )
         
-        # Cache with error handling
         if self.redis_client:
             try:
                 # Cache for 1 hour - recommendations don't change often
@@ -287,11 +279,10 @@ class JobService(BaseService):
         # Run the analysis
         result = self.reporter.run(resume_text, jd_text)
         
-        # Cache the result with error handling - extend to 72 hours since analysis doesn't change much
         if self.redis_client:
             try:
                 # Cache for 72 hours - analysis changes very rarely and is computationally expensive
-                self.redis_client.set(cache_key, result, 259200)  # 72 hours in seconds
+                self.redis_client.set(cache_key, result, 259200)
             except Exception as e:
                 print(f"Redis error while setting job analysis cache: {str(e)}")
         
@@ -339,11 +330,10 @@ class JobService(BaseService):
         # Run the scoring
         result = self.scorer.final_score(resume_text, jd_text)
         
-        # Cache with error handling - extend cache to 72 hours
         if self.redis_client:
             try:
                 # Cache for 72 hours - scoring changes very rarely and is computationally expensive
-                self.redis_client.set(cache_key, result, 259200)  # 72 hours in seconds
+                self.redis_client.set(cache_key, result, 259200)
             except Exception as e:
                 print(f"Redis error while setting job score cache: {str(e)}")
         
@@ -366,13 +356,9 @@ class JobService(BaseService):
         else:
             self.favorite_job_repository.create(request)
             
-        # Invalidate affected caches with error handling
         if self.redis_client:
             try:
-                # Invalidate cached favorites
                 self.redis_client.flush_by_pattern(f"user_favorites:{user_id}:*")
-                
-                # Invalidate cached search results that might contain this job
                 self.redis_client.flush_by_pattern(f"job_search:*:{user_id}")
             except Exception as e:
                 print(f"Redis error while invalidating caches after adding favorite: {str(e)}")
@@ -395,13 +381,9 @@ class JobService(BaseService):
         else:
             raise CustomError.NOT_FOUND.as_exception()
             
-        # Invalidate affected caches with error handling
         if self.redis_client:
             try:
-                # Invalidate cached favorites
                 self.redis_client.flush_by_pattern(f"user_favorites:{user_id}:*")
-                
-                # Invalidate cached search results that might contain this job
                 self.redis_client.flush_by_pattern(f"job_search:*:{user_id}")
             except Exception as e:
                 print(f"Redis error while invalidating caches after removing favorite: {str(e)}")
@@ -419,7 +401,6 @@ class JobService(BaseService):
         Returns:
             int: The total number of jobs indexed
         """
-        # Get total job count
         if include_deleted:
             total_jobs = self.job_repository.get_total_count_including_deleted()
             print(f"Including soft-deleted jobs. Total job count: {total_jobs}")
@@ -430,9 +411,8 @@ class JobService(BaseService):
         if total_jobs == 0:
             return 0
         
-        # Process in batches for better performance and to avoid memory issues
         total_indexed = 0
-        total_batches = (total_jobs + batch_size - 1) // batch_size  # Ceiling division
+        total_batches = (total_jobs + batch_size - 1) // batch_size
         
         offset = 0
         success_count = 0
@@ -440,7 +420,6 @@ class JobService(BaseService):
         
         while offset < total_jobs:
             try:
-                # Get a batch of jobs
                 with self.job_repository.replica_session_factory() as session:
                     if include_deleted:
                         statement = select(Job).offset(offset).limit(batch_size)
@@ -452,13 +431,10 @@ class JobService(BaseService):
                     if not jobs_batch:
                         break
                     
-                    # Convert to dictionaries
                     job_dicts = [job.model_dump() for job in jobs_batch]
                     
-                    # Bulk index
                     self.es_repository.index_bulk_jobs(job_dicts)
                     
-                    # Update counts
                     batch_count = len(job_dicts)
                     success_count += batch_count
                     total_indexed += batch_count
@@ -468,13 +444,10 @@ class JobService(BaseService):
             except Exception as e:
                 error_count += 1
                 print(f"Error indexing batch starting at offset {offset}: {str(e)}")
-                # Continue with next batch despite errors
             
             finally:
-                # Move to next batch
                 offset += batch_size
         
-        # Log results
         print(f"Indexing complete: {success_count} jobs indexed successfully, {error_count} batches with errors")
         
         return total_indexed
