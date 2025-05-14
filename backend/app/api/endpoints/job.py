@@ -27,15 +27,13 @@ def search_job(
     return job_service.full_text_search_job(request, current_user.id)
 
 
-@router.get("/recommendations", response_model=PageResponse[JobResponse])
+@router.get("/recommendations", response_model=list[JobResponse])
 @inject
 def get_recommendations(
-        page: int = Query(1, ge=1),
-        page_size: int = Query(20, ge=1, le=100),
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
         current_user: UserDetailResponse = Depends(get_current_user)
 ):
-    return service.get_job_recommendation(current_user.id, page, page_size)
+    return service.get_job_recommendation(current_user.id)
 
 
 @router.get("/favorite", response_model=PageResponse[JobFavoriteResponse])
