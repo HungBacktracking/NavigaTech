@@ -201,6 +201,6 @@ class ResumeReport:
         data = json.loads(feedback.replace("```", "").replace("json", ""))
         data = self.build_roadmap(data, jd_text=jd)
         for k, v in data.items():
-            data[k] = v.replace("\n", "\n\n")
+            data[k] = v.replace("\n", "\n\n").replace("   ", "  ")
 
         return data

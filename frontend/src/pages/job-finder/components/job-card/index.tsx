@@ -1,10 +1,12 @@
 import { Button, Card, Flex, Image, Space, Tag, theme, Tooltip, Typography } from "antd";
-import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BarChartOutlined } from "@ant-design/icons";
-import { Job } from "../../../../lib/types/job";
+import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BarChartOutlined, EyeOutlined } from "@ant-design/icons";
+import { Job, JobAnalytic } from "../../../../lib/types/job";
 import { blue, blueDark, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
+import { useQuery } from "@tanstack/react-query";
+import { jobAnalysisApi } from "../../../../services/job-analysis";
 import { MouseEvent } from "react";
 
 const { Text, Title } = Typography;
@@ -14,6 +16,7 @@ interface JobCardProps {
   handleToggleFavorite: (e: MouseEvent) => void;
   handleSelectJob: (job: Job) => void;
   handleJobAnalysisClick: (id: string) => void;
+  handleViewDetail: (jobAnalysis: JobAnalytic) => void;
   isSelected: boolean;
   isAnalyzing?: boolean;
 }
@@ -23,11 +26,18 @@ const JobCard = ({
   handleSelectJob,
   handleToggleFavorite,
   handleJobAnalysisClick,
+  handleViewDetail,
   isSelected = false,
-  isAnalyzing = false
+  isAnalyzing = false,
 }: JobCardProps) => {
   const { isMobile: isTablet } = useMobile(1024);
   const { token } = theme.useToken();
+
+  const { data: jobAnalysis, isLoading: isJobAnalysisLoading } = useQuery({
+    queryKey: ['jobAnalysis', job.id],
+    queryFn: () => jobAnalysisApi.getJobAnalysis(job.id),
+    enabled: !!job.id && !!job.is_analyze,
+  });
 
   return (
     <Card
@@ -55,11 +65,11 @@ const JobCard = ({
                 preview={false}
               />
             </div>
-            <Flex vertical>
+            <Flex vertical >
               <Title level={4} style={{ color: token.colorPrimary, margin: 0, fontWeight: 500, textWrap: "wrap" }}>
                 {job.job_name}
               </Title>
-              <Text type="secondary">
+              <Text type="secondary" style={{ textWrap: "wrap" }}>
                 {job.company_name}
               </Text>
             </Flex>
@@ -157,17 +167,36 @@ const JobCard = ({
           </a>
 
           <Space>
-            <AIButton
-              icon={<BarChartOutlined />}
-              loading={isAnalyzing}
-              onClick={(e: MouseEvent) => {
-                e.stopPropagation();
-                handleJobAnalysisClick(job.id);
-              }}
-              disabled={isAnalyzing}
-            >
-              {isAnalyzing ? "Analyzing..." : job.is_analyze ? "Re-Analyze" : "Analyze"}
-            </AIButton>
+            {job.is_analyze && (
+              <Button
+                type="primary"
+                shape="round"
+                icon={<EyeOutlined />}
+                onClick={(e: MouseEvent) => {
+                  e.stopPropagation();
+                  if (jobAnalysis) {
+                    handleViewDetail(jobAnalysis);
+                  }
+                }}
+                style={{ marginLeft: "auto" }}
+                loading={isJobAnalysisLoading}
+              >
+                View Analysis
+              </Button>
+            )}
+            {!job.is_analyze && (
+              <AIButton
+                icon={<BarChartOutlined />}
+                loading={isAnalyzing}
+                onClick={(e: MouseEvent) => {
+                  e.stopPropagation();
+                  handleJobAnalysisClick(job.id);
+                }}
+                disabled={isAnalyzing}
+              >
+                {isAnalyzing ? "Analyzing..." : "Analyze"}
+              </AIButton>
+            )}
           </Space>
         </Flex>
       </Space>

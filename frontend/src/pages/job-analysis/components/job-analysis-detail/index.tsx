@@ -74,7 +74,7 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
   useEffect(() => {
     if (activeTab === '1') {
       const timer = setTimeout(() => {
-        setProgressAnimation(analytic.match_overall);
+        setProgressAnimation(parseFloat((analytic.match_overall * 100).toFixed(2)));
       }, 200);
       return () => clearTimeout(timer);
     }
@@ -147,25 +147,47 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
       children: (
         <Flex vertical style={{ padding: '0 16px' }}>
           <Flex vertical>
-            <Title level={5}>Overall</Title>
+            <div style={{ marginTop: 4, fontWeight: 500 }}>Overall</div>
             <Progress
               percent={progressAnimation}
-              strokeColor={getMatchScoreColor(analytic.match_overall)}
+              strokeColor={getMatchScoreColor((analytic.match_overall * 100))}
               status="active"
             />
             <Text>
-              {analytic.match_overall > 75 ? 'Excellent match for your profile!' :
-                analytic.match_overall > 50 ? 'Good match for your profile' :
-                  analytic.match_overall > 25 ? 'Moderate match for your profile' :
+              {analytic.match_overall * 100 > 75 ? 'Excellent match for your profile!' :
+                analytic.match_overall * 100 > 50 ? 'Good match for your profile' :
+                  analytic.match_overall * 100 > 25 ? 'Moderate match for your profile' :
                     'Consider improving your skills or looking for better matches'}
             </Text>
+            <Flex vertical justify="space-between" style={{ marginTop: 20 }}>
+              {analytic.match_skills > 0 && (
+                <div style={{ textAlign: 'start', minWidth: 100, marginRight: 16 }}>
+                  <div style={{ marginTop: 4, fontWeight: 500 }}>Semantic Score</div>
+                  <Progress
+                    percent={analytic.match_skills * 100}
+                    strokeColor={getMatchScoreColor(analytic.match_skills * 100)}
+                    status="active"
+                  />
+                </div>
+              )}
+              {analytic.match_experience > 0 && (
+                <div style={{ textAlign: 'start', marginRight: 16 }}>
+                  <div style={{ marginTop: 4, fontWeight: 500 }}>LLM Score</div>
+                  <Progress
+                    percent={parseFloat((analytic.match_experience * 100).toFixed(2))}
+                    strokeColor={getMatchScoreColor(analytic.match_experience * 100)}
+                    status="active"
+                  />
+                </div>
+              )}
+            </Flex>
           </Flex>
 
           <Flex justify="space-between" style={{ marginTop: 16 }}>
             <Flex vertical style={{ flex: 1 }}>
               <Title level={4} style={{ color: token.colorSuccessActive, margin: 0 }}>Strengths</Title>
               <List
-                dataSource={analytic.strengths.split(',')}
+                dataSource={analytic.strengths.split('<br>')}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
@@ -183,7 +205,7 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
               <Title level={4} style={{ color: token.colorErrorActive, margin: 0 }}>Weaknesses</Title>
               <List
                 itemLayout="horizontal"
-                dataSource={analytic.weaknesses.split(',')}
+                dataSource={analytic.weaknesses.split('<br>')}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
@@ -204,7 +226,7 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
       key: '2',
       label: 'AI Report',
       children: (
-        <Flex style={{ height: '60vh' }} className="scrollbar-custom container">
+        <Flex style={{ height: '60vh', width: '100%' }} className="scrollbar-custom container">
           <Flex
             style={{
               width: 180,
@@ -291,7 +313,7 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
         </Space>
       </Flex>
 
-      <Flex gap="middle" wrap="wrap" style={{ marginTop: 8 }}>
+      <Flex vertical gap="middle" wrap="wrap" style={{ marginTop: 8 }}>
         <Space size="small">
           <Space>
             <EnvironmentOutlined />
@@ -315,47 +337,11 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
           <span>Analyzed on {analytic.analyzedAt.toLocaleString()}</span>
         </Space> */}
         <Space wrap>
-          {analytic.skills.split(',').map((skill, index) => (
+          {analytic.skills && analytic.skills.split(',').map((skill, index) => (
             <Tag key={index} color={token.colorInfoBg} style={{ padding: '2px 8px', fontSize: 12, borderRadius: 8, borderColor: token.colorInfoBorder }}>
               <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
             </Tag>
           ))}
-        </Space>
-        <Space wrap>
-          {analytic.match_skills > 0 && (
-            <div style={{ textAlign: 'center', minWidth: 100, marginRight: 16 }}>
-              <Progress
-                type="circle"
-                percent={analytic.match_skills}
-                strokeColor={getMatchScoreColor(analytic.match_skills)}
-                status="active"
-                size={100}
-                format={(percent) => (
-                  <Text style={{ color: getMatchScoreColor(analytic.match_skills) }}>
-                    {percent}%
-                  </Text>
-                )}
-              />
-              <div style={{ marginTop: 4, fontWeight: 500 }}>Skills Matched</div>
-            </div>
-          )}
-          {analytic.match_experience > 0 && (
-            <div style={{ textAlign: 'center', minWidth: 100, marginRight: 16 }}>
-              <Progress
-                type="circle"
-                percent={analytic.match_experience}
-                strokeColor={getMatchScoreColor(analytic.match_experience)}
-                status="active"
-                size={100}
-                format={(percent) => (
-                  <Text style={{ color: getMatchScoreColor(analytic.match_experience) }}>
-                    {percent}%
-                  </Text>
-                )}
-              />
-              <div style={{ marginTop: 4, fontWeight: 500 }}>Experience Matched</div>
-            </div>
-          )}
         </Space>
       </Flex>
 

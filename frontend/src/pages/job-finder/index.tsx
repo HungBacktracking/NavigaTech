@@ -4,7 +4,7 @@ import { Row, Col, Typography, Space, Flex, message, Pagination, Skeleton, Card,
 import { ReloadOutlined } from "@ant-design/icons";
 import JobCard from "./components/job-card";
 import { jobApi } from "../../services/job-finder";
-import { Job, JobSearchRequest } from "../../lib/types/job";
+import { Job, JobAnalytic, JobSearchRequest } from "../../lib/types/job";
 import JobDetail from "./components/job-detail";
 import SuggestionItem from "./components/suggestion-item";
 import AIButton from "../../components/ai-button";
@@ -13,6 +13,8 @@ import emptyStateSvg from "../../assets/empty-state.svg";
 import AISearchBar from "./components/ai-search-bar";
 import MultiChoiceFilter from "./components/multi-choice-filter";
 import { jobAnalysisApi } from "../../services/job-analysis";
+import { useJobAnalysis } from "../../contexts/job-analysis/job-analysis-context";
+
 const { Title } = Typography;
 
 export default function JobFindingPage() {
@@ -23,6 +25,7 @@ export default function JobFindingPage() {
     duration: 2,
     maxCount: 3,
   });
+  const { showJobAnalysis } = useJobAnalysis();
   const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState("");
   const [navbarHeight, setNavbarHeight] = useState(0);
@@ -98,14 +101,14 @@ export default function JobFindingPage() {
     },
     onSuccess: (result) => {
       if (result) {
-        messageApi.success("Job analysis completed successfully!");
+        messageApi.success("Job analysis is being processed in the background. Please check back later.");
         queryClient.invalidateQueries({ queryKey: ['jobAnalyses'] });
       } else {
-        messageApi.error("Failed to analyze job. The job may not exist.");
+        messageApi.error("Failed to analyze job. The job may be already analyzed!");
       }
     },
     onError: () => {
-      messageApi.error("Failed to analyze job. Please try again.");
+      messageApi.error("Failed to analyze job. The job may be already analyzed!");
     },
     onSettled: (_, __, jobId) => {
       setAnalyzingJobIds(prev => prev.filter(id => id !== jobId));
@@ -193,6 +196,10 @@ export default function JobFindingPage() {
     setQueryParams(prev => ({ ...prev, page: 1 }));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  const handleViewJobAnalysis = (jobAnalysis: JobAnalytic) => {
+    showJobAnalysis(jobAnalysis);
+  }
 
   return (
     <>
@@ -357,6 +364,7 @@ export default function JobFindingPage() {
                   }}
                   handleSelectJob={() => setSelectedJobId(job.id)}
                   handleJobAnalysisClick={handleAnalyzeJob}
+                  handleViewDetail={handleViewJobAnalysis}
                   isSelected={selectedJobId === job.id}
                   isAnalyzing={analyzingJobIds.includes(job.id)}
                 />

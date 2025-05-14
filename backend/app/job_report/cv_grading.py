@@ -98,7 +98,7 @@ class ResumeScorer:
                 "temperature": 0.2,
                 "top_k": 2,
                 "top_p": 0.9,
-                "max_output_tokens": 2000,
+                "max_output_tokens": 5000,
             },
         )
         grading = json.loads(res.text.replace("```", "").replace("json", ""))
@@ -113,6 +113,8 @@ class ResumeScorer:
 
         llm_s = self.llm_grading(resume_text, jd_text)
         se_s = self.semantic_scoring(resume_text, jd_text)
+        llm_s["match_skills"] = llm_s["match_overall"] #llm score
+        llm_s["match_experience"] = se_s #semantic score
         llm_s["match_overall"] = 0.7 * \
             llm_s["match_overall"] + 0.3*se_s
 
