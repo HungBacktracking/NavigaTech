@@ -161,8 +161,6 @@ class JobService(BaseService):
         return result
 
     def get_job_recommendation(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobResponse]:
-        # Recommendations shouldn't change very often unless the user updates their resume
-        # So this is a good candidate for longer caching
         cache_key = f"job_recommendations:{user_id}:{page}:{page_size}"
         cached_result = None
 
@@ -190,34 +188,33 @@ class JobService(BaseService):
             job = self.job_repository.find_by_url(
                 item.get("metadata", {}).get("link", "")
             )
+            if not job:
+                continue
 
-            # Get favorite status if job exists
-            fav = None
-            if job:
-                fav = self.favorite_job_repository.find_by_job_and_user_id(job.id, user_id)
+            fav = self.favorite_job_repository.find_by_job_and_user_id(job.id, user_id)
 
-                results.append(
-                    JobResponse(
-                        id=job.id,
-                        job_url=job.job_url,
-                        from_site=job.from_site,
-                        logo_url=job.logo_url,
-                        job_name=job.job_name,
-                        job_level=job.job_level,
-                        company_name=job.company_name,
-                        company_type=job.company_type,
-                        company_address=job.company_address,
-                        company_description=job.company_description,
-                        job_type=job.job_type,
-                        skills=job.skills,
-                        location=job.location,
-                        date_posted=job.date_posted,
-                        salary=job.salary,
-                        job_description=job.job_description,
-                        is_analyze=fav.is_analyze if fav else False,
-                        is_favorite=fav.is_favorite if fav else False
-                    )
+            results.append(
+                JobResponse(
+                    id=job.id,
+                    job_url=job.job_url,
+                    from_site=job.from_site,
+                    logo_url=job.logo_url,
+                    job_name=job.job_name,
+                    job_level=job.job_level,
+                    company_name=job.company_name,
+                    company_type=job.company_type,
+                    company_address=job.company_address,
+                    company_description=job.company_description,
+                    job_type=job.job_type,
+                    skills=job.skills,
+                    location=job.location,
+                    date_posted=job.date_posted,
+                    salary=job.salary,
+                    job_description=job.job_description,
+                    is_analyze=fav.is_analyze if fav else False,
+                    is_favorite=fav.is_favorite if fav else False
                 )
+            )
 
         total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
 
