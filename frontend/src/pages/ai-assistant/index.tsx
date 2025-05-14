@@ -20,6 +20,7 @@ const AIAssistant = () => {
   const queryClient = useQueryClient();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isThinking, setIsThinking] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const { data: conversations, isLoading: isLoadingConversations } = useQuery({
@@ -64,41 +65,59 @@ const AIAssistant = () => {
     }
   });
 
-  const { mutate: sendMessage, isPending: isSendingMessage } = useMutation({
-    mutationFn: ({ conversationId, content }: { conversationId: string, content: string }) => {
-      setIsThinking(true);
-      queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        return {
-          ...oldData,
-          messages: [
-            ...(oldData.messages || []),
-            { id: 'temp-id', role: ChatRole.USER, content, timestamp: new Date().toISOString() }
-          ]
-        };
-      });
+  const handleStreamedMessage = (content: string) => {
+    if (!content.trim() || !conversationId) return;
+    
+    setIsThinking(true);
+    setStreamingMessage('');
+    
+    // Add user message to the UI immediately
+    queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
+      const tempUserMessage = { 
+        id: 'temp-user-id', 
+        role: ChatRole.USER, 
+        content, 
+        timestamp: new Date().toISOString() 
+      };
+      
+      if (!oldData) return [tempUserMessage];
+      return [...oldData, tempUserMessage];
+    });
+    
+    scrollToBottom();
+    
+    // Start streaming the AI response
+    const { stream, events } = aiAssistantApi.streamMessage(conversationId, content);
+    
+    events.onMessage((chunk) => {
+      setStreamingMessage((prev) => prev + chunk);
       scrollToBottom();
-      return aiAssistantApi.sendMessage(conversationId, content);
-    },
-    onSuccess: ({ userMessage, aiMessage }) => {
+    });
+    
+    events.onComplete((fullResponse) => {
       setIsThinking(false);
-      queryClient.setQueryData(['conversation', conversationId], (oldData: any) => {
-        if (!oldData) return oldData;
-
-        const messages = oldData.messages.filter((msg: any) => msg.id !== 'temp-id');
-        return {
-          ...oldData,
-          messages: [...messages, userMessage, aiMessage]
-        };
-      });
-      scrollToBottom();
-    },
-    onError: () => {
+      setStreamingMessage('');
+      
+      // Refresh the conversation to get the updated messages with proper IDs
+      queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
+    });
+    
+    events.onError((errorMsg) => {
       setIsThinking(false);
-      messageApi.error("Error sending message. Please try again.");
-    }
-  });
+      setStreamingMessage('');
+      messageApi.error(`Error: ${errorMsg}`);
+      
+      // Refresh the conversation
+      queryClient.invalidateQueries({ queryKey: ['conversation', conversationId] });
+    });
+    
+    stream.catch((error) => {
+      console.error("Error in stream:", error);
+      setIsThinking(false);
+      setStreamingMessage('');
+      messageApi.error("Error generating response. Please try again.");
+    });
+  };
 
   useEffect(() => {
     if (conversation?.length) {
@@ -108,8 +127,7 @@ const AIAssistant = () => {
 
   const handleSendMessage = (content: string) => {
     if (!content.trim() || !conversationId) return;
-
-    sendMessage({ conversationId, content });
+    handleStreamedMessage(content);
   };
 
   const scrollToBottom = () => {
@@ -120,8 +138,28 @@ const AIAssistant = () => {
 
   const handleSendSamplePrompt = (prompt: string) => {
     if (conversationId) {
-      sendMessage({ conversationId, content: prompt });
+      handleStreamedMessage(prompt);
     }
+  };
+
+  // Render streaming message if it exists
+  const renderStreamingMessage = () => {
+    if (!streamingMessage) return null;
+    
+    return (
+      <div key="streaming-message">
+        <AnimatePresence>
+          <ChatMessage
+            message={{
+              id: 'streaming-id',
+              role: ChatRole.ASSISTANT,
+              content: streamingMessage,
+              timestamp: new Date().toISOString()
+            }}
+          />
+        </AnimatePresence>
+      </div>
+    );
   };
 
   return (
@@ -178,8 +216,8 @@ const AIAssistant = () => {
               >
                 <MessageInput
                   onSendMessage={handleSendMessage}
-                  isLoading={isThinking || isSendingMessage}
-                  disabled={!conversationId || isThinking || isSendingMessage}
+                  isLoading={isThinking}
+                  disabled={!conversationId || isThinking}
                 />
               </Flex>
             </>
@@ -211,14 +249,15 @@ const AIAssistant = () => {
                         <AnimatePresence>
                           <ChatMessage
                             message={message}
-                            // onRegenerateResponse={() => handleRegenerateResponse(message.id)}
-                            // onEditMessage={() => handleStartEditMessage(message)}
                           />
                         </AnimatePresence>
                       </div>
                     ))}
 
-                    {isThinking && (
+                    {/* Show streaming message content */}
+                    {renderStreamingMessage()}
+
+                    {isThinking && !streamingMessage && (
                       <Flex
                         justify="start"
                         style={{ margin: '16px 0 60px 0' }}
@@ -247,8 +286,8 @@ const AIAssistant = () => {
               >
                 <MessageInput
                   onSendMessage={handleSendMessage}
-                  isLoading={isThinking || isSendingMessage}
-                  disabled={!conversationId || isThinking || isSendingMessage}
+                  isLoading={isThinking}
+                  disabled={!conversationId || isThinking}
                 />
               </Flex>
             </Flex>
