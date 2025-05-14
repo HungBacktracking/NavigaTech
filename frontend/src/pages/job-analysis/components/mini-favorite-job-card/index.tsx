@@ -12,7 +12,7 @@ interface MiniFavoriteJobCardProps {
   isAnalyzing: boolean;
   handleAnalyze: () => void;
   handleToggleFavorite: (e: MouseEvent) => void;
-  handleViewDetail: (jobAnalysis: JobAnalytic) => void;
+  handleViewDetail: () => void;
 }
 
 const MiniFavoriteJobCard = ({ job, isAnalyzing, handleAnalyze, handleToggleFavorite, handleViewDetail }: MiniFavoriteJobCardProps) => {
@@ -44,9 +44,7 @@ const MiniFavoriteJobCard = ({ job, isAnalyzing, handleAnalyze, handleToggleFavo
             icon={<EyeOutlined />}
             onClick={(e: MouseEvent) => {
               e.stopPropagation();
-              if (job.job_analytics) {
-                handleViewDetail(job.job_analytics);
-              }
+              handleViewDetail();
             }}
             style={{ marginTop: 16 }}
           >
