@@ -58,7 +58,10 @@ export default function JobFindingPage() {
     queryKey: ['jobs', queryParams, isRecommendationMode],
     queryFn: () => {
       if (isRecommendationMode) {
-        return jobApi.getRecommendedJobs();
+        return jobApi.getRecommendedJobs({
+          page: queryParams.page,
+          page_size: queryParams.page_size
+        });
       } else {
         return jobApi.getJobs(queryParams);
       }
@@ -81,36 +84,25 @@ export default function JobFindingPage() {
   });
 
   const { mutate: toggleFavorite } = useMutation({
-    mutationFn: (jobId: string) => {
-      const job = isRecommendationMode
-        ? (jobsData as Job[])?.find(j => j.id === jobId)
-        : (jobsData as any)?.items?.find((j: Job) => j.id === jobId);
-      return jobApi.toggleFavorite(jobId, job?.is_favorite || false);
+    mutationFn: ({ jobId, isFavorite }: { jobId: string, isFavorite: boolean }) => {
+      return jobApi.toggleFavorite(jobId, isFavorite);
     },
     onSuccess: (data) => {
       const { id: jobId, is_favorite: isFavorite } = data;
 
-      if (isRecommendationMode) {
-        queryClient.setQueryData(["jobs", queryParams, isRecommendationMode], (oldData: Job[] | undefined) => {
-          if (!oldData) return oldData;
-          return oldData.map((job: Job) =>
-            job.id === jobId ? { ...job, is_favorite: isFavorite } : job
-          );
-        });
-      } else {
-        queryClient.setQueryData(["jobs", queryParams, isRecommendationMode], (oldData: any) => {
-          if (!oldData) return oldData;
-          return {
-            ...oldData,
-            items: oldData.items.map((job: Job) =>
-              job.id === jobId ? { ...job, is_favorite: isFavorite } : job
-            )
-          };
-        });
-      }
+      const updatedJobs = jobsData?.items.map((job: Job) => {
+        if (job.id === jobId) {
+          return { ...job, is_favorite: isFavorite };
+        }
+        return job;
+      });
+
+      queryClient.setQueryData(['jobs', queryParams, isRecommendationMode], {
+        ...jobsData,
+        items: updatedJobs,
+      });
 
       messageApi.success(`Job ${isFavorite ? 'added to' : 'removed from'} favorites`);
-      queryClient.invalidateQueries({ queryKey: ["favoriteJobs"] });
     },
     onError: () => {
       messageApi.error("Failed to update favorites. Please try again.");
@@ -139,14 +131,8 @@ export default function JobFindingPage() {
   });
 
   const selectedJob = useMemo(() => {
-    if (isRecommendationMode) {
-      if (!jobsData || !selectedJobId) return null;
-      return (jobsData as Job[]).find(job => job.id === selectedJobId) || null;
-    } else {
-      if (!(jobsData as any)?.items || !selectedJobId) return null;
-      return (jobsData as any).items.find((job: Job) => job.id === selectedJobId) || null;
-    }
-  }, [jobsData, selectedJobId, isRecommendationMode]);
+    return jobsData?.items?.find((job: Job) => job.id === selectedJobId) || null;
+  }, [jobsData, selectedJobId]);
 
   useMemo(() => {
     if (jobsData && !isRecommendationMode) {
@@ -165,31 +151,8 @@ export default function JobFindingPage() {
   }, []);
 
   useEffect(() => {
-    if (isRecommendationMode && Array.isArray(jobsData)) {
-      if (jobsData.length > 0 && !selectedJobId) {
-        setSelectedJobId(jobsData[0]?.id || null);
-      } else if (jobsData.length > 0 && selectedJobId) {
-        const stillExists = jobsData.some(job => job.id === selectedJobId);
-        if (!stillExists) {
-          setSelectedJobId(jobsData[0]?.id || null);
-        }
-      } else if (jobsData.length === 0) {
-        setSelectedJobId(null);
-      }
-    } else if (!isRecommendationMode && (jobsData as any)?.items) {
-      const items = (jobsData as any).items;
-      if (items.length > 0 && !selectedJobId) {
-        setSelectedJobId(items[0]?.id || null);
-      } else if (items.length > 0 && selectedJobId) {
-        const stillExists = items.some((job: Job) => job.id === selectedJobId);
-        if (!stillExists) {
-          setSelectedJobId(items[0]?.id || null);
-        }
-      } else if (items.length === 0) {
-        setSelectedJobId(null);
-      }
-    }
-  }, [jobsData, selectedJobId, isRecommendationMode]);
+      setSelectedJobId(jobsData?.items[0]?.id || null);
+  }, [jobsData]);
 
   const handlePageChange = (page: number) => {
     setQueryParams(prev => ({ ...prev, page }));
@@ -240,14 +203,6 @@ export default function JobFindingPage() {
   const handleViewJobAnalysis = (jobAnalysis: JobAnalytic) => {
     showJobAnalysis(jobAnalysis);
   }
-
-  const jobsToDisplay = useMemo(() => {
-    if (isRecommendationMode) {
-      return jobsData as Job[] || [];
-    } else {
-      return (jobsData as any)?.items || [];
-    }
-  }, [jobsData, isRecommendationMode]);
 
   return (
     <>
@@ -328,7 +283,7 @@ export default function JobFindingPage() {
         <AnimatePresence>
           {!isRecommendationMode && (
             <motion.div
-              style={{ 
+              style={{
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
@@ -401,8 +356,8 @@ export default function JobFindingPage() {
             {isJobsLoading
               ? <Skeleton.Node active style={{ width: 100, height: 16 }} />
               : isRecommendationMode
-                ? `${(jobsData as Job[])?.length || 0} personalized recommendations for you`
-                : `${(jobsData as any)?.total || 0} jobs found`}
+                ? `${jobsData?.items.length || 0} personalized recommendations for you`
+                : `${jobsData?.items.length || 0} jobs found`}
           </Typography.Text>
         </div>
       </Flex>
@@ -431,7 +386,7 @@ export default function JobFindingPage() {
                 animate={{ opacity: 1 }}
                 transition={{ staggerChildren: 0.1 }}
               >
-                {jobsToDisplay.map((job, index) => (
+                {jobsData?.items.map((job, index) => (
                   <motion.div
                     key={job.id}
                     initial={{ opacity: 0, y: 20 }}
@@ -443,7 +398,7 @@ export default function JobFindingPage() {
                       job={job}
                       handleToggleFavorite={(e: MouseEvent) => {
                         e.stopPropagation();
-                        toggleFavorite(job.id);
+                        toggleFavorite({ jobId: job.id, isFavorite: job.is_favorite });
                       }}
                       handleSelectJob={() => setSelectedJobId(job.id)}
                       handleJobAnalysisClick={handleAnalyzeJob}
@@ -456,7 +411,7 @@ export default function JobFindingPage() {
               </motion.div>
             )}
 
-            {!isJobsLoading && jobsToDisplay.length === 0 && (
+            {!isJobsLoading && jobsData?.items.length === 0 && (
               <div style={{ textAlign: 'center', padding: '0 0 24px 0', background: '#fff', borderRadius: 16 }}>
                 <Image
                   src={emptyStateSvg}
@@ -475,26 +430,24 @@ export default function JobFindingPage() {
               </div>
             )}
 
-            {/* Only show pagination in search mode */}
-            {!isRecommendationMode && (
-              <AnimatePresence>
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                >
-                  <Pagination
-                    align="center"
-                    current={isJobsLoading ? lastPaginationData.page : (jobsData as any)?.page}
-                    pageSize={isJobsLoading ? lastPaginationData.page_size : (jobsData as any)?.page_size}
-                    total={isJobsLoading ? lastPaginationData.total : (jobsData as any)?.total}
-                    onChange={handlePageChange}
-                    showSizeChanger={false}
-                    disabled={isJobsLoading}
-                  />
-                </motion.div>
-              </AnimatePresence>
-            )}
+            {/* Show pagination for both modes */}
+            <AnimatePresence>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+              >
+                <Pagination
+                  align="center"
+                  current={isRecommendationMode ? queryParams.page : lastPaginationData.page}
+                  pageSize={isRecommendationMode ? queryParams.page_size : lastPaginationData.page_size}
+                  total={isRecommendationMode ? jobsData?.items.length : lastPaginationData.total}
+                  onChange={handlePageChange}
+                  showSizeChanger={false}
+                  disabled={isJobsLoading}
+                />
+              </motion.div>
+            </AnimatePresence>
           </Space>
         </Col>
 
@@ -525,7 +478,7 @@ export default function JobFindingPage() {
               isFavorite={selectedJob.is_favorite || false}
               handleToggleFavorite={(e: MouseEvent) => {
                 e.stopPropagation();
-                toggleFavorite(selectedJob.id);
+                toggleFavorite({ jobId: selectedJob.id, isFavorite: selectedJob.is_favorite });
               }}
               handleJobAnalysisClick={handleAnalyzeJob}
               isAnalyzing={analyzingJobIds.includes(selectedJob.id)}

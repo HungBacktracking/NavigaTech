@@ -24,9 +24,14 @@ export const jobApi = {
     }
   },
 
-  getRecommendedJobs: async (): Promise<Job[]> => {
+  getRecommendedJobs: async (params: { page: number, page_size: number }): Promise<PageResponse<Job>> => {
     try {
-      const response = await api.get('/jobs/recommendations');
+      const response = await api.get('/jobs/recommendations', {
+        params: {
+          page: params.page,
+          page_size: params.page_size
+        }
+      });
       console.log("Recommended jobs response:", response.data);
       return response.data;
     } catch (error) {
