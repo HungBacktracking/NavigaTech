@@ -34,28 +34,6 @@ export const aiAssistantApi = {
     return response.data;
   },
 
-  // Send a new message
-  sendMessage: async (conversationId: string, content: string): Promise<{userMessage: ChatMessage, aiMessage: ChatMessage}> => {
-    const aiContent = await api.post(`/chat/sessions/${conversationId}/generate-response`, {
-      content,
-    });
-    
-    const userMessageResponse = await api.post(`/chat/sessions/${conversationId}/messages`, {
-      role: ChatRole.USER,
-      content,
-    });
-    
-    const aiMessageResponse = await api.post(`/chat/sessions/${conversationId}/messages`, {
-      role: ChatRole.ASSISTANT,
-      content: aiContent.data,
-    });
-      
-    return {
-      userMessage: userMessageResponse.data,
-      aiMessage: aiMessageResponse.data,
-    };
-  },
-
   // Stream a message from the AI assistant
   streamMessage: (conversationId: string, content: string): {
     stream: Promise<{fullResponse: string}>;
@@ -73,12 +51,6 @@ export const aiAssistantApi = {
       let fullResponse = '';
       
       try {
-        // Save the user message first
-        await api.post(`/chat/sessions/${conversationId}/messages`, {
-          role: ChatRole.USER,
-          content,
-        });
-        
         // Use actual fetch API for SSE since axios doesn't support it well
         const response = await fetch(`${api.defaults.baseURL}/chat/sessions/${conversationId}/generate-response`, {
           method: 'POST',
@@ -86,7 +58,10 @@ export const aiAssistantApi = {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${localStorage.getItem('token')}`
           },
-          body: JSON.stringify({ content }),
+          body: JSON.stringify({ 
+            content,
+            role: 'user'
+          }),
         });
         
         if (!response.ok || !response.body) {
@@ -126,11 +101,6 @@ export const aiAssistantApi = {
               return;
             } else if (eventType === 'done') {
               // Stream complete
-              await api.post(`/chat/sessions/${conversationId}/messages`, {
-                role: ChatRole.ASSISTANT,
-                content: fullResponse,
-              });
-              
               completeCallback(fullResponse);
               resolve({ fullResponse });
               return;
@@ -144,11 +114,6 @@ export const aiAssistantApi = {
         }
         
         // If we get here without a done event, ensure we still complete
-        await api.post(`/chat/sessions/${conversationId}/messages`, {
-          role: ChatRole.ASSISTANT,
-          content: fullResponse,
-        });
-        
         completeCallback(fullResponse);
         resolve({ fullResponse });
       } catch (error) {
