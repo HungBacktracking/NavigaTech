@@ -1,6 +1,8 @@
 import datetime
 from datetime import datetime, timezone
 from bson import ObjectId
+from bson.errors import InvalidId
+from app.exceptions.custom_error import CustomError
 
 
 class ChatbotRepository:
@@ -9,6 +11,22 @@ class ChatbotRepository:
         self.sessions = mongo_db["sessions"]
         self.messages = mongo_db["messages"]
 
+    async def find_session(self, session_id: str, user_id: str):
+        """
+        Find a session for the given session_id and user_id.
+        Returns the session if found, None otherwise.
+        """
+        try:
+            session = await self.sessions.find_one({
+                "_id": ObjectId(session_id),
+                "user_id": user_id
+            })
+            return session
+        except InvalidId:
+            return None
+        except Exception as e:
+            print(f"Error finding session: {str(e)}")
+            return None
 
     async def create_session(self, user_id: str, title: str):
         now = datetime.now(timezone.utc)

@@ -43,6 +43,12 @@ async def generate_response(
             
             async for chunk in service.generate_message_stream(session_id, data.content, str(current_user.id)):
                 if chunk:
+                    # Handle error messages with ERROR: prefix
+                    if chunk.startswith("ERROR:"):
+                        error_message = chunk[6:].strip()  # Remove the ERROR: prefix and trim whitespace
+                        yield f"event: error\ndata: {error_message}\n\n"
+                        return
+                        
                     if not isinstance(chunk, str):
                         chunk = str(chunk)
 

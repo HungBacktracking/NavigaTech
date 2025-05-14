@@ -13,6 +13,10 @@ from app.services.base_service import BaseService
 
 # Helper function to adapt different types of generators to async generator
 async def async_generator_adapter(generator):
+    """
+    Adapts any type of generator (sync or async) to be used with async for.
+    """
+    # If it's already an async generator
     if hasattr(generator, '__aiter__'):
         async for item in generator:
             yield item
@@ -70,16 +74,29 @@ class ChatbotService(BaseService):
     async def generate_message(self, session_id: str, message: str, user_id: str):
         self.verify_user(user_id)
 
+        session = await self.chatbot_repo.find_session(session_id, user_id)
+        if not session:
+                raise CustomError.NOT_FOUND.as_exception()
+
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
         history = await self.get_messages(user_id, session_id)
         history = [message.model_dump() for message in history]
+        await self.post_message(user_id, session_id, "user", message)
 
         self.chat_engine.compose(resume_text, history, session_id)
-        return self.chat_engine.chat(message)
+        response = self.chat_engine.chat(message)
+        await self.post_message(user_id, session_id, "assistant", response)
+        
+        return response
 
     async def generate_message_stream(self, session_id: str, message: str, user_id: str):
         self.verify_user(user_id)
+
+        session = await self.chatbot_repo.find_session(session_id, user_id)
+        if not session:
+            yield f"ERROR: Session not found or doesn't belong to the user"
+            return
 
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
@@ -102,7 +119,8 @@ class ChatbotService(BaseService):
                     yield chunk
         except Exception as e:
             print(f"Error in streaming: {str(e)}")
-            yield f"Error generating response: {str(e)}"
+            yield f"ERROR: {str(e)}"
+            return
 
         if full_response:
             await self.post_message(user_id, session_id, "assistant", full_response)
@@ -110,15 +128,11 @@ class ChatbotService(BaseService):
     async def post_message(self, user_id: str, session_id: str, role: str, content: str) -> MessageResponse:
         self.verify_user(user_id)
 
-        session = await self.chatbot_repo.sessions.find_one({
-            "_id": ObjectId(session_id)},
-            {"user_id": user_id
-        })
+        session = await self.chatbot_repo.find_session(session_id, user_id)
         if not session:
-            raise CustomError.NOT_FOUND.as_exception()
+                raise CustomError.NOT_FOUND.as_exception()
 
         mid, role, content, ts = await self.chatbot_repo.post_message(session_id, role, content)
-
 
         return MessageResponse(
             id=mid,
@@ -129,10 +143,8 @@ class ChatbotService(BaseService):
 
     async def get_messages(self, user_id: str, session_id: str) -> list[MessageResponse]:
         self.verify_user(user_id)
-        session = await self.chatbot_repo.sessions.find_one({
-            "_id": ObjectId(session_id),
-            "user_id": user_id
-        })
+
+        session = await self.chatbot_repo.find_session(session_id, user_id)
         if not session:
             raise CustomError.NOT_FOUND.as_exception()
 

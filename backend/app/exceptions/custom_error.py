@@ -5,6 +5,7 @@ from app.exceptions.errors.CustomClientException import ClientException
 
 
 class CustomError(Enum):
+    INVALID_VALUE = (status.HTTP_400_BAD_REQUEST, "17", "Invalid input value.")
     INTERNAL_SERVER_ERROR = (status.HTTP_500_INTERNAL_SERVER_ERROR, "100", "Internal server error")
     NOT_FOUND = (status.HTTP_404_NOT_FOUND, "10", "The resource could not be found")
     DUPLICATE_RESOURCE = (status.HTTP_409_CONFLICT, "11", "The resource already exists")
