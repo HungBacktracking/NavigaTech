@@ -53,20 +53,22 @@ class MultiPipelineChatbot:
             max_tokens=max_tokens,
             temperature=temperature,
         )
-        embedding_model = HuggingFaceEmbedding(
-            model_name='BAAI/bge-large-en-v1.5'
-        )
-        Settings.llm = self.llm
-        Settings.embed_model = embedding_model
+        # embedding_model = HuggingFaceEmbedding(
+        #     model_name='BAAI/bge-large-en-v1.5'
+        # )
 
         self.checker = AdvancedRuleBasedSmallTalkChecker()
 
-    def compose(self, resume, memory, token_limit, session_id, retrievers):
+    def compose(self, resume, memory, token_limit, session_id, retrievers, embedding_model):
+        Settings.llm = self.llm
+        Settings.embed_model = embedding_model
+
         self.build_prompt(resume=resume)
         self.build_memory(memory, token_limit, session_id)
         self.build_chat_engine(retrievers)
 
     def build_prompt(self, resume):
+        self.resume = resume
         self.rag_prompt = """
             You are an intelligent assistant specializing in job matching, job discovery, resume analysis, and career guidance. Your objective is to help users find relevant job opportunities and assess their fit based on job descriptions and their professional background.
 
@@ -122,9 +124,9 @@ class MultiPipelineChatbot:
         Answer "don't know" if not present in the document.
         """
 
-        self.smalltalk_prompt = f'You are a helpful assistant. and here is user resume: \n {self.resume}'
+        self.smalltalk_prompt = f'You are a helpful assistant. and here is user resume: \n {resume}'
 
-    def build_tool(retriever, tool_name, description):
+    def build_tool(self, retriever, tool_name, description):
         tool = RetrieverTool.from_defaults(
             retriever=retriever,
             name=tool_name,
@@ -133,9 +135,9 @@ class MultiPipelineChatbot:
         return tool
 
     def build_chat_engine(self, retrievers):
-        job_tool = self.build_tool(retrievers["job"], tool_name="job retriever tool",
+        job_tool = self.build_tool(retriever=retrievers["job"], tool_name="job retriever tool",
                                    description="Useful for retrieving job-related context")
-        course_tool = self.build_tool(retrievers["course"], tool_name="course retriever tool",
+        course_tool = self.build_tool(retriever=retrievers["course"], tool_name="course retriever tool",
                                       description="Useful for retrieving Handles course and learning path queries. context")
 
         main_retriever = RouterRetriever(
