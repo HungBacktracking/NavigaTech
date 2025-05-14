@@ -24,14 +24,9 @@ export const jobApi = {
     }
   },
 
-  getRecommendedJobs: async (params: { page: number, page_size: number }): Promise<PageResponse<Job>> => {
+  getRecommendedJobs: async (): Promise<Job[]> => {
     try {
-      const response = await api.get('/jobs/recommendations', {
-        params: {
-          page: params.page,
-          page_size: params.page_size
-        }
-      });
+      const response = await api.get('/jobs/recommendations');
       console.log("Recommended jobs response:", response.data);
       return response.data;
     } catch (error) {
@@ -110,6 +105,16 @@ export const jobApi = {
       "Manager",
       "Director",
       "Executive",
+      "Principal",
+      "Architect",
+      "VP",
+      "C-level",
+      "Fellow",
+      "Distinguished Engineer",
+      "Staff Engineer",
+      "Senior Staff Engineer",
+      "Technical Lead",
+      "Team Lead",
     ];
     
     return new Promise((resolve) => {
@@ -131,6 +136,20 @@ export const jobApi = {
       "Product Manager",
       "UX/UI Designer",
       "QA Engineer",
+      "Business Analyst",
+      "Project Manager",
+      "Technical Writer",
+      "System Administrator",
+      "Network Engineer",
+      "Cloud Engineer",
+      "Security Analyst",
+      "Database Administrator",
+      "Web Developer",
+      "Mobile Developer",
+      "Game Developer",
+      "Data Engineer",
+      "Data Analyst",
+      "Research Scientist",
     ];
     
     return new Promise((resolve) => {
