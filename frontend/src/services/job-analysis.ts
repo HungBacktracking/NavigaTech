@@ -1,3 +1,4 @@
+import { get } from "react-hook-form";
 import api from "../lib/clients/axios/api";
 import { JobAnalytic, JobAnalyticSearchRequest } from "../lib/types/job";
 import { PageResponse } from "../lib/types/pagination";
@@ -12,6 +13,17 @@ export const jobAnalysisApi = {
       return response.data;
     } catch (error) {
       console.error('Error fetching job analyses:', error);
+      throw error;
+    }
+  },
+
+  async getJobAnalysis(id: string): Promise<JobAnalytic> {
+    try {
+      const response = await api.get(`/job-analysis/${id}`);
+      console.log(`Job analysis response for ID ${id}:`, response.data);
+      return response.data;
+    } catch (error) {
+      console.error(`Error fetching job analysis with ID ${id}:`, error);
       throw error;
     }
   },

@@ -1,16 +1,14 @@
 import { Button, Card, Flex, Image, Space, Tag, Typography, Progress, Popconfirm, theme } from "antd";
 import {
   EnvironmentOutlined, ClockCircleOutlined, AuditOutlined,
-  BookOutlined, DeleteOutlined,
+  DeleteOutlined,
   CheckCircleFilled, CloseCircleFilled,
   DollarCircleOutlined,
-  EyeOutlined,
   ArrowsAltOutlined,
 } from "@ant-design/icons";
 import { JobAnalytic } from "../../../../lib/types/job";
 import { blue, green, red, yellow } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
-import AIButton from "../../../../components/ai-button";
 import { useMobile } from "../../../../hooks/use-mobile";
 import { MouseEvent } from "react";
 import { BoxArrowUpRight } from "react-bootstrap-icons";
@@ -21,7 +19,6 @@ interface JobAnalysisCardProps {
   jobAnalytic: JobAnalytic;
   isDeletingJobAnalytic: boolean;
   handleDeleteJobAnalytic: (jobId: string) => void;
-  // handleToggleCV: (jobId: string) => void;
   handleViewDetail: (jobId: string) => void;
 }
 
@@ -151,9 +148,9 @@ const JobAnalysisCard = ({
               percent={jobAnalytic.match_overall}
               size={100}
               strokeColor={getMatchScoreColor(jobAnalytic.match_overall)}
-              format={(percent) => (
+              format={() => (
                 <div style={{ fontSize: 24, color: getMatchScoreColor(jobAnalytic.match_overall) }}>
-                  {percent}%
+                  {jobAnalytic.match_overall * 100}%
                 </div>
               )}
             />
@@ -186,7 +183,7 @@ const JobAnalysisCard = ({
           wrap={isTablet ? "wrap" : "nowrap"}
           gap={isTablet ? "middle" : undefined}
         >
-          <Space>
+          {/* <Space>
             <Tag
               color={job.resume_url ? token.colorSuccessBg : token.colorErrorBg}
               style={{
@@ -221,7 +218,7 @@ const JobAnalysisCard = ({
                 View CV
               </Button>
             )}
-          </Space>
+          </Space> */}
           <Space>
             <Popconfirm
               title="Are you sure to delete this job analysis?"

@@ -65,14 +65,12 @@ class WebSocketService {
     try {
       this.socket = new WebSocket(wsUrl);
       
-      // Set connection timeout
       const connectionTimeout = setTimeout(() => {
         if (this.connectionStatus === 'connecting') {
           console.error('WebSocket connection timeout');
           this.socket?.close();
-          // Will trigger onclose event which handles reconnection
         }
-      }, 10000); // 10 second connection timeout
+      }, 10000);
       
       this.socket.onopen = () => {
         clearTimeout(connectionTimeout);
@@ -90,17 +88,14 @@ class WebSocketService {
           const data = JSON.parse(event.data);
           console.log('Received WebSocket message:', data);
           
-          // Handle connection confirmation message
           if (data.type === 'connection' && data.status === 'connected') {
             console.log('Received connection confirmation');
             return;
           }
           
-          // Handle heartbeat message
           if (data.type === 'heartbeat') {
             this.lastHeartbeatTime = Date.now();
             console.log('Received heartbeat from server');
-            // Send pong response
             if (this.socket && this.socket.readyState === WebSocket.OPEN) {
               try {
                 this.socket.send('pong');
@@ -111,15 +106,12 @@ class WebSocketService {
             return;
           }
           
-          // Process notification
           const notification = data as WebSocketNotification;
           
-          // Call the specific onMessage callback if provided
           if (this.callbacks.onMessage) {
             this.callbacks.onMessage(notification);
           }
           
-          // Call all listeners
           this.listeners.forEach(listener => {
             try {
               listener(notification);
@@ -210,7 +202,6 @@ class WebSocketService {
       if (timeSinceLastHeartbeat > 90000) {
         console.warn(`No heartbeat received in ${timeSinceLastHeartbeat}ms, forcing reconnect`);
         this.socket?.close();
-        // The onclose handler will handle reconnection
       }
     }, 10000); // Check every 10 seconds
   }

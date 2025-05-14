@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { message } from 'antd';
+import { notification } from 'antd';
 import { webSocketService } from '../services/websocket';
 
 interface NotificationHookProps {
   userId: string | null;
   token: string | null;
+  handleSuccess?: (notification: any) => void;
+  handleFailure?: (notification: any) => void;
 }
 
-export function useNotifications({ userId, token }: NotificationHookProps) {
+export function useSocketNotifications({ userId, token, handleSuccess, handleFailure }: NotificationHookProps) {
   const navigate = useNavigate();
-  const [messageApi, contextHolder] = message.useMessage();
+  const [notiApi, contextHolder] = notification.useNotification();
   const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected'>('disconnected');
   
   useEffect(() => {
@@ -41,22 +43,31 @@ export function useNotifications({ userId, token }: NotificationHookProps) {
     
     const removeListener = webSocketService.addListener((notification) => {
       if (notification.job_id && notification.status) {
-        const isCompleted = notification.status === 'COMPLETED';
-        const isFailed = notification.status === 'FAILED';
+        const isCompleted = notification.status === 'completed';
+        const isFailed = notification.status === 'failed';
         
         if (isCompleted) {
-          messageApi.success({
-            content: 'Job analysis completed successfully!',
-            duration: 8,
+          notiApi.success({
+            message: `Job analysis completed successfully!`,
+            description: `Your job analysis is ready. Click here to view the results.`,
             onClick: () => {
-              navigate(`/job-analysis/${notification.job_id}`);
+              handleSuccess && handleSuccess(notification);
             },
+            duration: 5,
+            showProgress: true,
+            pauseOnHover: true,
             key: `job-analysis-${notification.job_id}`
           });
         } else if (isFailed) {
-          messageApi.error({
-            content: `Job analysis failed: ${notification.error || 'Unknown error'}`,
-            duration: 8,
+          notiApi.error({
+            message: `Job analysis failed!`,
+            description: `There was an error processing your job analysis. Please try again.`,
+            onClick: () => {
+              handleFailure && handleFailure(notification);
+            },
+            duration: 5,
+            showProgress: true,
+            pauseOnHover: true,
             key: `job-analysis-${notification.job_id}`
           });
         }
@@ -68,9 +79,9 @@ export function useNotifications({ userId, token }: NotificationHookProps) {
       webSocketService.disconnect();
       abortController.abort();
     };
-  }, [userId, token, messageApi, navigate]);
+  }, [userId, token, notiApi, navigate]);
   
   return { contextHolder, connectionStatus };
 }
 
-export default useNotifications;
+export default useSocketNotifications;
