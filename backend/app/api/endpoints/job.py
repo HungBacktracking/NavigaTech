@@ -63,7 +63,6 @@ def add_favorite_job(
 
 @router.post("/{job_id}/delete-favorite", response_model=PageResponse[JobFavoriteResponse])
 @inject
-@inject
 def remove_favorite_job(
         job_id: UUID,
         service: JobService = Depends(Provide[ApplicationContainer.services.job_service]),
