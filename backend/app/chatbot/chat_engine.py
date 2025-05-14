@@ -86,14 +86,14 @@ class ChatEngine:
             - Analyze the user's query to determine whether they are seeking job recommendations, course suggestions, or roadmap guidance. 
 
             2. **Contextual Query Rephrasing:**   
-            - Use relevant job descriptions and resume content to rephrase or clarify the user’s query as a specific, standalone question. 
+            - Use relevant job descriptions and resume content to rephrase or clarify the user's query as a specific, standalone question. 
 
             3. **Job Recommendations:**   
             - If the query involves job recommendations, respond in **bullet points** with the following format: 
             ## Data Engineer 
 
             **Company Name:** Digital Intellect  
-            **Summary:** Role Overview: As a Data Engineer, you will collaborate closely with the client’s Data Lead to design, develop, and maintain data architectures that enhance their data platforms.... 
+            **Summary:** Role Overview: As a Data Engineer, you will collaborate closely with the client's Data Lead to design, develop, and maintain data architectures that enhance their data platforms.... 
             **URL:** https://www.vietnamworks.com/data-engineer--1906728-jv?source=searchResults&searchType=2&placement=1906728&sortBy=date 
 
             4. **Course Recommendations or Roadmaps:**   
@@ -218,6 +218,61 @@ class ChatEngine:
 
             # self.chat_store.persist(self.memory_path)
         return resp.response.replace("\n", "\n\n")
+        
+    async def stream_chat(self, user_input: str):
+        """
+        Streams the response from the chat engine.
+        Yields chunks of the response as they are generated.
+        """
+        if self.checker.is_small_talk(user_input):
+            response = self.smalltalk_engine.stream_chat(user_input)
+        else:
+            response = self.rag_engine.stream_chat(user_input)
+        
+        # Check if the response object has specific async generator attributes
+        if hasattr(response, 'aiter') or hasattr(response, '__aiter__'):
+            # Handle async generator
+            async for token in response:
+                if token:
+                    text = token.delta if hasattr(token, 'delta') else token
+                    if isinstance(text, str) and text:
+                        yield text
+        
+        # Handle specific LlamaIndex response objects
+        elif hasattr(response, 'response_gen'):
+            # Check if response_gen is an async generator
+            response_gen = response.response_gen
+            if hasattr(response_gen, 'aiter') or hasattr(response_gen, '__aiter__'):
+                # It's an async generator
+                async for token in response_gen:
+                    if token and isinstance(token, str):
+                        yield token
+            else:
+                # It's a regular generator
+                for token in response_gen:
+                    if token and isinstance(token, str):
+                        yield token
+        
+        # Handle content_generator (sync or async)
+        elif hasattr(response, 'content_generator'):
+            content_gen = response.content_generator
+            # Check if content_generator is an async generator
+            if hasattr(content_gen, 'aiter') or hasattr(content_gen, '__aiter__'):
+                async for token in content_gen:
+                    if token and isinstance(token, str):
+                        yield token
+            else:
+                # Regular generator
+                for token in content_gen:
+                    if token and isinstance(token, str):
+                        yield token
+        
+        # Fallback - handle the whole response at once
+        elif hasattr(response, 'response'):
+            yield response.response
+        else:
+            # Final fallback - try to get a string representation
+            yield str(response)
 
     def persist_memory(self):
         """

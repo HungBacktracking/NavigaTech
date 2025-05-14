@@ -11,6 +11,25 @@ from app.services import UserService
 from app.services.base_service import BaseService
 
 
+# Helper function to adapt different types of generators to async generator
+async def async_generator_adapter(generator):
+    """
+    Adapts any type of generator (sync or async) to be used with async for.
+    """
+    # If it's already an async generator
+    if hasattr(generator, '__aiter__'):
+        async for item in generator:
+            yield item
+    else:
+        # If it's a regular generator or iterable
+        try:
+            for item in generator:
+                yield item
+        except TypeError:
+            # If it's not iterable at all, yield it as a single item
+            yield generator
+
+
 class ChatbotService(BaseService):
     def __init__(
         self,
@@ -62,6 +81,35 @@ class ChatbotService(BaseService):
 
         self.chat_engine.compose(resume_text, history, session_id)
         return self.chat_engine.chat(message)
+
+    async def generate_message_stream(self, session_id: str, message: str, user_id: str):
+        self.verify_user(user_id)
+
+        user_detail = self.user_service.get_detail_by_id(user_id)
+        resume_text = self.resume_converter.process(user_detail.model_dump())
+        history = await self.get_messages(user_id, session_id)
+        history = [message.model_dump() for message in history]
+
+        self.chat_engine.compose(resume_text, history, session_id)
+
+        await self.post_message(user_id, session_id, "user", message)
+
+        full_response = ""
+        try:
+            generator = self.chat_engine.stream_chat(message)
+            if hasattr(generator, '__await__'):
+                generator = await generator
+
+            async for chunk in async_generator_adapter(generator):
+                if chunk:
+                    full_response += chunk
+                    yield chunk
+        except Exception as e:
+            print(f"Error in streaming: {str(e)}")
+            yield f"Error generating response: {str(e)}"
+
+        if full_response:
+            await self.post_message(user_id, session_id, "assistant", full_response)
 
     async def post_message(self, user_id: str, session_id: str, role: str, content: str) -> MessageResponse:
         self.verify_user(user_id)

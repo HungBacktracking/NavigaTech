@@ -37,17 +37,33 @@ async def generate_response(
     service: ChatbotService = Depends(Provide[ApplicationContainer.services.chatbot_service]),
     current_user: UserBasicResponse = Depends(get_current_user)
 ):
-    return await service.generate_message(session_id, data.content, str(current_user.id))
+    async def response_generator():
+        try:
+            yield "event: start\ndata: \n\n"
+            
+            async for chunk in service.generate_message_stream(session_id, data.content, str(current_user.id)):
+                if chunk:
+                    if not isinstance(chunk, str):
+                        chunk = str(chunk)
 
-@router.post("/sessions/{session_id}/messages", response_model=MessageResponse)
-@inject
-async def post_message(
-    session_id: str,
-    data: MessageCreate,
-    service: ChatbotService = Depends(Provide[ApplicationContainer.services.chatbot_service]),
-    current_user: UserBasicResponse = Depends(get_current_user)
-):
-    return await service.post_message(str(current_user.id), session_id, data.role, data.content)
+                    formatted_chunk = chunk.replace("\n", "\\n")
+                    yield f"event: message\ndata: {formatted_chunk}\n\n"
+
+            yield "event: done\ndata: \n\n"
+            
+        except Exception as e:
+            error_message = str(e)
+            yield f"event: error\ndata: {error_message}\n\n"
+            
+    return StreamingResponse(
+        response_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"  # Disable buffering in Nginx
+        }
+    )
 
 @router.get("/sessions/{session_id}/messages", response_model=list[MessageResponse])
 @inject
