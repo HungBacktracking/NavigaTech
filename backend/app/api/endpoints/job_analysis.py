@@ -1,13 +1,13 @@
 from uuid import UUID
 
 from dependency_injector.wiring import Provide
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Query
 
 from app.core.containers.application_container import ApplicationContainer
 from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
-from app.schema.job_analytic_schema import JobAnalyticResponse
+from app.schema.base_schema import PageResponse
 from app.schema.job_schema import JobFavoriteResponse
 from app.schema.user_schema import UserBasicResponse
 from app.services.job_analytic_service import JobAnalyticService
@@ -17,6 +17,22 @@ from app.services.kafka_service import KafkaService
 
 router = APIRouter(prefix="/job-analysis", tags=["Job Analysis"], dependencies=[Depends(JWTBearer())])
 
+
+@router.get("", response_model=PageResponse[JobFavoriteResponse])
+@inject
+def get_job_analysis_list(
+        page: int = Query(1, ge=1, description="Page number"),
+        page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+        search: str = Query(None, description="Search term to filter by job name or company"),
+        job_analytic_service: JobAnalyticService = Depends(Provide[ApplicationContainer.services.job_analytic_service]),
+        current_user: UserBasicResponse = Depends(get_current_user)
+):
+    return job_analytic_service.get_user_job_analytics(
+        user_id=current_user.id,
+        page=page,
+        page_size=page_size,
+        search=search
+    )
 
 
 @router.post("/{job_id}")

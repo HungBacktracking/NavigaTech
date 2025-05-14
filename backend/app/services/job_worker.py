@@ -203,13 +203,13 @@ class JobWorker:
             # Invalidate specific analysis caches
             redis_client.flush_by_pattern(f"job_analysis:{job_id_str}:{user_id_str}")
             redis_client.flush_by_pattern(f"job_score:{job_id_str}:{user_id_str}")
-            
+
             # Invalidate search results that might contain this job
             redis_client.flush_by_pattern(f"job_search:*:{user_id_str}")
-            
+
             # Invalidate user favorites that contain analysis results
             redis_client.flush_by_pattern(f"user_favorites:{user_id_str}:*")
-            
+
             # Invalidate recommendations if they might include this job
             redis_client.flush_by_pattern(f"job_recommendations:{user_id_str}:*")
 

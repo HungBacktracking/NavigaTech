@@ -16,25 +16,24 @@ def to_favorite_job_response(
         if analytic
         else None
     )
-
+    
     return JobFavoriteResponse(
         id=job.id,
-        job_url=job.job_url,
-        logo_url=job.logo_url,
-        job_name=job.job_name,
-        from_site=job.from_site,
-        company_name=job.company_name,
+        job_url=job.job_url or "",
+        logo_url=job.logo_url or "",
+        job_name=job.job_name or "",
+        from_site=job.from_site or "",
+        company_name=job.company_name or "",
         company_type=job.company_type,
         company_address=job.company_address,
         company_description=job.company_description,
         job_type=job.job_type,
-        skills=job.skills,
+        skills=job.skills or "",
         location=job.location,
         date_posted=job.date_posted,
         salary=job.salary,
-        job_description=job.job_description,
-        is_analyze=fav.is_analyze,
-        is_favorite=fav.is_favorite,
-
+        job_description=job.job_description or "",
+        is_analyze=fav.is_analyze if fav else False,
+        is_favorite=fav.is_favorite if fav else False,
         job_analytics=analytic_resp,
     )
