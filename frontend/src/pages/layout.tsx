@@ -7,6 +7,7 @@ import useSocketNotifications from '../hooks/use-notification';
 import { useAuth } from '../contexts/auth/auth-context';
 import { useJobAnalysis } from '../contexts/job-analysis/job-analysis-context';
 import { JobAnalysisProvider } from '../contexts/job-analysis/job-analysis-provider';
+import queryClient from '../lib/clients/query-client';
 
 const { Content, Footer } = Layout;
 
@@ -18,13 +19,20 @@ const SocketNotificationHandler = () => {
     userId: user?.id || null,
     token: localStorage.getItem('token'),
     handleSuccess: (notification) => {
-      if (notification.taskId && notification.result) {
+      if (notification.task_id && notification.result) {
         showJobAnalysis(notification.result);
+
+        queryClient.invalidateQueries({
+          predicate: (query) => {
+            const queryKey = query.queryKey;
+            return Array.isArray(queryKey) &&
+              (queryKey[0] === 'jobs' || queryKey[0] === 'favoriteJobs');
+          },
+        });
       }
     },
     handleFailure: (notification) => {
       console.log('Failure notification:', notification);
-      // You can show a different modal or handle failures differently if needed
     }
   });
 

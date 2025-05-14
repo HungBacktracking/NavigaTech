@@ -110,19 +110,7 @@ const JobAnalysisPage = () => {
   const { mutate: toggleFavorite } = useMutation({
     mutationFn: ({ id, is_favorite }: { id: string, is_favorite: boolean }) => jobApi.toggleFavorite(id, is_favorite),
     onSuccess: ({ id, is_favorite }: { id: string, is_favorite: boolean }) => {
-      queryClient.setQueryData(['favoriteJobs', favoriteQueryParams], (oldData: any) => {
-        if (oldData) {
-          const updatedItems = oldData.items.map((job: any) => {
-            if (job.id === id) {
-              return { ...job, is_favorite };
-            }
-            return job;
-          });
-          return { ...oldData, items: updatedItems };
-        }
-        return oldData;
-      });
-      queryClient.invalidateQueries({ queryKey: ['favoriteJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['favoriteJobs', favoriteQueryParams] });
       messageApi.success(`Job ${is_favorite ? 'added to' : 'removed from'} favorites`);
     },
     onError: () => {
@@ -230,8 +218,7 @@ const JobAnalysisPage = () => {
                     {favoriteJobs.items.map(job => (
                       <MiniFavoriteJobCard
                         key={job.id}
-                        jobName={job.job_name}
-                        companyName={job.company_name}
+                        job={job}
                         isAnalyzing={analyzingJobIds.includes(job.id)}
                         handleAnalyze={() => {
                           createAnalysis(job.id);
@@ -240,8 +227,11 @@ const JobAnalysisPage = () => {
                           e.stopPropagation();
                           toggleFavorite({
                             id: job.id,
-                            is_favorite: !job.is_favorite,
+                            is_favorite: job.is_favorite,
                           });
+                        }}
+                        handleViewDetail={(jobAnalysis: JobAnalytic) => {
+                          showJobAnalysis(jobAnalysis);
                         }}
                       />
                     ))}

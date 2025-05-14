@@ -51,7 +51,9 @@ export function useSocketNotifications({ userId, token, handleSuccess, handleFai
             message: `Job analysis completed successfully!`,
             description: `Your job analysis is ready. Click here to view the results.`,
             onClick: () => {
-              handleSuccess && handleSuccess(notification);
+              if (handleSuccess) {
+                handleSuccess(notification);
+              }
             },
             duration: 5,
             showProgress: true,
@@ -67,7 +69,7 @@ export function useSocketNotifications({ userId, token, handleSuccess, handleFai
             },
             duration: 5,
             showProgress: true,
-            pauseOnHover: true,
+            // pauseOnHover: true,
             key: `job-analysis-${notification.job_id}`
           });
         }
