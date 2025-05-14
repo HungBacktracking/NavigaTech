@@ -20,6 +20,9 @@ const AppRouter = () => {
       </Route>
 
       <Route path="/" element={<AuthGuard />}>
+        <Route path="/" element={<AuthLayout  />}>
+          <Route path="upload-cv" element={<UploadCVPage />} />
+        </Route>
         <Route element={<MainLayout />}>
           <Route index element={<Navigate to="/home" replace />} />
           <Route path="home" element={<JobFinderPage />} />
@@ -29,7 +32,6 @@ const AppRouter = () => {
             <Route path=":conversationId" element={<AIAssistantPage />} />
           </Route>
           <Route path="my-profile" element={<MyProfilePage />} />
-          <Route path="upload-cv" element={<UploadCVPage />} />
         </Route>
       </Route>
 
