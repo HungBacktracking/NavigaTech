@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+import logging
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
@@ -11,12 +12,33 @@ from app.exceptions.exception_handlers import register_exception_handlers
 from app.util.class_object import singleton
 
 
+# Configure logging
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("app.log")
+    ]
+)
+
+# Set specific module log levels
+logging.getLogger("app.services.kafka_service").setLevel(logging.DEBUG)
+logging.getLogger("app.api.endpoints.ws").setLevel(logging.DEBUG)
+logging.getLogger("app.services.job_worker").setLevel(logging.DEBUG)
+
+# Suppress verbose logs from other libraries
+logging.getLogger("kafka").setLevel(logging.WARNING)
+logging.getLogger("urllib3").setLevel(logging.WARNING)
+
+
 @singleton
 class AppCreator:
     def __init__(self):
         @asynccontextmanager
         async def lifespan(app: FastAPI):
             # Startup
+            logging.info("Starting application...")
             self.container.init_resources()
             # self.db.create_database()
             await self.mongo.init_mongo()
@@ -24,15 +46,18 @@ class AppCreator:
             # Initialize and start the job worker
             job_worker = self.container.services.job_worker()
             job_worker.start()
+            logging.info("Job worker started")
             
             yield
             
             # Shutdown
+            logging.info("Shutting down application...")
             # Stop the job worker before shutting down
             if hasattr(self, 'job_worker'):
                 job_worker.stop()
                 
             self.container.shutdown_resources()
+            logging.info("Application shutdown complete")
 
         # set app default
         self.app = FastAPI(

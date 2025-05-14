@@ -2,45 +2,68 @@ import json
 import logging
 import threading
 import time
-from typing import Any, Dict, Optional, Callable
+from typing import Any, Dict, Optional, Callable, List
 from uuid import UUID
 import asyncio
+from threading import Lock
+import collections
 
 from kafka import KafkaProducer, KafkaConsumer
 from kafka.errors import KafkaError, NoBrokersAvailable
 from fastapi import WebSocket
+from starlette.websockets import WebSocketState
 
 class KafkaService:
     def __init__(self, bootstrap_servers=None):
         self.bootstrap_servers = bootstrap_servers or 'kafka:9092'  # Default to container hostname instead of localhost
         self.producer = None
         self.active_connections: Dict[str, WebSocket] = {}
+        self.connections_lock = Lock()  # Add lock for thread safety
         self._logger = logging.getLogger(__name__)
         self._notification_consumer_thread = None
         self._notification_consumer_running = False
         self._consumers = {}  # Store consumer threads
+        # Add notification buffer for offline users
+        self.notification_buffer: Dict[str, collections.deque] = {}
+        self.notification_buffer_lock = Lock()
+        self.max_buffer_size = 50  # Store up to 50 notifications per user
         self._init_producer()
         
     def _init_producer(self):
-        try:
-            def json_serializer(obj):
-                if isinstance(obj, UUID):
-                    return str(obj)
-                raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
-                
-            self.producer = KafkaProducer(
-                bootstrap_servers=self.bootstrap_servers,
-                value_serializer=lambda v: json.dumps(v, default=json_serializer).encode('utf-8'),
-                request_timeout_ms=10000,  # Increase timeout for better reliability
-                retry_backoff_ms=500
-            )
-            self._logger.info(f"Kafka producer initialized successfully to {self.bootstrap_servers}")
-        except NoBrokersAvailable:
-            self._logger.warning(f"Kafka brokers not available at {self.bootstrap_servers}, will retry later")
-            self.producer = None
-        except Exception as e:
-            self._logger.error(f"Error initializing Kafka producer: {str(e)}")
-            self.producer = None
+        retry_interval = 5
+        max_retry_interval = 60
+        max_retries = 5
+        retries = 0
+        
+        while retries < max_retries:
+            try:
+                def json_serializer(obj):
+                    if isinstance(obj, UUID):
+                        return str(obj)
+                    raise TypeError(f"Object of type {type(obj)} is not JSON serializable")
+                    
+                self.producer = KafkaProducer(
+                    bootstrap_servers=self.bootstrap_servers,
+                    value_serializer=lambda v: json.dumps(v, default=json_serializer).encode('utf-8'),
+                    request_timeout_ms=10000,  # Increase timeout for better reliability
+                    retry_backoff_ms=500,
+                    acks='all'  # Ensure messages are durably stored
+                )
+                self._logger.info(f"Kafka producer initialized successfully to {self.bootstrap_servers}")
+                return
+            except NoBrokersAvailable:
+                self._logger.warning(f"Kafka brokers not available at {self.bootstrap_servers}, retry {retries+1}/{max_retries}")
+                retries += 1
+                time.sleep(retry_interval)
+                retry_interval = min(retry_interval * 2, max_retry_interval)
+            except Exception as e:
+                self._logger.error(f"Error initializing Kafka producer: {str(e)}")
+                retries += 1
+                time.sleep(retry_interval)
+                retry_interval = min(retry_interval * 2, max_retry_interval)
+        
+        self._logger.error(f"Failed to initialize Kafka producer after {max_retries} attempts")
+        self.producer = None
 
     def _ensure_producer(self):
         if self.producer is None:
@@ -55,6 +78,7 @@ class KafkaService:
         try:
             future = self.producer.send(topic, message)
             future.get(timeout=10)  # Wait for message to be sent
+            self.producer.flush(timeout=5)  # Ensure message is sent
             return {"status": "success", "message": f"Message sent to {topic}"}
         except KafkaError as e:
             self._logger.error(f"Kafka error sending message: {str(e)}")
@@ -66,47 +90,104 @@ class KafkaService:
     async def register_connection(self, user_id: str, websocket: WebSocket):
         """Register a WebSocket connection for a user"""
         await websocket.accept()
-        self.active_connections[user_id] = websocket
+        
+        with self.connections_lock:
+            self.active_connections[user_id] = websocket
+        
         self._logger.info(f"WebSocket connection registered for user {user_id}")
+        
+        # Deliver any buffered notifications
+        await self._deliver_buffered_notifications(user_id)
         
         # Start the notification consumer if not already running
         self.start_notification_consumer()
 
+    async def _deliver_buffered_notifications(self, user_id: str):
+        """Deliver any buffered notifications to the newly connected user"""
+        with self.notification_buffer_lock:
+            if user_id not in self.notification_buffer or not self.notification_buffer[user_id]:
+                return  # No notifications to deliver
+                
+            buffer = self.notification_buffer[user_id]
+            self._logger.info(f"Delivering {len(buffer)} buffered notifications to user {user_id}")
+            
+            # Get websocket
+            websocket = None
+            with self.connections_lock:
+                if user_id in self.active_connections:
+                    websocket = self.active_connections[user_id]
+            
+            if not websocket:
+                self._logger.warning(f"Cannot deliver buffered notifications: no active connection for user {user_id}")
+                return
+                
+            # Send all buffered notifications
+            while buffer:
+                try:
+                    notification = buffer.popleft()
+                    await websocket.send_json(notification)
+                    self._logger.info(f"Delivered buffered notification to user {user_id}")
+                    # Short delay to avoid overwhelming the client
+                    await asyncio.sleep(0.1)
+                except Exception as e:
+                    self._logger.error(f"Error delivering buffered notification to user {user_id}: {str(e)}")
+                    # Stop delivery if there's an error
+                    break
+
+    def _buffer_notification(self, user_id: str, notification: Dict[str, Any]):
+        """Buffer a notification for a user who is currently offline"""
+        with self.notification_buffer_lock:
+            if user_id not in self.notification_buffer:
+                self.notification_buffer[user_id] = collections.deque(maxlen=self.max_buffer_size)
+                
+            self.notification_buffer[user_id].append(notification)
+            self._logger.info(f"Buffered notification for offline user {user_id}, buffer size: {len(self.notification_buffer[user_id])}")
+
     def remove_connection(self, user_id: str):
         """Remove a WebSocket connection for a user"""
-        if user_id in self.active_connections:
-            del self.active_connections[user_id]
-            self._logger.info(f"WebSocket connection removed for user {user_id}")
+        with self.connections_lock:
+            if user_id in self.active_connections:
+                del self.active_connections[user_id]
+                self._logger.info(f"WebSocket connection removed for user {user_id}")
 
     async def send_notification(self, user_id: str, notification: Dict[str, Any]):
         """Send a notification to a user through WebSocket"""
-        if user_id in self.active_connections:
-            try:
+        websocket = None
+        
+        with self.connections_lock:
+            if user_id in self.active_connections:
                 websocket = self.active_connections[user_id]
-
-                if websocket.client_state.DISCONNECTED:
-                    self._logger.warning(f"WebSocket for user {user_id} is disconnected, removing connection")
-                    self.remove_connection(user_id)
-                    return False
-
-                await websocket.send_json(notification)
-                self._logger.info(f"Notification sent to user {user_id} via WebSocket")
-                return True
-            except RuntimeError as e:
-                if "websocket operation outside of a connection" in str(e).lower():
-                    self._logger.warning(f"WebSocket for user {user_id} is no longer connected, removing connection")
-                    self.remove_connection(user_id)
-                else:
-                    self._logger.error(f"Runtime error sending notification to user {user_id}: {str(e)}")
-                return False
-            except Exception as e:
-                self._logger.error(f"Error sending notification to user {user_id}: {str(e)}")
+        
+        if websocket is None:
+            self._logger.warning(f"No active WebSocket connection for user {user_id}, buffering notification")
+            self._buffer_notification(user_id, notification)
+            return False
+            
+        try:
+            # Check WebSocket state properly
+            if websocket.client_state == WebSocketState.DISCONNECTED:
+                self._logger.warning(f"WebSocket for user {user_id} is disconnected, buffering notification and removing connection")
+                self._buffer_notification(user_id, notification)
                 self.remove_connection(user_id)
-
                 return False
-        else:
-            self._logger.warning(f"No active WebSocket connection for user {user_id}")
-        return False
+
+            await websocket.send_json(notification)
+            self._logger.info(f"Notification sent to user {user_id} via WebSocket")
+            return True
+        except RuntimeError as e:
+            if "websocket operation outside of a connection" in str(e).lower():
+                self._logger.warning(f"WebSocket for user {user_id} is no longer connected, buffering notification and removing connection")
+                self._buffer_notification(user_id, notification)
+                self.remove_connection(user_id)
+            else:
+                self._logger.error(f"Runtime error sending notification to user {user_id}: {str(e)}")
+                self._buffer_notification(user_id, notification)
+            return False
+        except Exception as e:
+            self._logger.error(f"Error sending notification to user {user_id}: {str(e)}")
+            self._buffer_notification(user_id, notification)
+            self.remove_connection(user_id)
+            return False
 
     def start_consumer(self, topic: str, group_id: str, callback: Callable):
         consumer_key = f"{topic}:{group_id}"
@@ -138,7 +219,9 @@ class KafkaService:
                     bootstrap_servers=self.bootstrap_servers,
                     group_id=group_id,
                     auto_offset_reset='earliest',
-                    value_deserializer=lambda m: json.loads(m.decode('utf-8'))
+                    value_deserializer=lambda m: json.loads(m.decode('utf-8')),
+                    session_timeout_ms=30000,  # Increased session timeout for better stability
+                    heartbeat_interval_ms=10000
                 )
                 
                 self._logger.info(f"Kafka consumer connected to topic {topic}")
@@ -209,7 +292,7 @@ class KafkaService:
                     if result:
                         self._logger.info(f"Successfully sent notification to user {user_id}")
                     else:
-                        self._logger.warning(f"Failed to send notification to user {user_id}, no active connection")
+                        self._logger.warning(f"Failed to send notification to user {user_id}, notification buffered")
                 finally:
                     loop.close()
                     

@@ -86,6 +86,15 @@ class JobWorker:
                 self.job_task_service.update_task_status(task.id, TaskStatus.PROCESSING)
                 self._logger.info(f"Task {task_id} status updated to PROCESSING")
                 
+                # Send processing notification
+                processing_notification = {
+                    "task_id": str(task.id),
+                    "job_id": str(job_id),
+                    "status": TaskStatus.PROCESSING.value,
+                    "message": "Job analysis is processing"
+                }
+                self._send_notification(user_id, processing_notification)
+                
                 result = None
                 error = None
                 
@@ -99,6 +108,16 @@ class JobWorker:
                         # Run scoring and analysis in sequence
                         score_result = self.job_service.score_job(job_id, user_id)
                         self._logger.info(f"Job scoring completed for job {job_id}")
+
+                        # Send progress notification after scoring
+                        progress_notification = {
+                            "task_id": str(task.id),
+                            "job_id": str(job_id),
+                            "status": "PROGRESS",
+                            "progress": 50,
+                            "message": "Job scoring completed, analyzing job details"
+                        }
+                        self._send_notification(user_id, progress_notification)
 
                         analysis_result = self.job_service.analyze_job(job_id, user_id)
                         self._logger.info(f"Job analysis completed for job {job_id}")
@@ -133,20 +152,15 @@ class JobWorker:
                 
                 # Send notification to user
                 notification = {
-                    "task_id": task.id,
-                    "job_id": job_id,
+                    "task_id": str(task.id),
+                    "job_id": str(job_id),
                     "status": TaskStatus.COMPLETED.value if not error else TaskStatus.FAILED.value,
                     "result": result,
                     "error": error
                 }
                 
                 # Use a separate thread to avoid blocking
-                notification_thread = threading.Thread(
-                    target=self._send_notification,
-                    args=(user_id, notification),
-                    daemon=True
-                )
-                notification_thread.start()
+                self._send_notification(user_id, notification)
                 
             except Exception as e:
                 stack_trace = traceback.format_exc()
@@ -175,18 +189,37 @@ class JobWorker:
         """Send notification to user via Kafka"""
         try:
             self._logger.info(f"Sending notification to user {user_id} via Kafka")
-            result = self.kafka_service.send_message(
-                "user_notifications",
-                {
-                    "user_id": user_id,
-                    "notification": notification
-                }
-            )
             
-            if result.get("status") == "error":
-                self._logger.error(f"Failed to send notification: {result.get('message')}")
-            else:
-                self._logger.info(f"Successfully queued notification for user {user_id}")
+            # Ensure notification has proper formatting
+            if isinstance(notification.get("task_id"), UUID):
+                notification["task_id"] = str(notification["task_id"])
+            
+            if isinstance(notification.get("job_id"), UUID):
+                notification["job_id"] = str(notification["job_id"])
+                
+            # Retry logic for sending notifications
+            max_retries = 3
+            retry_delay = 1  # Initial delay in seconds
+            
+            for attempt in range(max_retries):
+                result = self.kafka_service.send_message(
+                    "user_notifications",
+                    {
+                        "user_id": user_id,
+                        "notification": notification
+                    }
+                )
+                
+                if result.get("status") == "success":
+                    self._logger.info(f"Successfully queued notification for user {user_id}")
+                    return
+                    
+                self._logger.warning(f"Failed to send notification (attempt {attempt+1}/{max_retries}): {result.get('message')}")
+                if attempt < max_retries - 1:
+                    time.sleep(retry_delay)
+                    retry_delay *= 2  # Exponential backoff
+            
+            self._logger.error(f"Failed to send notification after {max_retries} attempts")
                 
         except Exception as e:
             stack_trace = traceback.format_exc()
