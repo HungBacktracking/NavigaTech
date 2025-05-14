@@ -17,13 +17,13 @@ class ChatbotService(BaseService):
         user_repository: UserRepository,
         chatbot_repository: ChatbotRepository,
         user_service: UserService,
-        # chat_engine: ChatEngine
+        chat_engine: ChatEngine
     ):
         self.chatbot_repo = chatbot_repository
         self.user_repo = user_repository
         self.user_service = user_service
         self.resume_converter = ResumeConverter(data={})
-        # self.chat_engine = chat_engine
+        self.chat_engine = chat_engine
         super().__init__(user_repository)
 
     def verify_user(self, user_id: str):
@@ -58,12 +58,10 @@ class ChatbotService(BaseService):
         user_detail = self.user_service.get_detail_by_id(user_id)
         resume_text = self.resume_converter.process(user_detail.model_dump())
         history = await self.get_messages(user_id, session_id)
-
         history = [message.model_dump() for message in history]
 
-        chat_engine = ChatEngine(session_id=session_id, resume=resume_text, memory=history)
-
-        return chat_engine.chat(message)
+        self.chat_engine.compose(resume_text, history, session_id)
+        return self.chat_engine.chat(message)
 
     async def post_message(self, user_id: str, session_id: str, role: str, content: str) -> MessageResponse:
         self.verify_user(user_id)

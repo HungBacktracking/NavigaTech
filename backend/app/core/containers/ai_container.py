@@ -3,6 +3,7 @@ from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 from llama_index.postprocessor.cohere_rerank import CohereRerank
 import google.generativeai as genai
 from llama_index.llms.huggingface_api import HuggingFaceInferenceAPI
+from llama_index.llms.gemini import Gemini
 
 
 
@@ -20,6 +21,14 @@ class AIContainer(containers.DeclarativeContainer):
         create_llm_model,
         api_key=config.GEMINI_TOKEN,
         model_name=config.GEMINI_MODEL_NAME,
+    )
+
+    llm_gemini = providers.Singleton(
+        Gemini,
+        model_name='models/gemini-2.0-flash',
+        api_key=config.GEMINI_TOKEN,
+        max_tokens=config.MAX_TOKENS,
+        temperature=config.TEMPERATURE
     )
 
     llm_huggingface = providers.Singleton(

@@ -30,7 +30,7 @@ s3 = boto3.client(
     region_name=aws_region
 )
 
-response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250511.json')
+response = s3.get_object(Bucket=bucket_name, Key='clean2/final_20250513.json')
 jobs = json.loads(response['Body'].read())
 
 # database
@@ -78,6 +78,7 @@ with engine.connect() as conn:
         logo_url = job.get("company_logo") or ""
         job_name = job.get("title") or "N/A"
         company_name = job.get("company") or "N/A"
+
 
         # Xác định from_site từ job_url
         from_site = None

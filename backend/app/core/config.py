@@ -76,11 +76,13 @@ class Configs(BaseSettings):
     REDIS_PORT: str = os.getenv("REDIS_PORT", "6379")
     REDIS_PASSWORD: str = os.getenv("REDIS_PASSWORD", "")
     REDIS_DB: int = int(os.getenv("REDIS_DB", "0"))
-    REDIS_DEFAULT_TIMEOUT: int = int(os.getenv("REDIS_DEFAULT_TIMEOUT", "3600"))
+    REDIS_DEFAULT_TIMEOUT: int = int(os.getenv("REDIS_DEFAULT_TIMEOUT", 3600))
 
     QDRANT_URL: str = os.getenv("QDRANT_URL")
     QDRANT_API_TOKEN: str = os.getenv("QDRANT_API_TOKEN")
-    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "job_description")
+    QDRANT_COLLECTION_NAME: str = os.getenv("QDRANT_COLLECTION_NAME", "job_description_2")
+
+    COURSE_DB: str = os.getenv("COURSE_DB", "app/courses_db")
 
     ELASTICSEARCH_URL: str = os.getenv("ELASTICSEARCH_URL", "http://elasticsearch:9200")
 
@@ -90,12 +92,12 @@ class Configs(BaseSettings):
     HF_TOKEN: str = os.getenv("HF_TOKEN")
     GEMINI_MODEL_NAME: str = os.getenv("GEMINI_MODEL_NAME", "gemini-pro")
     GEMINI_TOKEN: str = os.getenv("GEMINI_TOKEN")
-    MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", "512"))
-    TEMPERATURE: float = float(os.getenv("TEMPERATURE", "0.7"))
+    MAX_TOKENS: int = int(os.getenv("MAX_TOKENS", 10240))
+    TEMPERATURE: float = float(os.getenv("TEMPERATURE", 0.7))
     EMBEDDING_MODEL_NAME: str = os.getenv("EMBEDDING_MODEL_NAME", "sentence-transformers/all-MiniLM-L6-v2")
 
-    TOP_K: int = int(os.getenv("TOP_K", "5"))
-    TOKEN_LIMIT: int = int(os.getenv("TOKEN_LIMIT", "2048"))
+    TOP_K: int = int(os.getenv("TOP_K", 15))
+    TOKEN_LIMIT: int = int(os.getenv("TOKEN_LIMIT", 2048))
 
     COHERE_API_TOKEN: str = os.getenv("COHERE_API_TOKEN")
 

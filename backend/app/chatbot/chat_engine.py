@@ -1,5 +1,7 @@
 from typing import Optional
 
+from llama_index.core.storage import chat_store
+
 from app.core.config import configs
 from qdrant_client import QdrantClient, AsyncQdrantClient
 from llama_index.vector_stores.qdrant import QdrantVectorStore
@@ -34,121 +36,43 @@ class ChatEngine:
 
     def __init__(
             self,
-            session_id: str = 'default',
+            llm,
+            embedding_model: HuggingFaceEmbedding,
+            checker,
+            retrievers,
+            chat_store,
             token_limit: int = 20000,
-            job_collection: str = 'job_description',
-            course_db_path: str = "app/courses_db",
+            job_collection: str = 'job_description_2',
             top_k: int = 20,
             temperature: float = 0.6,
-            max_tokens: int = 10000,
-            memory: list = [],
-            resume: str = "default"
+            max_tokens: int = 10000
     ):
         # Load environment variables
-        self.session_id = session_id
-        self.resume = resume
+        self.token_limit = token_limit
         self.top_k = top_k
-        self.course_db_path = course_db_path
+
         # Initialize LLM & embeddings
-        self.llm = Gemini(
-            model_name='models/gemini-2.0-flash',
-            api_key=configs.GEMINI_TOKEN,
-            max_tokens=max_tokens,
-            temperature=temperature,
-        )
-        embedding_model = HuggingFaceEmbedding(
-            model_name='BAAI/bge-large-en-v1.5'
-        )
+        self.llm = llm
+        self.embedding_model = embedding_model
+        self.retrievers = retrievers
+        self.chat_store = chat_store
         Settings.llm = self.llm
         Settings.embed_model = embedding_model
 
         # Setup persistent memory
-        self.memory = memory
-        self.chat_store = SimpleChatStore()
 
-        if memory:
-            json_memory = self.process_history()
-            try:
-                self.chat_store = SimpleChatStore.from_json(
-                    json_memory
-                )
-            except Exception:
-                pass
+        self.checker = checker
 
-        self.chat_memory = ChatMemoryBuffer.from_defaults(
-            token_limit=token_limit,
-            chat_store=self.chat_store,
-            chat_store_key=session_id,
-        )
+    def compose(self, resume, memory, session_id):
+        Settings.llm = self.llm
+        Settings.embed_model = self.embedding_model
 
-        qdrant_url = configs.QDRANT_URL
-        qdrant_api = configs.QDRANT_API_TOKEN
-        # Qdrant clients
-        client = QdrantClient(
-            url=qdrant_url,
-            api_key=qdrant_api,
-        )
-        aclient = AsyncQdrantClient(
-            url=qdrant_url,
-            api_key=qdrant_api,
-        )
+        self.build_prompt(resume=resume)
+        self.build_memory(memory, session_id)
+        self.build_chat_engine(self.retrievers)
 
-        # Helper to build RAG index and engine
-        def build_retriever(collection_name: str):
-            store = QdrantVectorStore(
-                client=client,
-                aclient=aclient,
-                collection_name=collection_name,
-                dense_vector_name='text-dense',
-                sparse_vector_name='text-sparse',
-                enable_hybrid=True,
-            )
-            index = VectorStoreIndex.from_vector_store(store, use_async=True)
-            retriever = index.as_retriever(
-                similarity_top_k=top_k,
-                vector_store_query_mode='hybrid',
-            )
-            return retriever
-
-        self.job_retriever = build_retriever(job_collection)
-        course_storage = StorageContext.from_defaults(
-            persist_dir=self.course_db_path)
-        course_index = load_index_from_storage(course_storage)
-        self.course_retriever = course_index.as_retriever(top_k=self.top_k)
-
-        def build_tool(retriever, tool_name, description):
-            tool = RetrieverTool.from_defaults(
-                retriever=retriever,
-                name=tool_name,
-                description=description
-            )
-            return tool
-
-        job_tool = build_tool(self.job_retriever, tool_name="job retriever tool",
-                              description="Useful for retrieving job-related context")
-        course_tool = build_tool(self.course_retriever, tool_name="course retriever tool",
-                                 description="Useful for retrieving Handles course and learning path queries. context")
-
-        # Build small talk engine
-        smalltalk_prompt = f'You are a helpful assistant. and here is user resume: \n {self.resume}'
-        prefix = [ChatMessage(role='system', content=smalltalk_prompt)]
-        self.smalltalk_engine = SimpleChatEngine(
-            llm=self.llm,
-            memory=self.chat_memory,
-            prefix_messages=prefix,
-        )
-
-        main_retriever = RouterRetriever(
-            selector=LLMSingleSelector.from_defaults(llm=self.llm),
-            retriever_tools=[
-                job_tool,
-                course_tool
-            ],
-        )
-
-        cohere_reranker = CohereRerank(
-            model="rerank-v3.5", api_key=configs.COHERE_API_TOKEN, top_n=self.top_k)
-
+    def build_prompt(self, resume):
+        self.resume = resume
         self.rag_prompt = """ 
             You are an intelligent assistant specializing in job matching, job discovery, resume analysis, and career guidance. Your objective is to help users find relevant job opportunities and assess their fit based on job descriptions and their professional background. 
 
@@ -166,7 +90,6 @@ class ChatEngine:
 
             3. **Job Recommendations:**   
             - If the query involves job recommendations, respond in **bullet points** with the following format: 
-
             ## Data Engineer 
 
             **Company Name:** Digital Intellect  
@@ -190,32 +113,78 @@ class ChatEngine:
 
         self.context_prompt = f""" 
         USER RESUME: 
-        {self.resume} 
-        
-        
+        {resume} 
+
         The following is a friendly conversation between a user and an AI assistant. 
         The assistant is talkative and provides lots of specific details from its context. 
         If the assistant does not know the answer to a question, it truthfully says it 
         does not know. 
- 
+
         Here are the relevant documents for the context: 
- 
+
         {{context_str}} 
- 
+
         Instruction: Based on the above documents, provide a detailed answer for the user question below. 
-        Answer "don't know" if not present in the document.
+        Answer "don't know" if not present in the document. 
         """
+
+        self.smalltalk_prompt = f'You are a helpful assistant. and here is user resume: \n {resume}'
+
+    def build_tool(self, retriever, tool_name, description):
+        tool = RetrieverTool.from_defaults(
+            retriever=retriever,
+            name=tool_name,
+            description=description
+        )
+        return tool
+
+    def build_chat_engine(self, retrievers):
+        job_tool = self.build_tool(retriever=retrievers["job"], tool_name="job retriever tool",
+                                   description="Useful for retrieving job-related context")
+        course_tool = self.build_tool(retriever=retrievers["course"], tool_name="course retriever tool",
+                                      description="Useful for retrieving Handles course and learning path queries. context")
+
+        main_retriever = RouterRetriever(
+            selector=LLMSingleSelector.from_defaults(llm=self.llm),
+            retriever_tools=[
+                job_tool,
+                course_tool
+            ]
+        )
 
         self.rag_engine = CondensePlusContextChatEngine(
             retriever=main_retriever,
             llm=self.llm,
             system_prompt=self.rag_prompt,
             context_prompt=self.context_prompt,
-            node_postprocessors=[cohere_reranker],
             memory=self.chat_memory,
         )
 
-        self.checker = SmallTalkChecker()
+        prefix = [ChatMessage(role='system', content=self.smalltalk_prompt)]
+        self.smalltalk_engine = SimpleChatEngine(
+            llm=self.llm,
+            memory=self.chat_memory,
+            prefix_messages=prefix,
+        )
+
+    def build_memory(self, memory, session_id):
+        self.memory = memory
+        self.session_id = session_id
+        # load if exists
+        if memory:
+            json_memory = self.process_history()
+            try:
+                self.chat_store = SimpleChatStore.from_json(
+                    json_memory
+                )
+            except Exception as e:
+                print(f"Error initializing chat store from memory: {e}")
+
+        self.chat_memory = ChatMemoryBuffer.from_defaults(
+            token_limit=self.token_limit,
+            chat_store=self.chat_store,
+            chat_store_key=self.session_id,
+        )
 
     def process_history(self):
         chat_history = {
