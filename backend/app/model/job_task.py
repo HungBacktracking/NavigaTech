@@ -20,7 +20,7 @@ class JobTask(BaseModel, table=True):
     __tablename__ = "job_tasks"
 
     __table_args__ = (
-        Index("ix_job_task", "job_id", "user_id", unique=True),
+        Index("ix_job_task", "id", "job_id", "user_id", unique=True),
     )
 
     model_config = ConfigDict(arbitrary_types_allowed=True)

@@ -130,6 +130,9 @@ class JobWorker:
                         )
                         self._logger.info(f"Combined analysis saved for job {job_id}")
 
+                        # Invalidate relevant caches after job analysis is complete
+                        self._invalidate_caches(job_id, user_id)
+
                         # Convert to dict for result storage
                         result = analytic_response.model_dump()
 
@@ -184,6 +187,35 @@ class JobWorker:
             time.sleep(1)
 
         self._logger.info("Task processor thread exiting")
+
+    def _invalidate_caches(self, job_id: Any, user_id: Any):
+        """Invalidate all relevant caches after job analysis is complete"""
+        try:
+            redis_client = self.job_service.redis_client
+            if not redis_client:
+                self._logger.warning("Redis client not available, skipping cache invalidation")
+                return
+
+            # Convert to string if needed
+            job_id_str = str(job_id)
+            user_id_str = str(user_id)
+
+            # Invalidate specific analysis caches
+            redis_client.flush_by_pattern(f"job_analysis:{job_id_str}:{user_id_str}")
+            redis_client.flush_by_pattern(f"job_score:{job_id_str}:{user_id_str}")
+            
+            # Invalidate search results that might contain this job
+            redis_client.flush_by_pattern(f"job_search:*:{user_id_str}")
+            
+            # Invalidate user favorites that contain analysis results
+            redis_client.flush_by_pattern(f"user_favorites:{user_id_str}:*")
+            
+            # Invalidate recommendations if they might include this job
+            redis_client.flush_by_pattern(f"job_recommendations:{user_id_str}:*")
+
+            self._logger.info(f"Successfully invalidated caches for job {job_id_str}, user {user_id_str}")
+        except Exception as e:
+            self._logger.error(f"Error invalidating caches: {str(e)}")
 
     def _send_notification(self, user_id: str, notification: Dict[str, Any]):
         """Send notification to user via Kafka"""

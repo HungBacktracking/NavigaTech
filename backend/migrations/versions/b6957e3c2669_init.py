@@ -1,8 +1,8 @@
 """init
 
-Revision ID: de9d63192afb
+Revision ID: b6957e3c2669
 Revises: 
-Create Date: 2025-05-14 19:09:30.417608
+Create Date: 2025-05-15 02:15:13.242138
 
 """
 from alembic import op
@@ -11,7 +11,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision = 'de9d63192afb'
+revision = 'b6957e3c2669'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -140,7 +140,7 @@ def upgrade():
     sa.ForeignKeyConstraint(['user_id'], ['user.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
-    op.create_index('ix_job_task', 'job_tasks', ['job_id', 'user_id'], unique=True)
+    op.create_index('ix_job_task', 'job_tasks', ['id', 'job_id', 'user_id'], unique=True)
     op.create_table('jobanalytic',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('job_id', sa.Uuid(), nullable=False),

@@ -36,3 +36,17 @@ class JobTaskService(BaseService):
             return JobTaskResponse.model_validate(task)
 
         raise CustomError.NOT_FOUND.as_exception()
+        
+    def handle_active_task(self, job_id: UUID, user_id: UUID) -> bool:
+        """
+        Check if there's an active (pending or processing) task for the job
+        """
+        task = self.job_task_repository.get_task_by_job(job_id, user_id)
+
+        if not task or task.status == TaskStatus.FAILED.value:
+            return False
+
+        if task.status in [TaskStatus.PENDING.value, TaskStatus.PROCESSING.value, TaskStatus.COMPLETED.value]:
+            raise CustomError.EXISTING_RESOURCE.as_exception()
+
+        return False
