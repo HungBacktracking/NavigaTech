@@ -8,6 +8,7 @@ from app.core.dependencies import get_current_user
 from app.core.middleware import inject
 from app.core.security import JWTBearer
 from app.schema.job_analytic_schema import JobAnalyticResponse
+from app.schema.job_schema import JobFavoriteResponse
 from app.schema.user_schema import UserBasicResponse
 from app.services.job_analytic_service import JobAnalyticService
 from app.services.job_task_service import JobTaskService
@@ -39,7 +40,7 @@ def process_job_analysis(
     return {"message": "Complete job analysis started in background", "job_id": str(job_id)}
 
 
-@router.get("/{job_id}", response_model=JobAnalyticResponse)
+@router.get("/{job_id}", response_model=JobFavoriteResponse)
 @inject
 def get_job_analysis(
         job_id: UUID,

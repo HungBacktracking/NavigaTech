@@ -119,8 +119,7 @@ class JobService(BaseService):
 
         return result
 
-    def get_user_favorite_jobs_with_analytics(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[
-        JobFavoriteResponse]:
+    def get_user_favorite_jobs_with_analytics(self, user_id: UUID, page: int = 1, page_size: int = 20) -> PageResponse[JobFavoriteResponse]:
         # This should not be cached for long as favorites can change frequently
         cache_key = f"user_favorites:{user_id}:{page}:{page_size}"
         cached_result = None

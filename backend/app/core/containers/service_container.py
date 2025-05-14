@@ -57,6 +57,7 @@ class ServiceContainer(containers.DeclarativeContainer):
         JobAnalyticService,
         job_analytic_repository=repos.job_analytic_repository,
         favorite_job_repository=repos.favorite_job_repository,
+        job_repository=repos.job_repository,
         redis_client=redis_client
     )
     

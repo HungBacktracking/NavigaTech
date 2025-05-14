@@ -6,8 +6,10 @@ from app.exceptions.custom_error import CustomError
 from app.model.job_analytic import JobAnalytic
 from app.repository.favorite_job_repository import FavoriteJobRepository
 from app.repository.job_analytic_repository import JobAnalyticRepository
+from app.repository.job_repository import JobRepository
 from app.schema.job_analytic_schema import JobAnalyticResponse
-from app.schema.job_schema import FavoriteJobRequest
+from app.schema.job_schema import FavoriteJobRequest, JobFavoriteResponse
+from app.convert.job import to_favorite_job_response
 from app.services.base_service import BaseService
 
 
@@ -16,18 +18,16 @@ class JobAnalyticService(BaseService):
             self,
             job_analytic_repository: JobAnalyticRepository,
             favorite_job_repository: FavoriteJobRepository,
+            job_repository: JobRepository,
             redis_client: RedisClient = None
     ):
         self.repository = job_analytic_repository
         self.favorite_job_repository = favorite_job_repository
+        self.job_repository = job_repository
         self.redis_client = redis_client
-        super().__init__(job_analytic_repository, favorite_job_repository)
+        super().__init__(job_analytic_repository, favorite_job_repository, job_repository)
         
-    def get_by_job_and_user(self, job_id: UUID, user_id: UUID) -> Optional[JobAnalyticResponse]:
-        """
-        Get job analytic by job_id and user_id with caching
-        """
-        # Try to get from cache first - this is the expensive computation result we want to cache
+    def get_by_job_and_user(self, job_id: UUID, user_id: UUID) -> Optional[JobFavoriteResponse]:
         cache_key = f"full_job_analysis:{job_id}:{user_id}"
         cached_result = None
         
@@ -38,13 +38,24 @@ class JobAnalyticService(BaseService):
                     return cached_result
             except Exception as e:
                 print(f"Redis error while retrieving job analysis cache: {str(e)}")
-        
-        # If not in cache, get from database
+
+        # Get job analytic
         analytic = self.repository.find_by_job_and_user(job_id, user_id)
         if not analytic:
             raise CustomError.NOT_FOUND.as_exception()
+            
+        # Get job
+        job = self.job_repository.find_by_id(job_id)
+        if not job:
+            raise CustomError.NOT_FOUND.as_exception()
 
-        result = JobAnalyticResponse.model_validate(analytic)
+        # Get favorite status
+        favorite = self.favorite_job_repository.find_by_job_and_user_id(job_id, user_id)
+        if not favorite:
+            raise CustomError.NOT_FOUND.as_exception("Favorite job record not found")
+
+        # Create JobFavoriteResponse using existing converter
+        result = to_favorite_job_response(job, favorite, analytic)
         
         # Cache the result for a long time since it rarely changes
         if self.redis_client:

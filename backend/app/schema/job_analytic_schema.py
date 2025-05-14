@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from app.schema.base_schema import ModelBaseInfo
 
 
-
 class BaseJobAnalytic(BaseModel):
     match_overall: float
     match_experience: float
@@ -23,6 +22,8 @@ class BaseJobAnalytic(BaseModel):
 class JobAnalyticRequest(BaseJobAnalytic): ...
 
 class JobAnalyticResponse(ModelBaseInfo, BaseJobAnalytic): ...
+
+
 
 
 
