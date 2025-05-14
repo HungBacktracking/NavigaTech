@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { message } from 'antd';
 import { webSocketService } from '../services/websocket';
@@ -11,11 +11,33 @@ interface NotificationHookProps {
 export function useNotifications({ userId, token }: NotificationHookProps) {
   const navigate = useNavigate();
   const [messageApi, contextHolder] = message.useMessage();
+  const [connectionStatus, setConnectionStatus] = useState<'connecting' | 'connected' | 'error' | 'disconnected'>('disconnected');
   
   useEffect(() => {
     if (!userId || !token) return;
     
-    webSocketService.connect(userId, token);
+    setConnectionStatus('connecting');
+    
+    const abortController = new AbortController();
+    
+    const onConnect = () => {
+      setConnectionStatus('connected');
+    };
+    
+    const onError = (error: any) => {
+      console.error('WebSocket connection error:', error);
+      setConnectionStatus('error');
+    };
+    
+    const onDisconnect = () => {
+      setConnectionStatus('disconnected');
+    };
+    
+    webSocketService.connect(userId, token, {
+      onConnect,
+      onError,
+      onDisconnect
+    });
     
     const removeListener = webSocketService.addListener((notification) => {
       if (notification.job_id && notification.status) {
@@ -43,10 +65,12 @@ export function useNotifications({ userId, token }: NotificationHookProps) {
     
     return () => {
       removeListener();
+      webSocketService.disconnect();
+      abortController.abort();
     };
   }, [userId, token, messageApi, navigate]);
   
-  return { contextHolder };
+  return { contextHolder, connectionStatus };
 }
 
 export default useNotifications;
