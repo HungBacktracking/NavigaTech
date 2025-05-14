@@ -27,8 +27,11 @@ class ChatbotContainer(containers.DeclarativeContainer):
         storage_context=course_storage,
         embed_model=embed_model,
     )
-    course_retriever = providers.Singleton(
-        course_index.provided.as_retriever,
+    
+    # Fix: Use a Factory provider to ensure as_retriever() is called
+    course_retriever = providers.Factory(
+        lambda idx, top_k: idx.as_retriever(top_k=top_k),
+        idx=course_index,
         top_k=15,
     )
 
@@ -51,16 +54,13 @@ class ChatbotContainer(containers.DeclarativeContainer):
     )
 
     # Retriever
-    job_retriever = providers.Singleton(
-        index.provided.as_retriever,
-        similarity_top_k=15,
-        vector_store_query_mode="hybrid",
+    # Fix: Use a Factory provider to ensure as_retriever() is called
+    job_retriever = providers.Factory(
+        lambda idx, top_k, mode: idx.as_retriever(similarity_top_k=top_k, vector_store_query_mode=mode),
+        idx=index,
+        top_k=15,
+        mode="hybrid",
     )
-
-    retrievers = {
-        "job": job_retriever,
-        "course": course_retriever
-    }
 
     # Helper components
     small_talk_checker = providers.Singleton(SmallTalkChecker)
@@ -70,7 +70,8 @@ class ChatbotContainer(containers.DeclarativeContainer):
     chat_engine = providers.Factory(
         ChatEngine,
         llm=llm,
-        retrievers=retrievers,
+        job_retriever=job_retriever,
+        course_retriever=course_retriever,
         embedding_model=embed_model,
         chat_store=chat_store,
         checker=small_talk_checker

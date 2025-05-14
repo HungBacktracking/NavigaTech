@@ -39,7 +39,8 @@ class ChatEngine:
             llm,
             embedding_model: HuggingFaceEmbedding,
             checker,
-            retrievers,
+            job_retriever,
+            course_retriever,
             chat_store,
             token_limit: int = 20000,
             job_collection: str = 'job_description_2',
@@ -54,7 +55,10 @@ class ChatEngine:
         # Initialize LLM & embeddings
         self.llm = llm
         self.embedding_model = embedding_model
-        self.retrievers = retrievers
+        self.retrievers = {
+            "job": job_retriever,
+            "course": course_retriever
+        }
         self.chat_store = chat_store
         Settings.llm = self.llm
         Settings.embed_model = embedding_model
