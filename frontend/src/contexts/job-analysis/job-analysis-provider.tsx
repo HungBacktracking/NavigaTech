@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from 'antd';
-import { JobAnalytic, JobFavoriteResponse } from '../../lib/types/job';
+import { JobFavoriteResponse } from '../../lib/types/job';
 import JobAnalysisDetail from '../../pages/job-analysis/components/job-analysis-detail';
 import { JobAnalysisContext } from './job-analysis-context';
 
@@ -8,7 +8,7 @@ export const JobAnalysisProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const [processedJobAnalysis, setProcessedJobAnalysis] = useState<JobFavoriteResponse | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
-  const showJobAnalysis = (analysis: JobAnalytic) => {
+  const showJobAnalysis = (analysis: JobFavoriteResponse) => {
     setProcessedJobAnalysis(analysis);
     setIsDetailModalOpen(true);
   };

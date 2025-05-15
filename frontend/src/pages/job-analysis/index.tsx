@@ -24,7 +24,7 @@ const JobAnalysisPage = () => {
   });
   const { showJobAnalysis } = useJobAnalysis();
   // const [searchValue, setSearchValue] = useState('');
-  const [selectedJob, setSelectedJob] = useState<JobAnalytic | null>(null);
+  const [selectedJob, setSelectedJob] = useState<JobFavoriteResponse | null>(null);
   const [favoriteQueryParams, setFavoriteQueryParams] = useState({
     page: 1,
     page_size: 10,

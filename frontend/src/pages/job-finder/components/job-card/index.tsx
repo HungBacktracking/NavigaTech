@@ -1,6 +1,6 @@
 import { Button, Card, Flex, Image, Space, Tag, theme, Tooltip, Typography } from "antd";
 import { EnvironmentOutlined, ClockCircleOutlined, StarFilled, StarOutlined, AuditOutlined, BarChartOutlined, EyeOutlined } from "@ant-design/icons";
-import { Job, JobAnalytic } from "../../../../lib/types/job";
+import { Job, JobAnalytic, JobFavoriteResponse } from "../../../../lib/types/job";
 import { blue, blueDark, orange } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import AIButton from "../../../../components/ai-button";
@@ -16,7 +16,7 @@ interface JobCardProps {
   handleToggleFavorite: (e: MouseEvent) => void;
   handleSelectJob: (job: Job) => void;
   handleJobAnalysisClick: (id: string) => void;
-  handleViewDetail: (jobAnalysis: JobAnalytic) => void;
+  handleViewDetail: (jobAnalysis: JobFavoriteResponse) => void;
   isSelected: boolean;
   isAnalyzing?: boolean;
 }

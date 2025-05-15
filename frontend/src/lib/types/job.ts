@@ -30,7 +30,7 @@ export interface FavoriteJobRequest {
   is_favorite: boolean;
 }
 
-export interface JobAnalytic extends Job {
+export interface JobAnalytic {
   id: string;
   job_id: string;
   match_overall: number;

@@ -8,6 +8,7 @@ import { useAuth } from '../contexts/auth/auth-context';
 import { useJobAnalysis } from '../contexts/job-analysis/job-analysis-context';
 import { JobAnalysisProvider } from '../contexts/job-analysis/job-analysis-provider';
 import queryClient from '../lib/clients/query-client';
+import { JobFavoriteResponse } from '../lib/types/job';
 
 const { Content, Footer } = Layout;
 
@@ -20,13 +21,29 @@ const SocketNotificationHandler = () => {
     token: localStorage.getItem('token'),
     handleSuccess: (notification) => {
       if (notification.task_id && notification.result) {
-        showJobAnalysis(notification.result);
+        // notification result is JobAnalytic type, need to convert it to JobFavoriteResponse
+        const jobFavoriteResponse : JobFavoriteResponse = {
+          id: notification.result.job_id || '',
+          from_site: '',
+          job_url: '',
+          logo_url: '',
+          job_name: '',
+          company_name: '',
+          skills: '',
+          job_description: '',
+          job_requirement: '',
+          is_analyze: true,
+          is_favorite: false,
+          job_analytics: notification.result,
+        }
+
+        showJobAnalysis(jobFavoriteResponse);
 
         queryClient.invalidateQueries({
           predicate: (query) => {
             const queryKey = query.queryKey;
             return Array.isArray(queryKey) &&
-              (queryKey[0] === 'jobs' || queryKey[0] === 'favoriteJobs');
+              (queryKey[0] === 'jobs' || queryKey[0] === 'favoriteJobs' || queryKey[0] === 'jobAnalyses');
           },
         });
       }
