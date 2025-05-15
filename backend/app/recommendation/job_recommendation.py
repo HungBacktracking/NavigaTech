@@ -3,6 +3,7 @@ from qdrant_client.http.models import Filter, FieldCondition, MatchValue
 import cohere
 from app.core.config import configs
 
+
 class JobRecommendation:
     DENSE_MODEL = "BAAI/bge-large-en-v1.5"
     SPARSE_MODEL = "prithivida/Splade_PP_en_v1"
@@ -67,19 +68,37 @@ class JobRecommendation:
                 "text": payload.get("text"),
                 **{k: v for k, v in payload.items() if k != "text"}
             })
-        # return enriched
+            # return enriched
         document_list = [{
             "text": point['text'],
             "metadata": {
-                "level": point.get("level"),
-                "title": point.get("title"),
-                "company": point.get("company"),
-                "link": point.get("job_url"),
-                "job_type": point.get("job_type"),
-                "location": point.get("location"),
-                "keyword": point.get("keyword"),
-                "salary": point.get("salary"),
-                "description": point.get("description")
+                "id": point.get("job_id", "id"),
+                "from_site": "",
+                "job_url": point.get("job_url", "job_url"),
+                "logo_url": point.get("logo_url", "company_logo"),
+                "company_name": point.get("company", "company"),
+                "job_type": point.get("job_type", "job_type"),
+                "job_level": point.get("job_level", "job_level"),
+                "job_name": point.get("job_title", "title"),
+                "date_posted": point.get("date_posted", "date_posted"),
+                "job_description": point.get("job_description", "description"),
+                "salary": point.get("salary", "salary"),
+                "skills": point.get("skills", "qualifications & skills"),
+
+                # "from_site": "",
+                # "job_url": point.get("job_url"),
+                # "job_name": point.get("job_title"),
+                # "job_level": point.get("job_level"),
+                # "job_type": point.get("job_type"),
+                # "company_name": point.get("company"),
+                # "company_type": "",
+                # "company_address": point.get("company_address"),
+                # "company_description": point.get("company_description"),
+                # "skills": point.get("skills"),
+                # "location": point.get("location"),
+                # "date_posted": point.get("date_posted"),
+                # "salary": point.get("salary"),
+                # "job_description": point.get("job_description")
             }
         } for point in enriched]
 
@@ -87,7 +106,7 @@ class JobRecommendation:
             model="rerank-english-v3.0",
             query=text,
             documents=document_list,
-            top_n=5,
+            top_n=top_k,
         )
 
         final_results = []
