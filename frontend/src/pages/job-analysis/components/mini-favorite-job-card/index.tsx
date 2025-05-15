@@ -1,20 +1,21 @@
 import { Card, Typography, Button, Flex } from 'antd';
-import { StarFilled, BarChartOutlined } from '@ant-design/icons';
+import { StarFilled, BarChartOutlined, EyeOutlined } from '@ant-design/icons';
 import { MouseEvent } from 'react';
 import { orange } from '@ant-design/colors';
 import AIButton from '../../../../components/ai-button';
+import { JobAnalytic, JobFavoriteResponse } from '../../../../lib/types/job';
 
 const { Text, Title } = Typography;
 
 interface MiniFavoriteJobCardProps {
-  jobName: string;
-  companyName: string;
+  job: JobFavoriteResponse
   isAnalyzing: boolean;
   handleAnalyze: () => void;
   handleToggleFavorite: (e: MouseEvent) => void;
+  handleViewDetail: () => void;
 }
 
-const MiniFavoriteJobCard = ({ jobName, companyName, isAnalyzing, handleAnalyze, handleToggleFavorite }: MiniFavoriteJobCardProps) => {
+const MiniFavoriteJobCard = ({ job, isAnalyzing, handleAnalyze, handleToggleFavorite, handleViewDetail }: MiniFavoriteJobCardProps) => {
   return (
     <Card
       size="small"
@@ -26,7 +27,7 @@ const MiniFavoriteJobCard = ({ jobName, companyName, isAnalyzing, handleAnalyze,
       <Flex vertical>
         <Flex justify="space-between" align="center">
           <Title level={5} style={{ margin: 0 }}>
-            {jobName}
+            {job.job_name}
           </Title>
           <Button
             type="text"
@@ -35,20 +36,35 @@ const MiniFavoriteJobCard = ({ jobName, companyName, isAnalyzing, handleAnalyze,
             size="small"
           />
         </Flex>
-        <Text type="secondary">{companyName}</Text>
-        <AIButton
-          type="primary"
-          loading={isAnalyzing}
-          icon={<BarChartOutlined />}
-          style={{
-            marginTop: 8,
-            width: '100%',
-            textAlign: 'center',
-          }}
-          onClick={handleAnalyze}
-        >
-          {isAnalyzing ? 'Analyzing...' : 'Analyze Job'}
-        </AIButton>
+        <Text type="secondary">{job.company_name}</Text>
+        {job.is_analyze && (
+          <Button
+            type="primary"
+            shape="round"
+            icon={<EyeOutlined />}
+            onClick={(e: MouseEvent) => {
+              e.stopPropagation();
+              handleViewDetail();
+            }}
+            style={{ marginTop: 16 }}
+          >
+            View Analysis
+          </Button>
+        )}
+        {!job.is_analyze && (
+          <AIButton
+            icon={<BarChartOutlined />}
+            loading={isAnalyzing}
+            onClick={(e: MouseEvent) => {
+              e.stopPropagation();
+              handleAnalyze();
+            }}
+            disabled={isAnalyzing}
+            style={{ marginTop: 16, width: '100%' }}
+          >
+            {isAnalyzing ? "Analyzing..." : "Analyze Job"}
+          </AIButton>
+        )}
       </Flex>
     </Card>
   );

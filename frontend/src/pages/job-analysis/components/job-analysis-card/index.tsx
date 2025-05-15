@@ -6,7 +6,7 @@ import {
   DollarCircleOutlined,
   ArrowsAltOutlined,
 } from "@ant-design/icons";
-import { JobAnalytic } from "../../../../lib/types/job";
+import { JobFavoriteResponse } from "../../../../lib/types/job";
 import { blue, green, red, yellow } from "@ant-design/colors";
 import { extractDomainFromUrl, formatDateToEngPeriodString } from "../../../../lib/helpers/string";
 import { useMobile } from "../../../../hooks/use-mobile";
@@ -16,7 +16,7 @@ import { BoxArrowUpRight } from "react-bootstrap-icons";
 const { Text, Title } = Typography;
 
 interface JobAnalysisCardProps {
-  jobAnalytic: JobAnalytic;
+  jobAnalytic: JobFavoriteResponse;
   isDeletingJobAnalytic: boolean;
   handleDeleteJobAnalytic: (jobId: string) => void;
   handleViewDetail: (jobId: string) => void;
@@ -107,34 +107,42 @@ const JobAnalysisCard = ({
           gap={isTablet ? "middle" : undefined}
         >
           <Flex vertical gap="small" style={{ flex: 1 }}>
-            <Flex wrap="wrap" gap={isTablet ? "small" : "large"}>
+            <Flex vertical gap={isTablet ? "small" : "large"}>
               <Space>
                 <EnvironmentOutlined />
                 {jobAnalytic.location || 'Remote'}
               </Space>
+              {jobAnalytic.company_name && (
+                <Space>
+                  <AuditOutlined />
+                  {jobAnalytic.company_name}
+                </Space>
+              )}
               {jobAnalytic.job_type && (
                 <Space>
                   <AuditOutlined />
                   {jobAnalytic.job_type}
                 </Space>
               )}
-              {jobAnalytic.benefit && jobAnalytic.benefit.includes('$') && (
+              {jobAnalytic.benefit && (
                 <Space>
                   <DollarCircleOutlined />
                   {jobAnalytic.benefit}
                 </Space>
               )}
             </Flex>
-            <Space style={{ fontWeight: 500 }}>
-              <ClockCircleOutlined />
-              <span>{formatDateToEngPeriodString(jobAnalytic.date_posted)}</span>
-            </Space>
+            {jobAnalytic.date_posted && (
+              <Space style={{ fontWeight: 500 }}>
+                <ClockCircleOutlined />
+                <span>{formatDateToEngPeriodString(jobAnalytic.date_posted)}</span>
+              </Space>
+            )}
             {/* <Space style={{ fontWeight: 500 }}>
               <SettingOutlined />
               <span>Analyzed on {analyzedAt.toLocaleString()}</span>
             </Space> */}
             <Space wrap>
-              {jobAnalytic.skills.split(",").map((skill, index) => (
+              {jobAnalytic.skills && jobAnalytic.skills.split("<br>").map((skill, index) => (
                 <Tag key={index} color={token.colorInfoBg} style={{ padding: "2px 8px", fontSize: 12, borderRadius: 8, borderColor: token.colorInfoBorder }}>
                   <Text style={{ color: token.colorInfoActive }}>{skill}</Text>
                 </Tag>
@@ -145,12 +153,12 @@ const JobAnalysisCard = ({
           <div style={{ textAlign: 'center', minWidth: 100, marginRight: 16 }}>
             <Progress
               type="circle"
-              percent={jobAnalytic.match_overall}
+              percent={parseFloat(((jobAnalytic.job_analytics?.match_overall || 0) * 100).toFixed(2))}
               size={100}
-              strokeColor={getMatchScoreColor(jobAnalytic.match_overall)}
+              strokeColor={getMatchScoreColor((jobAnalytic.job_analytics?.match_overall || 0) * 100)}
               format={() => (
-                <div style={{ fontSize: 24, color: getMatchScoreColor(jobAnalytic.match_overall) }}>
-                  {jobAnalytic.match_overall * 100}%
+                <div style={{ fontSize: 24, color: getMatchScoreColor((jobAnalytic.job_analytics?.match_overall || 0) * 100) }}>
+                  {parseFloat(((jobAnalytic.job_analytics?.match_overall || 0) * 100).toFixed(2))}%
                 </div>
               )}
             />
@@ -166,13 +174,13 @@ const JobAnalysisCard = ({
           <Flex align="center" gap="small" style={{ flex: 1 }}>
             <CheckCircleFilled style={{ color: token.colorSuccess }} />
             <Text>
-              {jobAnalytic.strengths.split(",").slice(0, 1)}
+              {jobAnalytic.job_analytics?.strengths.split("<br>").slice(0, 1)}
             </Text>
           </Flex>
           <Flex align="center" gap="small" style={{ flex: 1 }}>
             <CloseCircleFilled style={{ color: token.colorError }} />
             <Text>
-              {jobAnalytic.weaknesses.split(",").slice(0, 1)}
+              {jobAnalytic.job_analytics?.weaknesses.split("<br>").slice(0, 1)}
             </Text>
           </Flex>
         </Flex>

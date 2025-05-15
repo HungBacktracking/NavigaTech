@@ -10,13 +10,13 @@ import {
 import { useEffect, useState, useRef, useCallback } from 'react';
 import { blue, green, red, yellow } from '@ant-design/colors';
 import ReactMarkdown from 'react-markdown';
-import { JobAnalytic } from '../../../../lib/types/job';
+import { JobFavoriteResponse } from '../../../../lib/types/job';
 
 const { Title, Text, Paragraph } = Typography;
 const { useToken } = theme;
 
 interface JobAnalysisDetailProps {
-  analytic: JobAnalytic | null;
+  analytic: JobFavoriteResponse | null;
 }
 
 const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
@@ -37,44 +37,44 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
     {
       key: 'overall',
       title: 'Overall Assessment',
-      content: analytic.overall_assessment
+      content: analytic.job_analytics?.overall_assessment
     },
     {
       key: 'strengths',
       title: 'Strengths',
-      content: analytic.strength_details
+      content: analytic.job_analytics?.strength_details
     },
     {
       key: 'weaknesses',
       title: 'Weaknesses',
-      content: analytic.weakness_concerns
+      content: analytic.job_analytics?.weakness_concerns
     },
     {
       key: 'recommendations',
       title: 'Recommendations',
-      content: analytic.recommendations
+      content: analytic.job_analytics?.recommendations
     },
     {
       key: 'questions',
       title: 'Interview Questions',
-      content: analytic.questions
+      content: analytic.job_analytics?.questions
     },
     {
       key: 'roadmap',
       title: 'Career Roadmap',
-      content: analytic.roadmap
+      content: analytic.job_analytics?.roadmap
     },
     {
       key: 'conclusion',
       title: 'Conclusion',
-      content: analytic.conclusion
+      content: analytic.job_analytics?.conclusion
     }
   ].filter(section => section.content && section.content.trim().length > 0);
 
   useEffect(() => {
     if (activeTab === '1') {
       const timer = setTimeout(() => {
-        setProgressAnimation(parseFloat((analytic.match_overall * 100).toFixed(2)));
+        setProgressAnimation(parseFloat(((analytic.job_analytics?.match_overall || 0) * 100).toFixed(2)));
       }, 200);
       return () => clearTimeout(timer);
     }
@@ -150,32 +150,32 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
             <div style={{ marginTop: 4, fontWeight: 500 }}>Overall</div>
             <Progress
               percent={progressAnimation}
-              strokeColor={getMatchScoreColor((analytic.match_overall * 100))}
+              strokeColor={getMatchScoreColor(((analytic.job_analytics?.match_overall || 0) * 100))}
               status="active"
             />
             <Text>
-              {analytic.match_overall * 100 > 75 ? 'Excellent match for your profile!' :
-                analytic.match_overall * 100 > 50 ? 'Good match for your profile' :
-                  analytic.match_overall * 100 > 25 ? 'Moderate match for your profile' :
+              {((analytic.job_analytics?.match_overall || 0) * 100) * 100 > 75 ? 'Excellent match for your profile!' :
+                ((analytic.job_analytics?.match_overall || 0) * 100) * 100 > 50 ? 'Good match for your profile' :
+                  ((analytic.job_analytics?.match_overall || 0) * 100) * 100 > 25 ? 'Moderate match for your profile' :
                     'Consider improving your skills or looking for better matches'}
             </Text>
             <Flex vertical justify="space-between" style={{ marginTop: 20 }}>
-              {analytic.match_skills > 0 && (
+              {(analytic.job_analytics?.match_skills || 0) > 0 && (
                 <div style={{ textAlign: 'start', minWidth: 100, marginRight: 16 }}>
                   <div style={{ marginTop: 4, fontWeight: 500 }}>Semantic Score</div>
                   <Progress
-                    percent={analytic.match_skills * 100}
-                    strokeColor={getMatchScoreColor(analytic.match_skills * 100)}
+                    percent={parseFloat(((analytic.job_analytics?.match_skills || 0) * 100).toFixed(2))}
+                    strokeColor={getMatchScoreColor(((analytic.job_analytics?.match_skills || 0) * 100))}
                     status="active"
                   />
                 </div>
               )}
-              {analytic.match_experience > 0 && (
+              {(analytic.job_analytics?.match_experience || 0) > 0 && (
                 <div style={{ textAlign: 'start', marginRight: 16 }}>
                   <div style={{ marginTop: 4, fontWeight: 500 }}>LLM Score</div>
                   <Progress
-                    percent={parseFloat((analytic.match_experience * 100).toFixed(2))}
-                    strokeColor={getMatchScoreColor(analytic.match_experience * 100)}
+                    percent={parseFloat(((analytic.job_analytics?.match_experience || 0) * 100).toFixed(2))}
+                    strokeColor={getMatchScoreColor(((analytic.job_analytics?.match_experience || 0) * 100))}
                     status="active"
                   />
                 </div>
@@ -187,7 +187,7 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
             <Flex vertical style={{ flex: 1 }}>
               <Title level={4} style={{ color: token.colorSuccessActive, margin: 0 }}>Strengths</Title>
               <List
-                dataSource={analytic.strengths.split('<br>')}
+                dataSource={analytic.job_analytics?.strengths.split('<br>')}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>
@@ -205,7 +205,7 @@ const JobAnalysisDetail = ({ analytic }: JobAnalysisDetailProps) => {
               <Title level={4} style={{ color: token.colorErrorActive, margin: 0 }}>Weaknesses</Title>
               <List
                 itemLayout="horizontal"
-                dataSource={analytic.weaknesses.split('<br>')}
+                dataSource={analytic.job_analytics?.weaknesses.split('<br>')}
                 split={false}
                 renderItem={(item) => (
                   <Space size="small" style={{ width: '100%', marginBottom: 8 }}>

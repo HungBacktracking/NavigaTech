@@ -1,6 +1,6 @@
-import { ChangeEvent, MouseEvent, useMemo, useState } from 'react';
+import { MouseEvent, useMemo, useState } from 'react';
 import { Typography, Space, Input, Empty, Flex, message, Skeleton, Card, Button, Image, Pagination } from 'antd';
-import { SearchOutlined, StarOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
+import { StarOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from '@ant-design/icons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Splitter } from 'antd';
 
@@ -11,11 +11,11 @@ import MiniFavoriteJobCard from './components/mini-favorite-job-card';
 import emptyStateSvg from '../../assets/empty-state.svg';
 import { Link } from 'react-router-dom';
 import { orange } from '@ant-design/colors';
-import { JobAnalytic, JobAnalyticSearchRequest } from '../../lib/types/job';
+import { JobAnalytic, JobFavoriteResponse } from '../../lib/types/job';
 import { useJobAnalysis } from '../../contexts/job-analysis/job-analysis-context';
 
 const { Title, Text } = Typography;
-const { Search } = Input;
+// const { Search } = Input;
 
 const JobAnalysisPage = () => {
   const queryClient = useQueryClient();
@@ -23,21 +23,11 @@ const JobAnalysisPage = () => {
     top: 50,
   });
   const { showJobAnalysis } = useJobAnalysis();
-  const [searchValue, setSearchValue] = useState('');
-  const [selectedJob, setSelectedJob] = useState<JobAnalytic | null>(null);
-  const [analysesQueryParams, setAnalysesQueryParams] = useState<JobAnalyticSearchRequest>({
-    page: 1,
-    page_size: 5,
-    search: '',
-  });
+  // const [searchValue, setSearchValue] = useState('');
+  const [selectedJob, setSelectedJob] = useState<JobFavoriteResponse | null>(null);
   const [favoriteQueryParams, setFavoriteQueryParams] = useState({
     page: 1,
     page_size: 10,
-  });
-  const [lastAnalysesPaginationData, setLastAnalysesPaginationData] = useState({
-    page: 1,
-    pageSize: 5,
-    total: 0,
   });
   const [lastFavoritesPaginationData, setLastFavoritesPaginationData] = useState({
     page: 1,
@@ -50,8 +40,8 @@ const JobAnalysisPage = () => {
   const [deletingJobIds, setDeletingJobIds] = useState<string[]>([]);
 
   const { data: jobAnalyses, isLoading: isAnalysesLoading } = useQuery({
-    queryKey: ['jobAnalyses', analysesQueryParams],
-    queryFn: () => jobAnalysisApi.getJobAnalyses(analysesQueryParams),
+    queryKey: ['jobAnalyses'],
+    queryFn: () => jobAnalysisApi.getJobAnalyses(),
   });
 
   const { data: favoriteJobs, isLoading: isFavoritesLoading } = useQuery({
@@ -73,7 +63,7 @@ const JobAnalysisPage = () => {
           setSelectedJob(null);
         }
 
-        queryClient.invalidateQueries({ queryKey: ['jobAnalyses', analysesQueryParams] });
+        queryClient.invalidateQueries({ queryKey: ['jobAnalyses'] });
       } else {
         messageApi.error('Failed to delete job analysis');
       }
@@ -94,7 +84,7 @@ const JobAnalysisPage = () => {
     onSuccess: (analysisJobResponse) => {
       if (analysisJobResponse) {
         messageApi.success('Job is being processed in the background. You will be notified when it is ready.');
-        queryClient.invalidateQueries({ queryKey: ['jobAnalyses', analysesQueryParams] });
+        queryClient.invalidateQueries({ queryKey: ['jobAnalyses'] });
       } else {
         messageApi.error("Failed to analyze job. The job may be already analyzed!")
       }
@@ -110,19 +100,7 @@ const JobAnalysisPage = () => {
   const { mutate: toggleFavorite } = useMutation({
     mutationFn: ({ id, is_favorite }: { id: string, is_favorite: boolean }) => jobApi.toggleFavorite(id, is_favorite),
     onSuccess: ({ id, is_favorite }: { id: string, is_favorite: boolean }) => {
-      queryClient.setQueryData(['favoriteJobs', favoriteQueryParams], (oldData: any) => {
-        if (oldData) {
-          const updatedItems = oldData.items.map((job: any) => {
-            if (job.id === id) {
-              return { ...job, is_favorite };
-            }
-            return job;
-          });
-          return { ...oldData, items: updatedItems };
-        }
-        return oldData;
-      });
-      queryClient.invalidateQueries({ queryKey: ['favoriteJobs'] });
+      queryClient.invalidateQueries({ queryKey: ['favoriteJobs', favoriteQueryParams] });
       messageApi.success(`Job ${is_favorite ? 'added to' : 'removed from'} favorites`);
     },
     onError: () => {
@@ -130,15 +108,15 @@ const JobAnalysisPage = () => {
     }
   });
 
-  useMemo(() => {
-    if (jobAnalyses) {
-      setLastAnalysesPaginationData({
-        page: jobAnalyses.page,
-        pageSize: jobAnalyses.page_size,
-        total: jobAnalyses.total,
-      });
-    }
-  }, [jobAnalyses]);
+  // useMemo(() => {
+  //   if (jobAnalyses) {
+  //     setLastAnalysesPaginationData({
+  //       page: jobAnalyses.page,
+  //       pageSize: jobAnalyses.page_size,
+  //       total: jobAnalyses.total,
+  //     });
+  //   }
+  // }, [jobAnalyses]);
 
   useMemo(() => {
     if (favoriteJobs) {
@@ -160,9 +138,9 @@ const JobAnalysisPage = () => {
     }
   };
 
-  const handleAnalysesPageChange = (page: number) => {
-    setAnalysesQueryParams(prev => ({ ...prev, page }));
-  }
+  // const handleAnalysesPageChange = (page: number) => {
+  //   setAnalysesQueryParams(prev => ({ ...prev, page }));
+  // }
 
   const handelFavoritesPageChange = (page: number) => {
     setFavoriteQueryParams(prev => ({ ...prev, page }));
@@ -230,8 +208,7 @@ const JobAnalysisPage = () => {
                     {favoriteJobs.items.map(job => (
                       <MiniFavoriteJobCard
                         key={job.id}
-                        jobName={job.job_name}
-                        companyName={job.company_name}
+                        job={job}
                         isAnalyzing={analyzingJobIds.includes(job.id)}
                         handleAnalyze={() => {
                           createAnalysis(job.id);
@@ -240,8 +217,11 @@ const JobAnalysisPage = () => {
                           e.stopPropagation();
                           toggleFavorite({
                             id: job.id,
-                            is_favorite: !job.is_favorite,
+                            is_favorite: job.is_favorite,
                           });
+                        }}
+                        handleViewDetail={() => {
+                          showJobAnalysis(job);
                         }}
                       />
                     ))}
@@ -272,7 +252,7 @@ const JobAnalysisPage = () => {
             style={{ padding: '16px', overflow: 'auto' }}
           >
             <Flex vertical gap="large">
-              <Search
+              {/* <Search
                 placeholder="Eg: Software Engineer"
                 value={searchValue}
                 onChange={(e: ChangeEvent<HTMLInputElement>) => {
@@ -284,7 +264,7 @@ const JobAnalysisPage = () => {
                 style={{ maxWidth: 500 }}
                 enterButton={<SearchOutlined />}
                 allowClear
-              />
+              /> */}
 
               <Space direction="vertical" size={12} style={{ width: "100%" }}>
                 {isAnalysesLoading ? (
@@ -302,17 +282,17 @@ const JobAnalysisPage = () => {
                       <Skeleton active paragraph={{ rows: 4 }} />
                     </Card>
                   ))
-                ) : jobAnalyses && jobAnalyses.items.length > 0 ? (
+                ) : jobAnalyses && jobAnalyses.length > 0 ? (
                   <Flex vertical gap="small">
                     <Space direction="vertical" size={12} style={{ width: "100%" }}>
-                      {jobAnalyses.items.map((jobAnalyticResponse) => (
+                      {jobAnalyses.map((jobAnalyticResponse) => (
                         <JobAnalysisCard
                           key={jobAnalyticResponse.id}
                           jobAnalytic={jobAnalyticResponse}
                           handleDeleteJobAnalytic={deleteJobAnalysis}
                           isDeletingJobAnalytic={deletingJobIds.includes(jobAnalyticResponse.id)}
                           handleViewDetail={(jobId) => {
-                            const job = jobAnalyses.items.find(item => item.id === jobId);
+                            const job = jobAnalyses.find(item => item.id === jobId);
                             if (job) {
                               showJobAnalysis(job);
                             }
@@ -335,7 +315,7 @@ const JobAnalysisPage = () => {
                     </Text>
                   </div>
                 )}
-                <Pagination
+                {/* <Pagination
                   align="center"
                   current={isAnalysesLoading ? lastAnalysesPaginationData.page : jobAnalyses?.page}
                   pageSize={isAnalysesLoading ? lastAnalysesPaginationData.pageSize : jobAnalyses?.page_size}
@@ -343,7 +323,7 @@ const JobAnalysisPage = () => {
                   onChange={handleAnalysesPageChange}
                   showSizeChanger={false}
                   disabled={isAnalysesLoading}
-                />
+                /> */}
               </Space>
             </Flex>
           </Splitter.Panel>

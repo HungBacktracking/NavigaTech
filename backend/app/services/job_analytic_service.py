@@ -17,22 +17,26 @@ from app.services.base_service import BaseService
 
 class JobAnalyticService(BaseService):
     def __init__(
-            self,
-            job_analytic_repository: JobAnalyticRepository,
-            favorite_job_repository: FavoriteJobRepository,
-            job_repository: JobRepository,
-            redis_client: RedisClient = None
+        self,
+        job_analytic_repository: JobAnalyticRepository,
+        favorite_job_repository: FavoriteJobRepository,
+        job_repository: JobRepository,
+        redis_client: RedisClient = None,
     ):
         self.repository = job_analytic_repository
         self.favorite_job_repository = favorite_job_repository
         self.job_repository = job_repository
         self.redis_client = redis_client
-        super().__init__(job_analytic_repository, favorite_job_repository, job_repository)
-        
-    def get_by_job_and_user(self, job_id: UUID, user_id: UUID) -> Optional[JobFavoriteResponse]:
+        super().__init__(
+            job_analytic_repository, favorite_job_repository, job_repository
+        )
+
+    def get_by_job_and_user(
+        self, job_id: UUID, user_id: UUID
+    ) -> Optional[JobFavoriteResponse]:
         cache_key = f"full_job_analysis:{job_id}:{user_id}"
         cached_result = None
-        
+
         if self.redis_client:
             try:
                 cached_result = self.redis_client.get(cache_key)
@@ -45,7 +49,7 @@ class JobAnalyticService(BaseService):
         analytic = self.repository.find_by_job_and_user(job_id, user_id)
         if not analytic:
             raise CustomError.NOT_FOUND.as_exception()
-            
+
         # Get job
         job = self.job_repository.find_by_id(job_id)
         if not job:
@@ -58,7 +62,7 @@ class JobAnalyticService(BaseService):
 
         # Create JobFavoriteResponse using existing converter
         result = to_favorite_job_response(job, favorite, analytic)
-        
+
         # Cache the result for a long time since it rarely changes
         if self.redis_client:
             try:
@@ -66,7 +70,7 @@ class JobAnalyticService(BaseService):
                 self.redis_client.set(cache_key, result, 604800)  # 7 days in seconds
             except Exception as e:
                 print(f"Redis error while setting job analysis cache: {str(e)}")
-                
+
         return result
         
     def get_user_job_analytics(
@@ -83,40 +87,54 @@ class JobAnalyticService(BaseService):
             except Exception as e:
                 print(f"Redis error while retrieving job analytics list cache: {str(e)}")
 
-        results, total_count = self.repository.find_by_user_with_pagination(
-            user_id=user_id, 
-            page=page, 
-            page_size=page_size,
-            search=search
-        )
+    def get_full_job_analysis(self, user_id: UUID) -> list[JobFavoriteResponse]:
+        """
+        Get all job analyses for a specific user
+        """
+        cache_key = f"full_job_analysis_list:{user_id}"
+        cached_result = None
 
-        items = [to_favorite_job_response(job, favorite, analytic) for job, favorite, analytic in results]
-        total_pages = math.ceil(total_count / page_size) if total_count > 0 else 1
-
-        response = PageResponse(
-            items=items,
-            total=total_count,
-            page=page,
-            page_size=page_size,
-            total_pages=total_pages
-        )
-
-        if self.redis_client and not search:  # Only cache when not searching
+        if self.redis_client:
             try:
-                self.redis_client.set(cache_key, response, 600)
+                cached_result = self.redis_client.get(cache_key)
+                if cached_result:
+                    return cached_result
             except Exception as e:
-                print(f"Redis error while setting job analytics list cache: {str(e)}")
-        
-        return response
+                print(f"Redis error while retrieving full job analysis cache: {str(e)}")
+
+        # Get all job analytics for this user
+        results, _ = self.repository.find_by_user_with_pagination(
+            user_id, page=1, page_size=1000
+        )
+
+        # Convert to response objects
+        job_favorites = [
+            to_favorite_job_response(job, favorite, analytic)
+            for job, favorite, analytic in results
+        ]
+
+        # Cache the result since it doesn't change frequently
+        if self.redis_client and job_favorites:
+            try:
+                # Cache for 1 hour - list of analyses changes more frequently than individual analyses
+                self.redis_client.set(cache_key, job_favorites, 3600)
+            except Exception as e:
+                print(f"Redis error while setting full job analysis cache: {str(e)}")
+
+        return job_favorites
 
     def handle_exist_analysis(self, job_id: UUID, user_id: UUID):
         analytic = self.repository.find_by_job_and_user(job_id, user_id)
         if analytic:
             raise CustomError.EXISTING_RESOURCE.as_exception()
 
-        
-    def process_analyze(self, job_id: UUID, user_id: UUID, score_result: Dict[str, Any],
-                         analysis_result: Dict[str, Any]) -> JobFavoriteResponse:
+    def process_analyze(
+        self,
+        job_id: UUID,
+        user_id: UUID,
+        score_result: Dict[str, Any],
+        analysis_result: Dict[str, Any],
+    ) -> JobAnalyticResponse:
         """
         Combine scoring and analysis results and save to database
         
@@ -142,7 +160,8 @@ class JobAnalyticService(BaseService):
         questions = analysis_result.get("questions", "")
         roadmap = analysis_result.get("roadmap", "")
         conclusion = analysis_result.get("conclusion", "")
-        
+
+        # Combine data into a single dictionary
         combined_data = {
             "match_overall": match_overall,
             "match_experience": match_experience,
@@ -155,26 +174,26 @@ class JobAnalyticService(BaseService):
             "recommendations": recommendations,
             "questions": questions,
             "roadmap": roadmap,
-            "conclusion": conclusion
+            "conclusion": conclusion,
         }
         analytic = self.repository.create_or_update(job_id, user_id, combined_data)
 
         favorite_request = FavoriteJobRequest(
-            job_id=job_id,
-            user_id=user_id,
-            is_analyze=True
+            job_id=job_id, user_id=user_id, is_analyze=True
         )
 
         fav_job = self.favorite_job_repository.find_by_job_and_user_id(job_id, user_id)
         if fav_job:
             self.favorite_job_repository.update(fav_job.id, favorite_request)
         else:
-            fav_job = self.favorite_job_repository.create(favorite_request)
-            
+            self.favorite_job_repository.create(favorite_request)
+
+        # Invalidate the cache since we've updated the analysis
         if self.redis_client:
             try:
                 self.redis_client.delete(f"full_job_analysis:{job_id}:{user_id}")
-                
+
+                # Also invalidate favorite caches because we've updated the favorite status
                 self.redis_client.flush_by_pattern(f"user_favorites:{user_id}:*")
                 
                 self.redis_client.flush_by_pattern(f"user_job_analytics:{user_id}:*")

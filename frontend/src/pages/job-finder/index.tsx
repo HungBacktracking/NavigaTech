@@ -5,7 +5,7 @@ import { ReloadOutlined } from "@ant-design/icons";
 import { motion, AnimatePresence } from "framer-motion";
 import JobCard from "./components/job-card";
 import { jobApi } from "../../services/job-finder";
-import { Job, JobAnalytic, JobSearchRequest } from "../../lib/types/job";
+import { Job, JobAnalytic, JobFavoriteResponse, JobSearchRequest } from "../../lib/types/job";
 import JobDetail from "./components/job-detail";
 import SuggestionItem from "./components/suggestion-item";
 import AIButton from "../../components/ai-button";
@@ -200,7 +200,7 @@ export default function JobFindingPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleViewJobAnalysis = (jobAnalysis: JobAnalytic) => {
+  const handleViewJobAnalysis = (jobAnalysis: JobFavoriteResponse) => {
     showJobAnalysis(jobAnalysis);
   }
 
@@ -356,8 +356,8 @@ export default function JobFindingPage() {
             {isJobsLoading
               ? <Skeleton.Node active style={{ width: 100, height: 16 }} />
               : isRecommendationMode
-                ? `${jobsData?.items.length || 0} personalized recommendations for you`
-                : `${jobsData?.items.length || 0} jobs found`}
+                ? `${jobsData?.total || 0} personalized recommendations for you`
+                : `${jobsData?.total || 0} jobs found`}
           </Typography.Text>
         </div>
       </Flex>

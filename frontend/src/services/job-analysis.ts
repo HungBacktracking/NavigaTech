@@ -1,14 +1,11 @@
 import api from "../lib/clients/axios/api";
-import { JobAnalytic, JobAnalyticSearchRequest } from "../lib/types/job";
-import { PageResponse } from "../lib/types/pagination";
+import { JobFavoriteResponse } from "../lib/types/job";
 
 export const jobAnalysisApi = {
-  async getJobAnalyses(params: JobAnalyticSearchRequest): Promise<PageResponse<JobAnalytic>> {
+  async getJobAnalyses(): Promise<JobFavoriteResponse[]> {
     try {
-      const response = await api.get('/job-analysis', { 
-        params
-      });
-      
+      const response = await api.get('/job-analysis/full');
+      console.log('Job analyses response:', response.data);
       return response.data;
     } catch (error) {
       console.error('Error fetching job analyses:', error);
@@ -16,7 +13,7 @@ export const jobAnalysisApi = {
     }
   },
 
-  async getJobAnalysis(id: string): Promise<JobAnalytic> {
+  async getJobAnalysis(id: string): Promise<JobFavoriteResponse> {
     try {
       const response = await api.get(`/job-analysis/${id}`);
       console.log(`Job analysis response for ID ${id}:`, response.data);

@@ -1,8 +1,8 @@
 import { createContext, useContext } from 'react';
-import { JobAnalytic } from '../../lib/types/job';
+import { JobFavoriteResponse } from '../../lib/types/job';
 
 interface JobAnalysisContextType {
-  showJobAnalysis: (analysis: JobAnalytic) => void;
+  showJobAnalysis: (analysis: JobFavoriteResponse) => void;
 }
 
 export const JobAnalysisContext = createContext<JobAnalysisContextType | undefined>(undefined);
