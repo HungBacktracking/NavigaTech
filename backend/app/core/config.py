@@ -101,7 +101,11 @@ class Configs(BaseSettings):
     TOKEN_LIMIT: int = int(os.getenv("TOKEN_LIMIT", 2048))
 
     COHERE_API_TOKEN: str = os.getenv("COHERE_API_TOKEN")
-
+    
+    NEO4J_URI: str = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+    NEO4J_USERNAME: str = os.getenv("NEO4J_USERNAME", "neo4j")
+    NEO4J_PASSWORD: str = os.getenv("NEO4J_PASSWORD", "password")
+    
     AWS_ACCESS_KEY_ID: str = os.getenv("AWS_ACCESS_KEY_ID")
     AWS_SECRET_KEY: str = os.getenv("AWS_SECRET_ACCESS_KEY")
     AWS_REGION: str = os.getenv("AWS_REGION")

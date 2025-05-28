@@ -1,11 +1,5 @@
-from typing import Optional
 
-from llama_index.core.storage import chat_store
-
-from app.core.config import configs
-from qdrant_client import QdrantClient, AsyncQdrantClient
-from llama_index.vector_stores.qdrant import QdrantVectorStore
-from llama_index.core import VectorStoreIndex, Settings, load_index_from_storage, StorageContext
+from llama_index.core import Settings
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.core.chat_engine import (
@@ -16,16 +10,13 @@ from llama_index.core.tools import RetrieverTool
 from llama_index.core.retrievers import RouterRetriever
 from llama_index.core.selectors import LLMSingleSelector
 from llama_index.embeddings.huggingface import HuggingFaceEmbedding
-from llama_index.postprocessor.cohere_rerank import CohereRerank
 from llama_index.core.llms import ChatMessage
-
-from llama_index.llms.gemini import Gemini
-
-from app.chatbot.small_talk_checker import SmallTalkChecker
 import nest_asyncio
 import json
+import asyncio
 
 nest_asyncio.apply()
+
 
 class ChatEngine:
     """
@@ -64,8 +55,10 @@ class ChatEngine:
         Settings.embed_model = embedding_model
 
         # Setup persistent memory
-
         self.checker = checker
+        self.rag_engine = None
+        self.smalltalk_engine = None
+        self.chat_memory = None
 
     def compose(self, resume, memory, session_id):
         Settings.llm = self.llm
@@ -175,7 +168,7 @@ class ChatEngine:
         self.memory = memory
         self.session_id = session_id
         # load if exists
-        if memory:
+        if memory and len(memory) > 0:
             json_memory = self.process_history()
             try:
                 self.chat_store = SimpleChatStore.from_json(
@@ -183,6 +176,8 @@ class ChatEngine:
                 )
             except Exception as e:
                 print(f"Error initializing chat store from memory: {e}")
+                # Initialize empty chat store if loading fails
+                self.chat_store = SimpleChatStore()
 
         self.chat_memory = ChatMemoryBuffer.from_defaults(
             token_limit=self.token_limit,
@@ -209,71 +204,86 @@ class ChatEngine:
                 ]
             }
             chat_history["store"][self.session_id].append(message)
+
         return json.dumps(chat_history)
 
-    def chat(self, user_input: str) -> str:
-        """
-        Routes input to small-talk or RAG engine, persists memory.
-        """
-        if self.checker.is_small_talk(user_input):
-            resp = self.smalltalk_engine.chat(user_input)
-        else:
-            resp = self.rag_engine.chat(user_input)
 
-            # self.chat_store.persist(self.memory_path)
-        return resp.response.replace("\n", "\n\n")
-        
     async def stream_chat(self, user_input: str):
+        if not self.rag_engine or not self.smalltalk_engine:
+            yield "ERROR: Chat engine not properly initialized."
+            return
+            
+        try:
+            if self.checker.is_small_talk(user_input):
+                response = await self.get_streaming_response(self.smalltalk_engine, user_input)
+            else:
+                response = await self.get_streaming_response(self.rag_engine, user_input)
 
-        if self.checker.is_small_talk(user_input):
-            response = self.smalltalk_engine.stream_chat(user_input)
+            async for chunk in self.process_streaming_response(response):
+                yield chunk
+                
+        except Exception as e:
+            print(f"Error in stream_chat: {str(e)}")
+            yield f"ERROR: {str(e)}"
+
+    async def get_streaming_response(self, engine, user_input: str):
+        """Get streaming response from engine, handling both sync and async methods."""
+        if hasattr(engine, 'astream_chat'):
+            # Async streaming method exists
+            return await engine.astream_chat(user_input)
+        elif hasattr(engine, 'stream_chat'):
+            # Sync streaming method exists - run in executor
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(None, engine.stream_chat, user_input)
         else:
-            response = self.rag_engine.stream_chat(user_input)
-        
-        # Check if the response object has specific async generator attributes
-        if hasattr(response, 'aiter') or hasattr(response, '__aiter__'):
-            # Handle async generator
+            # Fallback to regular chat
+            if hasattr(engine, 'achat'):
+                response = await engine.achat(user_input)
+            else:
+                loop = asyncio.get_event_loop()
+                response = await loop.run_in_executor(None, engine.chat, user_input)
+            return response
+
+    async def process_streaming_response(self, response):
+        """Process various types of streaming responses."""
+        # Handle async generators
+        if hasattr(response, '__aiter__'):
             async for token in response:
                 if token:
-                    text = token.delta if hasattr(token, 'delta') else token
-                    if isinstance(text, str) and text:
+                    text = self.extract_text_from_token(token)
+                    if text:
                         yield text
-        
-        # Handle specific LlamaIndex response objects
+        # Handle sync generators
+        elif hasattr(response, '__iter__') and not isinstance(response, str):
+            for token in response:
+                if token:
+                    text = self.extract_text_from_token(token)
+                    if text:
+                        yield text
+        # Handle response objects with generators
         elif hasattr(response, 'response_gen'):
-            # Check if response_gen is an async generator
-            response_gen = response.response_gen
-            if hasattr(response_gen, 'aiter') or hasattr(response_gen, '__aiter__'):
-                # It's an async generator
-                async for token in response_gen:
-                    if token and isinstance(token, str):
-                        yield token
-            else:
-                # It's a regular generator
-                for token in response_gen:
-                    if token and isinstance(token, str):
-                        yield token
-        
-        # Handle content_generator (sync or async)
+            async for chunk in self.process_streaming_response(response.response_gen):
+                yield chunk
         elif hasattr(response, 'content_generator'):
-            content_gen = response.content_generator
-            # Check if content_generator is an async generator
-            if hasattr(content_gen, 'aiter') or hasattr(content_gen, '__aiter__'):
-                async for token in content_gen:
-                    if token and isinstance(token, str):
-                        yield token
-            else:
-                # Regular generator
-                for token in content_gen:
-                    if token and isinstance(token, str):
-                        yield token
-        
-        # Fallback - handle the whole response at once
+            async for chunk in self.process_streaming_response(response.content_generator):
+                yield chunk
+        # Handle response objects with text
         elif hasattr(response, 'response'):
             yield response.response
         else:
-            # Final fallback - try to get a string representation
+            # Final fallback
             yield str(response)
+
+    def extract_text_from_token(self, token):
+        if isinstance(token, str):
+            return token
+        elif hasattr(token, 'delta'):
+            return token.delta
+        elif hasattr(token, 'text'):
+            return token.text
+        elif hasattr(token, 'content'):
+            return token.content
+        return None
 
     def persist_memory(self):
         """
@@ -282,9 +292,6 @@ class ChatEngine:
         return self.chat_store.json()
 
     def clear_memory(self):
-        self.chat_memory.reset()
-        try:
-            pass
-            # os.remove(self.memory_path)
-        except:
-            pass
+        if self.chat_memory:
+            self.chat_memory.reset()
+        self.chat_store = SimpleChatStore()

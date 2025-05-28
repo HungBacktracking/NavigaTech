@@ -12,7 +12,6 @@ from app.core.containers.recommendation_container import RecommendationContainer
 from app.core.containers.service_container import ServiceContainer
 from app.core.containers.redis_container import RedisContainer
 
-
 class ApplicationContainer(containers.DeclarativeContainer):
     logger = logging.getLogger(__name__)
     

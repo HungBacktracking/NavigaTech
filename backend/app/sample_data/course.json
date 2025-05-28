@@ -1,0 +1,43 @@
+{
+  "title": "Advanced Cybersecurity Techniques",
+  "url": "https://www.coursera.org/learn/advanced-cybersecurity-techniques",
+  "website": "Coursera",
+  "organization": "University of Michigan",
+  "instructor": "John Doe",
+  "subtitle": "Deep dive into Security",
+  "level": "Advanced",
+  "competencies": {
+    "programming_languages": ["Python"],
+    "frameworks": ["Django", "Flask"],
+    "platforms": ["AWS", "Azure"],
+    "tools": ["Docker", "Git"],
+    "knowledge": ["Algorithms", "Data Structures"],
+    "soft_skills": ["Problem-solving", "Teamwork"],
+    "certifications": ["Certified Security Developer"]
+  },
+  "skills": [
+    "Mobile Security",
+    "Wireless Networks",
+    "Vulnerability Assessments",
+    "MITRE ATT&CK Framework",
+    "Application Security",
+    "Web Applications",
+    "Intrusion Detection and Prevention",
+    "Cyber Threat Intelligence",
+    "Encryption",
+    "Cybersecurity",
+    "Threat Modeling",
+    "Penetration Testing",
+    "Open Web Application Security Project (OWASP)",
+    "Network Security",
+    "Authentications",
+    "Distributed Denial-Of-Service (DDoS) Attacks",
+    "Network Protocols"
+  ],
+  "what_you_will_learn": [
+    "Learn to identify and exploit vulnerabilities in mobile devices, networks, and web applications.",
+    "Master the use of ethical hacking frameworks to systematically assess and mitigate security threats.",
+    "Develop effective countermeasures to mitigate DNS, Wi-Fi, and protocol-based cyberattacks."
+  ],
+  "description": "The course \"Advanced Cybersecurity Techniques\" delves into advanced cybersecurity methodologies, equipping learners with practical skills to tackle complex security challenges. Covering critical topics such as mobile device vulnerabilities, DNS attacks, network exploitation, web application security, and Wi-Fi exploitation, participants will gain hands-on experience through practical labs and real-world scenarios. Learners will benefit from a comprehensive understanding of the latest attack vectors and mitigation strategies, enhancing their ability to safeguard digital environments. The course emphasizes ethical hacking methodologies, utilizing the MITRE ATT&CK Enterprise Framework to provide a structured approach to understanding cyber exploits."
+}

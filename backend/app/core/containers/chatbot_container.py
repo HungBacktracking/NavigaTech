@@ -2,10 +2,12 @@ from dependency_injector import containers, providers
 
 from app.chatbot.chat_engine import ChatEngine
 from app.chatbot.small_talk_checker import SmallTalkChecker
+from app.chatbot.graph_retriever import Neo4jGraphRetriever
+from app.chatbot.hybrid_retriever import HybridRetriever
 from llama_index.core import VectorStoreIndex, load_index_from_storage, StorageContext
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core.storage.chat_store import SimpleChatStore
-
+from llama_index.postprocessor.cohere_rerank import CohereRerank
 
 
 class ChatbotContainer(containers.DeclarativeContainer):
@@ -15,8 +17,10 @@ class ChatbotContainer(containers.DeclarativeContainer):
 
     qdrant_client = database.qdrant_client
     async_qdrant_client = database.async_qdrant_client
+    neo4j_driver = database.async_neo4j_driver
     llm = AI.llm_gemini
     embed_model = AI.embed_model
+    cohere_client = AI.cohere_reranker
 
     course_storage = providers.Singleton(
         StorageContext.from_defaults,
@@ -28,11 +32,11 @@ class ChatbotContainer(containers.DeclarativeContainer):
         embed_model=embed_model,
     )
     
-    # Fix: Use a Factory provider to ensure as_retriever() is called
-    course_retriever = providers.Factory(
+    # Embedding-based course retriever
+    course_embedding_retriever = providers.Factory(
         lambda idx, top_k: idx.as_retriever(top_k=top_k),
         idx=course_index,
-        top_k=15,
+        top_k=20,
     )
 
     # Vector store components
@@ -53,13 +57,53 @@ class ChatbotContainer(containers.DeclarativeContainer):
         use_async=True,
     )
 
-    # Retriever
-    # Fix: Use a Factory provider to ensure as_retriever() is called
-    job_retriever = providers.Factory(
+    # Embedding-based job retriever
+    job_embedding_retriever = providers.Factory(
         lambda idx, top_k, mode: idx.as_retriever(similarity_top_k=top_k, vector_store_query_mode=mode),
         idx=index,
-        top_k=15,
+        top_k=20,
         mode="hybrid",
+    )
+
+    # Graph retrievers
+    job_graph_retriever = providers.Singleton(
+        Neo4jGraphRetriever,
+        neo4j_driver=neo4j_driver,
+        top_k=20
+    )
+    
+    course_graph_retriever = providers.Singleton(
+        Neo4jGraphRetriever,
+        neo4j_driver=neo4j_driver,
+        top_k=20
+    )
+
+    # Reranker
+    reranker = providers.Singleton(
+        CohereRerank,
+        api_key=config.COHERE_API_TOKEN,
+        top_n=10
+    )
+
+    # Hybrid retrievers
+    job_retriever = providers.Singleton(
+        HybridRetriever,
+        embedding_retriever=job_embedding_retriever,
+        graph_retriever=job_graph_retriever,
+        reranker=reranker,
+        embedding_weight=0.6,
+        graph_weight=0.4,
+        top_k=15
+    )
+    
+    course_retriever = providers.Singleton(
+        HybridRetriever,
+        embedding_retriever=course_embedding_retriever,
+        graph_retriever=course_graph_retriever,
+        reranker=reranker,
+        embedding_weight=0.6,
+        graph_weight=0.4,
+        top_k=15
     )
 
     # Helper components

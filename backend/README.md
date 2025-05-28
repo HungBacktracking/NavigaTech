@@ -98,11 +98,12 @@ NavigaTech follows a modular, service-oriented architecture built with FastAPI a
 
 - Python 3.10+
 - PostgreSQL 
-- MongoDB
-- Elasticsearch
+- MongoDB 
+- Elasticsearch 
 - Kafka
 - Redis
-- Docker and Docker Compose (optional)
+- Neo4j (for Hybrid RAG)
+- Docker and Docker Compose (optional, but recommended)
 
 ### Environment Setup
 
@@ -156,6 +157,13 @@ NavigaTech follows a modular, service-oriented architecture built with FastAPI a
    # AI API keys
    OPENAI_API_KEY=
    HUGGINGFACE_API_KEY=
+   GEMINI_TOKEN=
+   COHERE_API_TOKEN=
+   
+   # Neo4j Graph Database
+   NEO4J_URI=bolt://localhost:7687
+   NEO4J_USERNAME=neo4j
+   NEO4J_PASSWORD=password
    ```
 
 ### Database Setup

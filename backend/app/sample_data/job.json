@@ -1,0 +1,23 @@
+[
+  {
+    "id":"in-eb36f899c383637c",
+    "title":"Full-Stack Developer",
+    "location":"Hochiminh City, VN",
+    "job_type":"Full-time",
+    "job_level":"Full-Stack Developer",
+    "salary":"Negotiate",
+    "min_salary":null,
+    "max_salary":null,
+    "date_posted":null,
+    "job_url":"https:\/\/vn.indeed.com\/viewjob?jk=eb36f899c383637c",
+    "company_logo":"https://media.licdn.com/dms/image/v2/C560BAQF2SrGEBA65hg/company-logo_200_200/company-logo_200_200/0/1648441169028/beyond_compass_invest_co_ltd_logo?e=2147483647&v=beta&t=PMf_MspEWdGx0xNinaOw7TI9xcc-xN3ms30PxOud_MI",
+    "company":"beyond compass",
+    "company_addresses":null,
+    "company_description":null,
+    "skills":"Javascript, MySQL, Agile",
+    "description":"Join our mission to build cutting-edge cybersecurity solutions! As a Fullstack Engineer in the Deep CDR team, you will develop high-performance security products using Javascript for both Windows and Linux. You'll work at the binary and structural levels of files, designing scalable back-end engines that process millions of files daily. In this role, you'll also contribute to automation testing with Python, ensuring product reliability. Be part of an innovative team that values deep technical expertise in data structures, algorithms, OOP, and system design while tackling real-world cybersecurity challenges.",
+    "requirements":"Good English in communication, Bachelor s Degree in Computer Science, Engineering, or related fields, 3+ years of experience in full-stack web development, Experience with databases such as MySQL, SQL Server, PostgreSQL, or Oracle, Proven ability to write clean, reusable, and maintainable code, Strong proficiency in Java, Spring, Spring Boot and related frameworks, Hands-on experience with technologies like HTML5, CSS3, JavaScript, React.js or Angular, Experience with RESTful APIs, microservices architecture, and web services SOAP\/REST, Experience with Agile development methodologies, Knowledge of cloud platforms such as AWS or Azure, Experience working with global projects, international teams, Skills Time management and process optimization, Team collaboration, Adaptability and flexibility, Critical thinking and creativity, Focused on details with a business-oriented mindset, Responsibility and discipline, Work effectively in a diverse and multinational environment, demonstrating respect and appreciation for different perspectives and cultural nuances.",
+    "benefits":"",
+    "responsibilities":"Requirement Analysis Technical Planning: Analyze business requirements and plan appropriate system architecture and tech stack. Frontend Development: Develop responsive, user-friendly interfaces based on UI\/UX designs provided by the Website Designer Backend Development: Design and develop robust backend APIs and services to support the platform. Database Design and Management: Develop and maintain relational or non-relational databases to support application functionality. Deployment DevOps Support: Manage source code, automated tests, and deployments across environments. Testing Debugging: Perform unit tests, integration tests, and fix bugs. Maintenance Optimization: Continuously improve code quality and platform performance. Collaboration Agile Practice: Participate in sprint meetings and cross-functional planning. Other tasks required by the Line Manager"
+  }
+]

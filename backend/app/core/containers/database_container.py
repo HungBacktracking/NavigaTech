@@ -1,5 +1,6 @@
 from dependency_injector import containers, providers
 from elasticsearch import Elasticsearch
+from neo4j import GraphDatabase, AsyncGraphDatabase
 
 from qdrant_client import QdrantClient, AsyncQdrantClient
 from app.core.database import Database
@@ -43,4 +44,20 @@ class DatabaseContainer(containers.DeclarativeContainer):
         AsyncQdrantClient,
         url=config.QDRANT_URL,
         api_key=config.QDRANT_API_TOKEN,
+    )
+
+    # Neo4j driver for sync operations
+    neo4j_driver = providers.Singleton(
+        GraphDatabase.driver,
+        uri=config.NEO4J_URI,
+        auth=(config.NEO4J_USERNAME, config.NEO4J_PASSWORD),
+        max_connection_pool_size=50,
+    )
+
+    # Neo4j async driver for async operations
+    async_neo4j_driver = providers.Singleton(
+        AsyncGraphDatabase.driver,
+        uri=config.NEO4J_URI,
+        auth=(config.NEO4J_USERNAME, config.NEO4J_PASSWORD),
+        max_connection_pool_size=50,
     )
