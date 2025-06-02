@@ -212,37 +212,24 @@ class ChatEngine:
         if not self.rag_engine or not self.smalltalk_engine:
             yield "ERROR: Chat engine not properly initialized."
             return
-            
+
         try:
             if self.checker.is_small_talk(user_input):
-                response = await self.get_streaming_response(self.smalltalk_engine, user_input)
+                response = self.smalltalk_engine.stream_chat(user_input)
             else:
-                response = await self.get_streaming_response(self.rag_engine, user_input)
+                response = self.rag_engine.stream_chat(user_input)
+
+            if response is None:
+                yield "ERROR: Failed to get streaming response"
+                return
 
             async for chunk in self.process_streaming_response(response):
-                yield chunk
+                if chunk:
+                    yield chunk
                 
         except Exception as e:
             print(f"Error in stream_chat: {str(e)}")
             yield f"ERROR: {str(e)}"
-
-    async def get_streaming_response(self, engine, user_input: str):
-        """Get streaming response from engine, handling both sync and async methods."""
-        if hasattr(engine, 'astream_chat'):
-            # Async streaming method exists
-            return await engine.astream_chat(user_input)
-        elif hasattr(engine, 'stream_chat'):
-            # Sync streaming method exists - run in executor
-            loop = asyncio.get_event_loop()
-            return await loop.run_in_executor(None, engine.stream_chat, user_input)
-        else:
-            # Fallback to regular chat
-            if hasattr(engine, 'achat'):
-                response = await engine.achat(user_input)
-            else:
-                loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(None, engine.chat, user_input)
-            return response
 
     async def process_streaming_response(self, response):
         """Process various types of streaming responses."""

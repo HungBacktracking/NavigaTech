@@ -252,13 +252,13 @@ class GraphIngestionService:
             query = f"""
             MERGE (comp:{comp_label} {{name: $comp_value}})
             MERGE (c:Career {{id: $entity_id}})
-            MERGE (c)-[:REQUIRES_{{type: $comp_type}}]->(comp)
+            MERGE (c)-[:REQUIRES{{type: $comp_type}}]->(comp)
             """
         else:  # course
             query = f"""
             MERGE (comp:{comp_label} {{name: $comp_value}})
             MERGE (c:Course {{title: $entity_id}})
-            MERGE (c)-[:TEACHES_{{type: $comp_type}}]->(comp)
+            MERGE (c)-[:TEACHES{{type: $comp_type}}]->(comp)
             """
         
         await session.run(

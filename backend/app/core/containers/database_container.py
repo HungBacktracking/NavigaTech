@@ -14,7 +14,7 @@ class DatabaseContainer(containers.DeclarativeContainer):
 
     # Database
     db = providers.Singleton(
-        Database, 
+        Database,
         db_url=config.DATABASE_URI,
         replica_db_url=config.REPLICA_DATABASE_URI
     )
@@ -50,7 +50,11 @@ class DatabaseContainer(containers.DeclarativeContainer):
     neo4j_driver = providers.Singleton(
         GraphDatabase.driver,
         uri=config.NEO4J_URI,
-        auth=(config.NEO4J_USERNAME, config.NEO4J_PASSWORD),
+        auth=providers.Factory(
+            lambda username, password: (username, password),
+            username=config.NEO4J_USERNAME,
+            password=config.NEO4J_PASSWORD
+        ),
         max_connection_pool_size=50,
     )
 
@@ -58,6 +62,10 @@ class DatabaseContainer(containers.DeclarativeContainer):
     async_neo4j_driver = providers.Singleton(
         AsyncGraphDatabase.driver,
         uri=config.NEO4J_URI,
-        auth=(config.NEO4J_USERNAME, config.NEO4J_PASSWORD),
+        auth=providers.Factory(
+            lambda username, password: (username, password),
+            username=config.NEO4J_USERNAME,
+            password=config.NEO4J_PASSWORD
+        ),
         max_connection_pool_size=50,
     )

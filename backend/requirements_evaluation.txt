@@ -1,0 +1,4 @@
+# Evaluation-specific requirements
+rouge-score==0.1.2
+matplotlib==3.8.2
+seaborn==0.13.2 
