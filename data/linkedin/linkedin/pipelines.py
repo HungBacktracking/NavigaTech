@@ -95,8 +95,6 @@ def build_llm_prompt(raw_item: Dict[str, Any]) -> str:
             • knowledge: Include any domain-specific knowledge topics (e.g., Algorithms, Data Structures, Networking, Security) described in the posting.
             • soft_skills: Capture interpersonal or general skills (e.g., Communication, Teamwork, Problem-solving, Leadership); look for phrases like "strong communication skills" or "team player".
             • certifications: Extract any certifications (e.g., "Certified Security Developer", "PMP", "AWS Certified Solutions Architect") mentioned explicitly.
-        - company_addresses (string or null)
-        - company_description (string or null)
         - description (English, markdown format suitable for frontend display)
         
         Rules:
