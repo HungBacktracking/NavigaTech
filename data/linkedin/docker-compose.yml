@@ -1,0 +1,64 @@
+version: '3.7'
+services:
+  splash1:
+    image: scrapinghub/splash:latest
+    container_name: splash1
+    ports:
+      - "8050:8050"
+    restart: unless-stopped
+    command: >
+      splash 
+      --disable-private-mode 
+      --max-timeout 30 
+      --slots 50
+    volumes:
+      - splash-cache1:/home/splash/.cache
+
+  splash2:
+    image: scrapinghub/splash:latest
+    container_name: splash2
+    ports:
+      - "8051:8050"   # ánh xạ cổng host 8051 → cổng container 8050
+    restart: unless-stopped
+    command: >
+      splash 
+      --disable-private-mode 
+      --max-timeout 30 
+      --slots 50
+    volumes:
+      - splash-cache2:/home/splash/.cache
+
+  splash3:
+    image: scrapinghub/splash:latest
+    container_name: splash3
+    ports:
+      - "8052:8050"
+    restart: unless-stopped
+    command: >
+      splash 
+      --disable-private-mode 
+      --max-timeout 30 
+      --slots 50
+    volumes:
+      - splash-cache3:/home/splash/.cache
+
+  splash4:
+    image: scrapinghub/splash:latest
+    container_name: splash4
+    ports:
+      - "8053:8050"
+    restart: unless-stopped
+    command: >
+      splash 
+      --disable-private-mode 
+      --max-timeout 20 
+      --slots 50
+    volumes:
+      - splash-cache4:/home/splash/.cache
+
+
+volumes:
+  splash-cache1:
+  splash-cache2:
+  splash-cache3:
+  splash-cache4:
