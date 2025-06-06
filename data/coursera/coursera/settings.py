@@ -1,4 +1,4 @@
-# Scrapy settings for linkedin project
+# Scrapy settings for coursera project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,12 +7,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-# import scrapy_splash
+BOT_NAME = "coursera"
 
-BOT_NAME = "linkedin"
-
-SPIDER_MODULES = ["linkedin.spiders"]
-NEWSPIDER_MODULE = "linkedin.spiders"
+SPIDER_MODULES = ["coursera.spiders"]
+NEWSPIDER_MODULE = "coursera.spiders"
 
 ADDONS = {}
 
@@ -55,7 +53,7 @@ CONCURRENT_REQUESTS_PER_IP = 4
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 # SPIDER_MIDDLEWARES = {
     # 'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
-   # "linkedin.middlewares.LinkedinSpiderMiddleware": 543,
+   # "coursera.middlewares.CourseraSpiderMiddleware": 543,
 # }
 
 # DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
@@ -67,7 +65,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy_splash.SplashCookiesMiddleware': 723,
     # 'scrapy_splash.SplashMiddleware': 725,
     # 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
-    'linkedin.middlewares.RateLimitDetectionMiddleware': 300,
+    'coursera.middlewares.RateLimitDetectionMiddleware': 300,
     'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
     'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
@@ -90,8 +88,8 @@ FAKEUSERAGENT_FALLBACK = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.go
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "linkedin.pipelines.GeminiNormalizationPipeline": 300,
-    # "linkedin.pipelines.LinkedinPipeline": 300,
+    "coursera.pipelines.GeminiNormalizationPipeline": 300,
+    # "coursera.pipelines.CourseraPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
@@ -137,18 +135,11 @@ RETRY_HTTP_CODES = [500, 502, 503, 504, 522, 524, 408, 429]
 
 
 ROTATING_PROXY_LIST = [
-    '72.10.160.172:25965',
-    '45.12.150.82:8080',
-    '139.59.34.209:8080',
-    '185.234.65.66:1080',
-    '66.201.7.151:3128',
-    '47.236.224.32:8080',
-    '189.240.60.171:9090',
-    '103.156.57.118:8080',
-    '5.161.103.41:88',
-    '91.103.120.55:80',
-    '149.200.200.44:80',
-    '185.234.65.66:1080'
+    '159.69.57.20:8880',
+    '141.94.196.80:8989',
+    '62.133.60.126:24558',
+    '45.140.143.77:18080',
+    '200.174.198.86:8888'
 ]
 
 ROTATING_PROXY_BAN_CODES = [
@@ -158,7 +149,7 @@ ROTATING_PROXY_BAN_CODES = [
 FEEDS = {
     # key: đường dẫn/tên file hoặc URI (có thể kèm protocol như file://, s3://, v.v.)
     # value: cấu hình detalied cho từng output
-    "linkedin_jobs.json": {
+    "coursera.json": {
         "format": "json",         # định dạng (csv, json, jsonlines, xml, v.v.)
         "encoding": "utf-8",      # (tuỳ chọn) mã hoá
         "store_empty": True,     # (tuỳ chọn) có lưu file nếu không có item nào không

@@ -6,7 +6,6 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 
-
 import os
 import json
 import logging
@@ -74,9 +73,9 @@ def rotate_token():
 def build_llm_prompt(raw_item: Dict[str, Any]) -> str:
     prompt = f"""
         You are given a scraped job posting with these attributes in JSON format:
-        
+
         {json.dumps(raw_item, ensure_ascii=False)}
-        
+
         Transform it into a normalized JSON object with exactly these keys:
         - from_site
         - title 
@@ -97,7 +96,7 @@ def build_llm_prompt(raw_item: Dict[str, Any]) -> str:
             • soft_skills: Capture interpersonal or general skills (e.g., Communication, Teamwork, Problem-solving, Leadership); look for phrases like "strong communication skills" or "team player".
             • certifications: Extract any certifications (e.g., "Certified Security Developer", "PMP", "AWS Certified Solutions Architect") mentioned explicitly.
         - description (English, markdown format suitable for frontend display)
-        
+
         Rules:
         1. Convert any relative date strings like "3 days ago" or "1 month ago" into an absolute date in ISO format, assuming today is {datetime.now().strftime("%Y-%m-%d")}.
         2. job_type should be determined from the original "job_type" field; if missing or ambiguous, infer from description or set to null.
@@ -107,7 +106,7 @@ def build_llm_prompt(raw_item: Dict[str, Any]) -> str:
         6. Preserve "job_url" and "company_logo" as-is.
         7. Output only valid JSON. Do not include any extra keys.
         8. If any field is missing or cannot be determined, set it to null (except competencies, which should be an object with empty lists if no data).
-        
+
         Return only the normalized JSON.
         IMPORTANT: Return exactly one JSON object. Do NOT wrap it in triple backticks or any markdown. The response must start with {{ and end with }} and contain no other text. DO NOT RESPONSE LIKE ```json ```.
     """
@@ -134,12 +133,12 @@ def call_gemini_llm(prompt: str) -> Dict[str, Any]:
             return normalized
 
         except json.JSONDecodeError as jde:
-            logger.warning(f"JSON parse error on attempt {attempt+1}: {jde}. Rotating token and retrying.")
+            logger.warning(f"JSON parse error on attempt {attempt + 1}: {jde}. Rotating token and retrying.")
             rotate_token()
             time.sleep(RETRY_DELAY_SECONDS)
 
         except Exception as e:
-            logger.error(f"Error calling Gemini on attempt {attempt+1}: {e}. Rotating token and retrying.")
+            logger.error(f"Error calling Gemini on attempt {attempt + 1}: {e}. Rotating token and retrying.")
             rotate_token()
             time.sleep(RETRY_DELAY_SECONDS)
 
@@ -151,6 +150,7 @@ class GeminiNormalizationPipeline:
     """
     Scrapy pipeline that sends each scraped job item to Gemini for normalization.
     """
+
     def process_item(self, item: JobItem, spider: scrapy.Spider) -> Dict[str, Any]:
         adapter = ItemAdapter(item)
         raw_dict = dict(adapter.asdict())

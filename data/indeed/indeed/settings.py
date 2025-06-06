@@ -1,4 +1,4 @@
-# Scrapy settings for linkedin project
+# Scrapy settings for indeed project
 #
 # For simplicity, this file contains only settings considered important or
 # commonly used. You can find more settings consulting the documentation:
@@ -7,12 +7,10 @@
 #     https://docs.scrapy.org/en/latest/topics/downloader-middleware.html
 #     https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
-# import scrapy_splash
+BOT_NAME = "indeed"
 
-BOT_NAME = "linkedin"
-
-SPIDER_MODULES = ["linkedin.spiders"]
-NEWSPIDER_MODULE = "linkedin.spiders"
+SPIDER_MODULES = ["indeed.spiders"]
+NEWSPIDER_MODULE = "indeed.spiders"
 
 ADDONS = {}
 
@@ -33,7 +31,7 @@ CONCURRENT_REQUESTS = 16
 # Configure a delay for requests for the same website (default: 0)
 # See https://docs.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1
+DOWNLOAD_DELAY = 10
 RANDOMIZE_DOWNLOAD_DELAY = True
 # The download delay setting will honor only one of:
 CONCURRENT_REQUESTS_PER_DOMAIN = 8
@@ -55,7 +53,7 @@ CONCURRENT_REQUESTS_PER_IP = 4
 # See https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 # SPIDER_MIDDLEWARES = {
     # 'scrapy_splash.SplashDeduplicateArgsMiddleware': 100,
-   # "linkedin.middlewares.LinkedinSpiderMiddleware": 543,
+   # "indeed.middlewares.IndeedSpiderMiddleware": 543,
 # }
 
 # DUPEFILTER_CLASS = 'scrapy_splash.SplashAwareDupeFilter'
@@ -67,7 +65,7 @@ DOWNLOADER_MIDDLEWARES = {
     # 'scrapy_splash.SplashCookiesMiddleware': 723,
     # 'scrapy_splash.SplashMiddleware': 725,
     # 'scrapy.downloadermiddlewares.httpcompression.HttpCompressionMiddleware': 810,
-    'linkedin.middlewares.RateLimitDetectionMiddleware': 300,
+    'indeed.middlewares.RateLimitDetectionMiddleware': 300,
     'rotating_proxies.middlewares.RotatingProxyMiddleware': 610,
     'rotating_proxies.middlewares.BanDetectionMiddleware': 620,
     'scrapy_fake_useragent.middleware.RandomUserAgentMiddleware': 400,
@@ -83,22 +81,23 @@ FAKEUSERAGENT_FALLBACK = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.go
 
 # Enable or disable extensions
 # See https://docs.scrapy.org/en/latest/topics/extensions.html
-#EXTENSIONS = {
-#    "scrapy.extensions.telnet.TelnetConsole": None,
-#}
+EXTENSIONS = {
+    "indeed.extensions.S3UploadExtension": 100,
+    # "scrapy.extensions.telnet.TelnetConsole": None,
+}
 
 # Configure item pipelines
 # See https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    "linkedin.pipelines.GeminiNormalizationPipeline": 300,
-    # "linkedin.pipelines.LinkedinPipeline": 300,
+    "indeed.pipelines.GeminiNormalizationPipeline": 300,
+    # "indeed.pipelines.IndeedPipeline": 300,
 }
 
 # Enable and configure the AutoThrottle extension (disabled by default)
 # See https://docs.scrapy.org/en/latest/topics/autothrottle.html
 AUTOTHROTTLE_ENABLED = True
 # The initial download delay
-AUTOTHROTTLE_START_DELAY = 1
+AUTOTHROTTLE_START_DELAY = 10
 # The maximum download delay to be set in case of high latencies
 AUTOTHROTTLE_MAX_DELAY = 10
 # The average number of requests Scrapy should be sending in parallel to
@@ -158,7 +157,7 @@ ROTATING_PROXY_BAN_CODES = [
 FEEDS = {
     # key: đường dẫn/tên file hoặc URI (có thể kèm protocol như file://, s3://, v.v.)
     # value: cấu hình detalied cho từng output
-    "linkedin_jobs.json": {
+    "indeed_jobs.json": {
         "format": "json",         # định dạng (csv, json, jsonlines, xml, v.v.)
         "encoding": "utf-8",      # (tuỳ chọn) mã hoá
         "store_empty": True,     # (tuỳ chọn) có lưu file nếu không có item nào không

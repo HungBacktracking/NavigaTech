@@ -6,7 +6,6 @@
 # useful for handling different item types with a single interface
 from itemadapter import ItemAdapter
 
-
 import os
 import json
 import logging
@@ -20,7 +19,7 @@ from itemadapter import ItemAdapter
 from dateutil.relativedelta import relativedelta
 from datetime import datetime
 
-from .items import JobItem
+from .items import CourseItem
 
 load_dotenv()
 
@@ -47,9 +46,8 @@ TOKENS: List[str] = [
 MAX_RETRIES = 5
 RETRY_DELAY_SECONDS = 10
 
-# Job type & level taxonomy
-VALID_JOB_TYPES = ["Internship", "Contract", "Full-time", "Part-time", "Freelancer"]
-VALID_JOB_LEVELS = ["Intern", "Entry-level", "Junior", "Mid-level", "Senior", "Leader", "Principal"]
+# Course level
+VALID_COURSE_LEVELS = ["Beginner", "Intermediate", "Advanced"]
 
 # Configure initial Gemini client
 token_index = 0
@@ -73,20 +71,23 @@ def rotate_token():
 
 def build_llm_prompt(raw_item: Dict[str, Any]) -> str:
     prompt = f"""
-        You are given a scraped job posting with these attributes in JSON format:
-        
+        You are given a scraped courses with these attributes in JSON format:
+
         {json.dumps(raw_item, ensure_ascii=False)}
-        
+
         Transform it into a normalized JSON object with exactly these keys:
-        - from_site
+        - from_site (Coursera or Udemy)
         - title 
-        - company 
-        - location (English)
-        - date_posted (ISO format YYYY-MM-DD)
-        - job_url
-        - company_logo
-        - job_type (one of: {', '.join(VALID_JOB_TYPES)})
-        - job_level (one of: {', '.join(VALID_JOB_LEVELS)})
+        - instructor
+        - organization
+        - rating
+        - reviews
+        - enrolled
+        - estimated_time (infer from "meta_data")
+        - skills (list of Strings written in English)
+        - what_you_will_learn (list of Strings written in English)
+        - url
+        - level (one of: {', '.join(VALID_COURSE_LEVELS)}, classify based on description/skills/what_you_will_learn or the origin)
         - competencies (an object with the following subkeys, each must be a list of strings. If you cannot find any items for a subkey, return an empty list.)
             • programming_languages: Extract any explicit mentions of languages (e.g., Python, Java, C++) 
               from the title, description, or other text fields.
@@ -97,18 +98,17 @@ def build_llm_prompt(raw_item: Dict[str, Any]) -> str:
             • soft_skills: Capture interpersonal or general skills (e.g., Communication, Teamwork, Problem-solving, Leadership); look for phrases like "strong communication skills" or "team player".
             • certifications: Extract any certifications (e.g., "Certified Security Developer", "PMP", "AWS Certified Solutions Architect") mentioned explicitly.
         - description (English, markdown format suitable for frontend display)
-        
+
         Rules:
         1. Convert any relative date strings like "3 days ago" or "1 month ago" into an absolute date in ISO format, assuming today is {datetime.now().strftime("%Y-%m-%d")}.
-        2. job_type should be determined from the original "job_type" field; if missing or ambiguous, infer from description or set to null.
-        3. job_level should be one of the valid levels; infer from "job_level", or from description context. If uncertain, set to null.
-        4. Translate any non-English text (for location, description, job_type, job_level) into English.
-        5. Ensure "description" is full markdown with proper line breaks and bullets if list-like and maybe headings, bold, italics if it is suitable.
-        6. Preserve "job_url" and "company_logo" as-is.
-        7. Output only valid JSON. Do not include any extra keys.
-        8. If any field is missing or cannot be determined, set it to null (except competencies, which should be an object with empty lists if no data).
-        
-        Return only the normalized JSON.
+        2. level should be one of the valid levels; infer from "meta_data", or from description context. If uncertain, set to null.
+        3. Translate any non-English text (except title) into English.
+        4. Ensure "description" is full markdown with proper line breaks and bullets if list-like and maybe headings, bold, italics if it is suitable.
+        5. Output only valid JSON. Do not include any extra keys.
+        6. If any field is missing or cannot be determined, set it to null (except competencies, skills, what_you_will_learn, which should be an object with empty lists if no data).
+
+        Return only the normalized JSON. CONTAINS ONLY ENGLISH in description, translate the headings, and everything in description. 
+        Do not remain null in job_type and job_level.
         IMPORTANT: Return exactly one JSON object. Do NOT wrap it in triple backticks or any markdown. The response must start with {{ and end with }} and contain no other text. DO NOT RESPONSE LIKE ```json ```.
     """
     return prompt.strip()
@@ -134,12 +134,12 @@ def call_gemini_llm(prompt: str) -> Dict[str, Any]:
             return normalized
 
         except json.JSONDecodeError as jde:
-            logger.warning(f"JSON parse error on attempt {attempt+1}: {jde}. Rotating token and retrying.")
+            logger.warning(f"JSON parse error on attempt {attempt + 1}: {jde}. Rotating token and retrying.")
             rotate_token()
             time.sleep(RETRY_DELAY_SECONDS)
 
         except Exception as e:
-            logger.error(f"Error calling Gemini on attempt {attempt+1}: {e}. Rotating token and retrying.")
+            logger.error(f"Error calling Gemini on attempt {attempt + 1}: {e}. Rotating token and retrying.")
             rotate_token()
             time.sleep(RETRY_DELAY_SECONDS)
 
@@ -151,7 +151,8 @@ class GeminiNormalizationPipeline:
     """
     Scrapy pipeline that sends each scraped job item to Gemini for normalization.
     """
-    def process_item(self, item: JobItem, spider: scrapy.Spider) -> Dict[str, Any]:
+
+    def process_item(self, item: CourseItem, spider: scrapy.Spider) -> Dict[str, Any]:
         adapter = ItemAdapter(item)
         raw_dict = dict(adapter.asdict())
 
@@ -162,7 +163,7 @@ class GeminiNormalizationPipeline:
             normalized: str = call_gemini_llm(prompt)
 
         except Exception as err:
-            logger.error(f"Failed to normalize item {raw_dict.get('job_url')}: {err}")
+            logger.error(f"Failed to normalize item {raw_dict.get('url')}: {err}")
             # Optionally, return raw item or drop
             return raw_dict  # or raise DropItem()
 

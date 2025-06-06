@@ -10,10 +10,10 @@ from dateutil.parser import parse
 load_dotenv()
 
 # AWS config
-aws_access_key = os.environ['AWS_ACCESS_KEY_ID_DE']
-aws_secret_key = os.environ['AWS_SECRET_ACCESS_KEY_DE']
-aws_region = os.environ.get('AWS_REGION_DE', 'ap-southeast-1')
-bucket_name = os.environ['AWS_S3_BUCKET_DE']
+aws_access_key = os.environ['AWS_ACCESS_KEY_ID']
+aws_secret_key = os.environ['AWS_SECRET_KEY']
+aws_region = os.environ.get('AWS_REGION', 'ap-southeast-1')
+bucket_name = os.environ['AWS_S3_BUCKET_NAME']
 
 # # PostgreSQL config
 # pg_user = os.environ['PG_USER']
@@ -30,7 +30,7 @@ s3 = boto3.client(
     region_name=aws_region
 )
 
-response = s3.get_object(Bucket=bucket_name, Key='clean2/final_final.json')
+response = s3.get_object(Bucket=bucket_name, Key='data/job_data.json')
 jobs = json.loads(response['Body'].read())
 
 # database
@@ -78,27 +78,18 @@ with engine.connect() as conn:
         logo_url = job.get("company_logo") or ""
         job_name = job.get("title") or "N/A"
         company_name = job.get("company") or "N/A"
+        from_site = job.get("from_site") or "N/A"
 
-
-        # Xác định from_site từ job_url
-        from_site = None
-        job_url_lower = job_url.lower()
-        if "linkedin" in job_url_lower:
-            from_site = "linkedin"
-        elif "indeed" in job_url_lower:
-            from_site = "indeed"
-        elif "vietnamworks" in job_url_lower:
-            from_site = "vietnamworks"
 
         stmt = text("""
             INSERT INTO job (
                 id, job_url, logo_url, job_name, job_level, job_type, from_site,
-                company_name, company_type, company_address, company_description,
-                skills, location, date_posted, salary, job_description, created_at, updated_at, deleted_at
+                company_name,
+                location, date_posted, job_description, created_at, updated_at, deleted_at
             ) VALUES (
                 :id, :job_url, :logo_url, :job_name, :job_level, :job_type, :from_site,
-                :company_name, :company_type, :company_address, :company_description,
-                :skills, :location, :date_posted, :salary, :job_description, :created_at, :updated_at, :deleted_at
+                :company_name,
+                :location, :date_posted, :job_description, :created_at, :updated_at, :deleted_at
             )
             ON CONFLICT (id) DO NOTHING
         """)
@@ -112,13 +103,8 @@ with engine.connect() as conn:
             "job_type": job.get("job_type"),
             "from_site": from_site,
             "company_name": company_name,
-            "company_type": job.get("job_type"),
-            "company_address": job.get("company_address"),
-            "company_description": job.get("company_description"),
-            "skills": job.get("skills"),
             "location": job.get("location"),
             "date_posted": date_posted,
-            "salary": job.get("salary"),
             "job_description": job.get("description"),
             "created_at": created_at,
             "updated_at": updated_at,
