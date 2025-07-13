@@ -1,10 +1,11 @@
 from dependency_injector import containers, providers
+from llama_index.embeddings.huggingface import HuggingFaceEmbedding
 
 from app.chatbot.chat_engine import ChatEngine
 from app.chatbot.small_talk_checker import SmallTalkChecker
 from app.chatbot.graph_retriever import Neo4jGraphRetriever
 from app.chatbot.hybrid_retriever import HybridRetriever
-from llama_index.core import VectorStoreIndex, load_index_from_storage, StorageContext
+from llama_index.core import Settings, VectorStoreIndex, load_index_from_storage, StorageContext
 from llama_index.vector_stores.qdrant import QdrantVectorStore
 from llama_index.core.storage.chat_store import SimpleChatStore
 from llama_index.postprocessor.cohere_rerank import CohereRerank
@@ -50,10 +51,17 @@ class ChatbotContainer(containers.DeclarativeContainer):
         enable_hybrid=True,
     )
 
+    # settings = providers.Singleton(
+    #     Settings,
+    #     embed_model=AI.embed_model
+    # )
+
     # Index components
     index = providers.Singleton(
         VectorStoreIndex.from_vector_store,
         vector_store=vector_store,
+        # settings=settings,
+        embed_model=AI.embed_model,
         use_async=True,
     )
 

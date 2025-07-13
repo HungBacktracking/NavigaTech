@@ -142,3 +142,7 @@ dmypy.json
 
 # Data local
 app/courses_db/
+evaluation/app/courses_db/
+evaluation/evaluation_datasets
+evaluation/evaluation_results
+
