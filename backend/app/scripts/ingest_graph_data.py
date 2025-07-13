@@ -2,6 +2,7 @@ import asyncio
 import json
 import os
 import sys
+import boto3
 
 from llama_index.llms.gemini import Gemini
 from neo4j import AsyncGraphDatabase
@@ -28,8 +29,16 @@ async def ingest_data():
         max_tokens=1000,
         temperature=0.7
     )
+
+    s3 = boto3.client(
+        's3',
+        aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
+        aws_secret_access_key=os.getenv("AWS_SECRET_KEY"),
+        region_name=os.getenv("AWS_REGION")
+    )
+    bucket_name = os.getenv('AWS_S3_BUCKET_NAME')
     
-    ingestion_service = GraphIngestionService(neo4j_driver, llm)
+    ingestion_service = GraphIngestionService(neo4j_driver)
     
     # Create indices first
     print("Creating Neo4j indices...")
@@ -38,8 +47,8 @@ async def ingest_data():
     
     # Load job data
     print("\nLoading job data...")
-    with open('../sample_data/job.json', 'r', encoding='utf-8') as f:
-        job_data = json.load(f)
+    job_response = s3.get_object(Bucket=bucket_name, Key='data/job_data.json')
+    job_data = json.loads(job_response['Body'].read())
     
     if isinstance(job_data, dict):
         job_data = [job_data]
@@ -50,8 +59,8 @@ async def ingest_data():
     
     # Load course data
     print("\nLoading course data...")
-    with open('../sample_data/course.json', 'r', encoding='utf-8') as f:
-        course_data = json.load(f)
+    course_response = s3.get_object(Bucket=bucket_name, Key='data/course_data.json')
+    course_data = json.loads(course_response['Body'].read())
     
     if isinstance(course_data, dict):
         course_data = [course_data]

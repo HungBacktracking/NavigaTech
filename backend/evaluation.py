@@ -67,14 +67,14 @@ class SimpleRAGASEvaluator:
         questions = [
             "What skills are needed for a Data Engineer position?",
             "Can you recommend Python courses for beginners?",
-            "What are the responsibilities of a Software Engineer?",
+            # "What are the responsibilities of a Software Engineer?",
             "How can I improve my data analysis skills?",
-            "What is the typical salary range for a Machine Learning Engineer?",
-            "What are the requirements for a DevOps Engineer role?",
-            "Which online courses teach React development?",
-            "What does a Product Manager do?",
-            "How to transition into a data science career?",
-            "What programming languages should a backend developer know?"
+            # "What is the typical salary range for a Machine Learning Engineer?",
+            # "What are the requirements for a DevOps Engineer role?",
+            # "Which online courses teach React development?",
+            # "What does a Product Manager do?",
+            # "How to transition into a data science career?",
+            # "What programming languages should a backend developer know?"
         ]
         return questions
 

@@ -55,18 +55,9 @@ class Neo4jGraphRetriever(BaseRetriever):
         try:
             query_str = query_bundle.query_str.lower()
 
-            # Determine query intent
-            if any(word in query_str for word in ['job', 'career', 'position', 'role', 'vacancy']):
-                return await self._retrieve_jobs(query_str)
-            elif any(word in query_str for word in ['course', 'learn', 'study', 'training', 'education']):
-                return await self._retrieve_courses(query_str)
-            elif any(word in query_str for word in ['skill', 'competency', 'ability', 'expertise']):
-                return await self._retrieve_by_skills(query_str)
-            else:
-                # Combined search
-                jobs = await self._retrieve_jobs(query_str)
-                courses = await self._retrieve_courses(query_str)
-                return self._merge_results(jobs, courses)
+            jobs = await self._retrieve_jobs(query_str)
+            courses = await self._retrieve_courses(query_str)
+            return self._merge_results(jobs, courses)
         except Exception as e:
             print(f"Error in graph retrieval: {e}")
             return []
