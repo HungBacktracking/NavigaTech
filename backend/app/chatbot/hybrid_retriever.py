@@ -90,16 +90,12 @@ class HybridRetriever(BaseRetriever):
     ) -> List[NodeWithScore]:
         """Safely retrieve with error handling"""
         try:
-            if hasattr(retriever, '_aretrieve'):
-                return await retriever._aretrieve(query_bundle)
-            else:
-                # Fallback to sync retrieve in thread
-                loop = asyncio.get_event_loop()
-                return await loop.run_in_executor(
-                    None, 
-                    retriever._retrieve, 
-                    query_bundle
-                )
+            loop = asyncio.get_event_loop()
+            return await loop.run_in_executor(
+                None,
+                retriever._retrieve,
+                query_bundle
+            )
         except Exception as e:
             print(f"Error in retriever {type(retriever).__name__}: {e}")
             return []
