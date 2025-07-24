@@ -1,4 +1,3 @@
-
 from llama_index.core import Settings
 from llama_index.core.memory import ChatMemoryBuffer
 from llama_index.core.storage.chat_store import SimpleChatStore
@@ -14,15 +13,226 @@ from llama_index.core.llms import ChatMessage
 import nest_asyncio
 import json
 import asyncio
+from typing import Optional, Dict, List, AsyncGenerator
+from dataclasses import dataclass
+import re
 
 nest_asyncio.apply()
+
+
+@dataclass
+class DebateConfig:
+    """Configuration for multi-agent debate"""
+    turns: int = 2
+    temperature: float = 0.6
+
+    expert_meta: str = """You are an expert career advisor specializing in computer science and IT. 
+    You provide thoughtful, comprehensive advice based on the context provided."""
+
+    expert_prompt: str = """
+    You are an intelligent assistant specializing in job matching, job discovery, resume analysis, and career guidance. Your objective is to help users find relevant job opportunities and assess their fit based on job descriptions and their professional background. 
+
+    You have access to:   
+    - A vector database of job descriptions and online courses (retrieved based on contextual relevance)   
+    - The user's resume or summarized professional experience   
+
+    ### Guidelines for Handling User Queries: 
+
+    1. **Understanding Intent:**   
+    - Analyze the user's query to determine whether they are seeking job recommendations, course suggestions, or roadmap guidance. 
+
+    2. **Contextual Query Rephrasing:**   
+    - Use relevant job descriptions and resume content to rephrase or clarify the user's query as a specific, standalone question. 
+
+    3. **Job Recommendations:**   
+    - If the query involves job recommendations, respond in **bullet points** with the following format: 
+    ## Data Engineer 
+
+    **Company Name:** Digital Intellect  
+    **Summary:** Role Overview: As a Data Engineer, you will collaborate closely with the client's Data Lead to design, develop, and maintain data architectures that enhance their data platforms.... 
+    **URL:** https://www.vietnamworks.com/data-engineer--1906728-jv?source=searchResults&searchType=2&placement=1906728&sortBy=date 
+
+    4. **Course Recommendations or Roadmaps:**   
+    - If the query involves courses or roadmaps, respond in **bullet points** with the following format: 
+
+    ## {Course Title} 
+
+    **Skills:** {Skills Learned}   
+    **What You Will Learn:** {What the user will learn here}   
+    **Description:** {Course Description}   
+    **URL:** {Course URL} 
+
+    
+    Based on the context and user query, provide detailed expert advice 
+    highlighting opportunities, strengths, and positive paths forward.
+    Instruction: Based on the context documents, provide a detailed answer for the user question. 
+    Answer "don't know" if not present in the document.
+    """
+
+    critic_meta: str = """
+    You are a critical analyzer who identifies potential challenges and gaps.
+    You provide constructive criticism to ensure comprehensive guidance."""
+
+    critic_prompt: str = """
+    You are an intelligent assistant specializing in job matching, job discovery, resume analysis, and career guidance. Your objective is to help users find relevant job opportunities and assess their fit based on job descriptions and their professional background. 
+
+    You have access to:   
+    - A vector database of job descriptions and online courses (retrieved based on contextual relevance)   
+    - The user's resume or summarized professional experience   
+
+    ### Guidelines for Handling User Queries: 
+
+    1. **Understanding Intent:**   
+    - Analyze the user's query to determine whether they are seeking job recommendations, course suggestions, or roadmap guidance. 
+
+    2. **Contextual Query Rephrasing:**   
+    - Use relevant job descriptions and resume content to rephrase or clarify the user's query as a specific, standalone question. 
+
+    3. **Job Recommendations:**   
+    - If the query involves job recommendations, respond in **bullet points** with the following format: 
+    ## Data Engineer 
+
+    **Company Name:** Digital Intellect  
+    **Summary:** Role Overview: As a Data Engineer, you will collaborate closely with the client's Data Lead to design, develop, and maintain data architectures that enhance their data platforms.... 
+    **URL:** https://www.vietnamworks.com/data-engineer--1906728-jv?source=searchResults&searchType=2&placement=1906728&sortBy=date 
+
+    4. **Course Recommendations or Roadmaps:**   
+    - If the query involves courses or roadmaps, respond in **bullet points** with the following format: 
+
+    ## {Course Title} 
+
+    **Skills:** {Skills Learned}   
+    **What You Will Learn:** {What the user will learn here}   
+    **Description:** {Course Description}   
+    **URL:** {Course URL} 
+
+    
+    Analyze the previous response and identify any gaps, challenges, 
+    or areas that need more consideration. Be constructive but thorough.
+    Instruction: Based on the context documents, provide a detailed answer for the user question. 
+    Answer "don't know" if not present in the document.
+    """
+
+    synthesizer_meta: str = """You are a synthesis expert who combines multiple perspectives 
+    into comprehensive, balanced advice."""
+
+    synthesizer_prompt: str = """
+    You are an intelligent assistant specializing in job matching, job discovery, resume analysis, and career guidance. Your objective is to help users find relevant job opportunities and assess their fit based on job descriptions and their professional background. 
+
+            You have access to:   
+            - A vector database of job descriptions and online courses (retrieved based on contextual relevance)   
+            - The user's resume or summarized professional experience   
+
+            ### Guidelines for Handling User Queries: 
+
+            1. **Understanding Intent:**   
+            - Analyze the user's query to determine whether they are seeking job recommendations, course suggestions, or roadmap guidance. 
+
+            2. **Contextual Query Rephrasing:**   
+            - Use relevant job descriptions and resume content to rephrase or clarify the user's query as a specific, standalone question. 
+
+            3. **Job Recommendations:**   
+            - If the query involves job recommendations, respond in **bullet points** with the following format: 
+            ## Data Engineer 
+
+            **Company Name:** Digital Intellect  
+            **Summary:** Role Overview: As a Data Engineer, you will collaborate closely with the client's Data Lead to design, develop, and maintain data architectures that enhance their data platforms.... 
+            **URL:** https://www.vietnamworks.com/data-engineer--1906728-jv?source=searchResults&searchType=2&placement=1906728&sortBy=date 
+
+            4. **Course Recommendations or Roadmaps:**   
+            - If the query involves courses or roadmaps, respond in **bullet points** with the following format: 
+
+            ## {Course Title} 
+
+            **Skills:** {Skills Learned}   
+            **What You Will Learn:** {What the user will learn here}   
+            **Description:** {Course Description}   
+            **URL:** {Course URL} 
+            
+            5. **Response Formatting:**   
+            - Ensure all responses are structured in **Markdown format** with appropriate headings for clarity and organization. 
+            - Job and course Title MUST be heading like this: ## Job Title 
+
+    
+    Based on the expert perspective: {expert_response}
+    And the critical analysis: {critic_response}
+
+    Synthesize a comprehensive, balanced response that:
+    1. Incorporates the strengths from the expert perspective
+    2. Addresses the concerns raised by the critic
+    3. Provides actionable, practical advice
+    4. Maintains the same markdown formatting as requested
+
+    User's original query: {user_query}
+    Context provided: {context}
+    
+    Instruction: Based on the context documents and previous conversation, provide a detailed answer for the user question. 
+    Answer "don't know" if not present in the document.
+    """
+
+
+class MultiAgentDebateEngine:
+    """Multi-agent debate engine for enhanced responses"""
+
+    def __init__(self, llm, config: Optional[DebateConfig] = None):
+        self.llm = llm
+        self.config = config or DebateConfig()
+
+    async def debate(self, context: str, user_query: str) -> AsyncGenerator[str, None]:
+        """Run multi-agent debate and yield results"""
+
+        # Phase 1: Expert response
+        expert_messages = [
+            ChatMessage(role="system", content=self.config.expert_meta),
+            ChatMessage(role="user",
+                        content=f"Context: {context}\n\nQuery: {user_query}\n\n{self.config.expert_prompt}")
+        ]
+
+        expert_response = ""
+        expert_stream = await self.llm.astream_chat(expert_messages)
+        async for chunk in expert_stream:
+            if chunk.delta:
+                expert_response += chunk.delta
+
+        # Phase 2: Critic response
+        critic_messages = [
+            ChatMessage(role="system", content=self.config.critic_meta),
+            ChatMessage(role="user", content=f"Context: {context}\n\nQuery: {user_query}\n\nExpert's response: {expert_response}\n\n{self.config.critic_prompt}")
+        ]
+
+        critic_response = ""
+
+        critic_stream = await self.llm.astream_chat(critic_messages)
+        async for chunk in critic_stream:
+            if chunk.delta:
+                critic_response += chunk.delta
+
+
+
+        # Phase 3: Synthesis
+        synthesis_prompt = self.config.synthesizer_prompt.format(
+            expert_response=expert_response,
+            critic_response=critic_response,
+            user_query=user_query,
+            context=context
+        )
+
+        synthesizer_messages = [
+            ChatMessage(role="system", content=self.config.synthesizer_meta),
+            ChatMessage(role="user", content=synthesis_prompt)
+        ]
+
+
+        synthesis_stream = await self.llm.astream_chat(synthesizer_messages)
+        async for chunk in synthesis_stream:
+            if chunk.delta:
+                yield chunk.delta
 
 
 class ChatEngine:
     """
     Chatbot with two RAG pipelines (job & course) plus small talk.
-    Preserves chat history across all dialogues via memory buffer.
-    Routes queries via RouterQueryEngine.
+    Now includes multi-agent debate capability.
     """
 
     def __init__(
@@ -37,7 +247,9 @@ class ChatEngine:
             job_collection: str = 'job_description_2',
             top_k: int = 20,
             temperature: float = 0.6,
-            max_tokens: int = 10000
+            max_tokens: int = 10000,
+            enable_debate: bool = False,
+            debate_config: Optional[DebateConfig] = None  # New parameter
     ):
         # Load environment variables
         self.token_limit = token_limit
@@ -59,6 +271,10 @@ class ChatEngine:
         self.rag_engine = None
         self.smalltalk_engine = None
         self.chat_memory = None
+
+        # Multi-agent debate setup
+        self.enable_debate = enable_debate
+        self.debate_engine = MultiAgentDebateEngine(llm, debate_config)
 
     def compose(self, resume, memory, session_id):
         Settings.llm = self.llm
@@ -207,29 +423,73 @@ class ChatEngine:
 
         return json.dumps(chat_history)
 
+    async def stream_chat(self, user_input: str, use_debate: bool = None):
+        """
+        Stream chat with optional multi-agent debate
 
-    async def stream_chat(self, user_input: str):
+        Args:
+            user_input: The user's input query
+            use_debate: Override the default debate setting. If None, uses self.enable_debate
+        """
         if not self.rag_engine or not self.smalltalk_engine:
             yield "ERROR: Chat engine not properly initialized."
             return
 
+        # Determine if we should use debate
+        should_use_debate = use_debate if use_debate is not None else self.enable_debate
+
         try:
             if self.checker.is_small_talk(user_input):
                 response = self.smalltalk_engine.stream_chat(user_input)
+                async for chunk in self.process_streaming_response(response):
+                    if chunk:
+                        yield chunk
             else:
-                response = self.rag_engine.stream_chat(user_input)
+                if should_use_debate:
+                    # Use multi-agent debate for RAG queries
+                    async for chunk in self.stream_chat_with_debate(user_input):
+                        yield chunk
+                else:
+                    # Use standard RAG response
+                    response = self.rag_engine.stream_chat(user_input)
+                    async for chunk in self.process_streaming_response(response):
+                        if chunk:
+                            yield chunk
 
-            if response is None:
-                yield "ERROR: Failed to get streaming response"
-                return
-
-            async for chunk in self.process_streaming_response(response):
-                if chunk:
-                    yield chunk
-                
         except Exception as e:
             print(f"Error in stream_chat: {str(e)}")
             yield f"ERROR: {str(e)}"
+
+    async def stream_chat_with_debate(self, user_input: str):
+        """Stream chat using multi-agent debate for enhanced responses"""
+
+        # First, get the context from retriever
+        job_tool = self.build_tool(
+            retriever=self.retrievers["job"],
+            tool_name="job retriever tool",
+            description="Useful for retrieving job-related context"
+        )
+        course_tool = self.build_tool(
+            retriever=self.retrievers["course"],
+            tool_name="course retriever tool",
+            description="Useful for retrieving course and learning path queries context"
+        )
+
+        main_retriever = RouterRetriever(
+            selector=LLMSingleSelector.from_defaults(llm=self.llm),
+            retriever_tools=[job_tool, course_tool]
+        )
+
+        # Retrieve context
+        nodes = main_retriever.retrieve(user_input)
+        context = "\n\n".join([node.get_content() for node in nodes])
+
+        # Add resume context
+        full_context = f"RETRIEVED CONTEXT:\n{context}"
+
+        # Run multi-agent debate
+        async for chunk in self.debate_engine.debate(full_context, user_input):
+            yield chunk
 
     async def process_streaming_response(self, response):
         """Process various types of streaming responses."""

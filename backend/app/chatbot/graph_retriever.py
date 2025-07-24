@@ -1,10 +1,8 @@
 from typing import List, Dict, Any, Optional
-from neo4j import AsyncSession
+from neo4j import Session
 from llama_index.core.schema import NodeWithScore, TextNode, QueryBundle
 from llama_index.core.retrievers import BaseRetriever
 from llama_index.core.callbacks import CallbackManager
-import asyncio
-
 
 class Neo4jGraphRetriever(BaseRetriever):
     def __init__(
@@ -18,12 +16,12 @@ class Neo4jGraphRetriever(BaseRetriever):
         self._is_initialized = False
         super().__init__(callback_manager=callback_manager)
 
-    async def _check_connection(self):
+    def _check_connection(self):
         """Check if Neo4j connection is available"""
         if not self._is_initialized:
             try:
-                async with self.driver.session() as session:
-                    await session.run("RETURN 1")
+                with self.driver.session() as session:
+                    session.run("RETURN 1")
                 self._is_initialized = True
             except Exception as e:
                 print(f"Neo4j connection error: {e}")
@@ -31,46 +29,25 @@ class Neo4jGraphRetriever(BaseRetriever):
         return True
 
     def _retrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
-        """Sync retrieve - runs async method in sync context"""
+        """Synchronous retrieve from Neo4j graph."""
+        if not self._check_connection():
+            return []
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If there's already a running loop, create a task
-                import concurrent.futures
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    future = executor.submit(asyncio.run, self._aretrieve(query_bundle))
-                    return future.result()
-            else:
-                return loop.run_until_complete(self._aretrieve(query_bundle))
+            query_str = query_bundle.query_str.lower()
+            jobs = self._retrieve_jobs(query_str)
+            courses = self._retrieve_courses(query_str)
+            return self._merge_results(jobs, courses)
         except Exception as e:
             print(f"Error in sync retrieve: {e}")
             return []
 
-    async def _aretrieve(self, query_bundle: QueryBundle) -> List[NodeWithScore]:
-        """Async retrieve from Neo4j graph"""
-        # Check connection first
-        if not await self._check_connection():
-            return []
-
-        try:
-            query_str = query_bundle.query_str.lower()
-
-            jobs = await self._retrieve_jobs(query_str)
-            courses = await self._retrieve_courses(query_str)
-            return self._merge_results(jobs, courses)
-        except Exception as e:
-            print(f"Error in graph retrieval: {e}")
-            return []
-
-    async def _retrieve_jobs(self, query_text: str) -> List[NodeWithScore]:
-        """Retrieve jobs from graph based on query"""
-        async with self.driver.session() as session:
-            # Extract potential skills from query
-            skills = await self._extract_skills_from_query(session, query_text)
+    def _retrieve_jobs(self, query_text: str) -> List[NodeWithScore]:
+        """Retrieve jobs from graph based on query."""
+        with self.driver.session() as session:
+            skills = self._extract_skills_from_query(session, query_text)
 
             if skills:
-                # Search by required skills
-                result = await session.run(
+                result = session.run(
                     """
                     MATCH (c:Career)-[r:REQUIRES]->(comp)
                     WHERE comp.name IN $skills
@@ -89,8 +66,7 @@ class Neo4jGraphRetriever(BaseRetriever):
                     limit=self.top_k
                 )
             else:
-                # Fallback to text search
-                result = await session.run(
+                result = session.run(
                     """
                     MATCH (c:Career)
                     WHERE toLower(c.title) CONTAINS toLower($query_text)
@@ -108,8 +84,8 @@ class Neo4jGraphRetriever(BaseRetriever):
                     limit=self.top_k
                 )
 
-            nodes = []
-            async for record in result:
+            nodes: List[NodeWithScore] = []
+            for record in result:
                 text = self._format_job_text(record)
                 node = TextNode(
                     text=text,
@@ -123,18 +99,15 @@ class Neo4jGraphRetriever(BaseRetriever):
                     }
                 )
                 nodes.append(NodeWithScore(node=node, score=1.0))
-            print("Job nodes:", nodes)
             return nodes
 
-    async def _retrieve_courses(self, query_text: str) -> List[NodeWithScore]:
-        """Retrieve courses from graph based on query"""
-        async with self.driver.session() as session:
-            # Extract potential skills from query
-            skills = await self._extract_skills_from_query(session, query_text)
+    def _retrieve_courses(self, query_text: str) -> List[NodeWithScore]:
+        """Retrieve courses from graph based on query."""
+        with self.driver.session() as session:
+            skills = self._extract_skills_from_query(session, query_text)
 
             if skills:
-                # Search by taught skills
-                result = await session.run(
+                result = session.run(
                     """
                     MATCH (c:Course)-[r:TEACHES]->(comp)
                     WHERE comp.name IN $skills
@@ -153,12 +126,12 @@ class Neo4jGraphRetriever(BaseRetriever):
                     limit=self.top_k
                 )
             else:
-                # Fallback to text search
-                result = await session.run(
+                result = session.run(
                     """
                     MATCH (c:Course)
                     WHERE toLower(c.title) CONTAINS toLower($query_text)
                        OR toLower(c.description) CONTAINS toLower($query_text)
+                       OR toLower($query_text) CONTAINS toLower($title)
                     OPTIONAL MATCH (c)<-[:COLLABORATES_WITH]-(o:Organization)
                     OPTIONAL MATCH (c)-[:TEACHES]->(comp)
                     WITH c, o, COLLECT(DISTINCT comp.name) as taught_skills
@@ -172,8 +145,8 @@ class Neo4jGraphRetriever(BaseRetriever):
                     limit=self.top_k
                 )
 
-            nodes = []
-            async for record in result:
+            nodes: List[NodeWithScore] = []
+            for record in result:
                 text = self._format_course_text(record)
                 node = TextNode(
                     text=text,
@@ -186,16 +159,12 @@ class Neo4jGraphRetriever(BaseRetriever):
                     }
                 )
                 nodes.append(NodeWithScore(node=node, score=1.0))
-
-            print("Course nodes:", nodes)
-
             return nodes
 
-    async def _retrieve_by_skills(self, query_text: str) -> List[NodeWithScore]:
-        """Retrieve both jobs and courses based on skills"""
-        async with self.driver.session() as session:
-            # Find paths between skills and opportunities
-            result = await session.run(
+    def _retrieve_by_skills(self, query_text: str) -> List[NodeWithScore]:
+        """Retrieve both jobs and courses based on skills."""
+        with self.driver.session() as session:
+            result = session.run(
                 """
                 // Find jobs that require skills matching the query
                 MATCH (c:Career)-[:REQUIRES]->(skill)
@@ -217,8 +186,8 @@ class Neo4jGraphRetriever(BaseRetriever):
                 half_limit=self.top_k // 2
             )
 
-            nodes = []
-            async for record in result:
+            nodes: List[NodeWithScore] = []
+            for record in result:
                 entity = record['c']
                 if record['type'] == 'job':
                     text = f"Job: {entity.get('title', '')}\n"
@@ -237,16 +206,13 @@ class Neo4jGraphRetriever(BaseRetriever):
                     }
                 )
                 nodes.append(NodeWithScore(node=node, score=1.0))
-            print("Skills nodes:", nodes)
             return nodes
 
-    async def _extract_skills_from_query(self, session: AsyncSession, query_text: str) -> List[str]:
-        """Extract known skills from query by matching against graph"""
+    def _extract_skills_from_query(self, session: Session, query_text: str) -> List[str]:
+        """Extract known skills from query by matching against graph."""
         try:
-            # Sanitize query words to prevent injection
             query_words = [word.strip().lower() for word in query_text.split() if word.strip()]
-
-            result = await session.run(
+            result = session.run(
                 """
                 MATCH (n)
                 WHERE (n:ProgrammingLanguage OR n:Framework OR n:Platform 
@@ -256,12 +222,7 @@ class Neo4jGraphRetriever(BaseRetriever):
                 """,
                 query_words=query_words
             )
-
-            skills = []
-            async for record in result:
-                skills.append(record['skill'])
-
-            return skills
+            return [record['skill'] for record in result]
         except Exception as e:
             print(f"Error extracting skills: {e}")
             return []

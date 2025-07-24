@@ -110,7 +110,7 @@ class ChatbotService(BaseService):
 
             full_response = ""
             try:
-                generator = self.chat_engine.stream_chat(message)
+                generator = self.chat_engine.stream_chat(user_input=message, use_debate=True)
                 if hasattr(generator, '__await__'):
                     generator = await generator
 

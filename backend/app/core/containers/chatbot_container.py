@@ -18,7 +18,7 @@ class ChatbotContainer(containers.DeclarativeContainer):
 
     qdrant_client = database.qdrant_client
     async_qdrant_client = database.async_qdrant_client
-    neo4j_driver = database.async_neo4j_driver
+    neo4j_driver = database.neo4j_driver
     llm = AI.llm_gemini
     embed_model = AI.embed_model
     cohere_client = AI.cohere_reranker
