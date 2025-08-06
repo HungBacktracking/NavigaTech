@@ -1,8 +1,9 @@
-FROM apache/airflow:2.7.3-python3.10
-
-COPY requirements.txt /opt/airflow/
+FROM apache/airflow:2.10.0-python3.10
 
 USER root
+
+# Set Airflow to use LocalExecutor
+ENV AIRFLOW__CORE__EXECUTOR=LocalExecutor
 
 # Cài đặt Google Chrome và ChromeDriver với cách phân phối mới từ Google
 RUN apt-get update && \
@@ -20,11 +21,9 @@ RUN apt-get update && \
     rm -rf /tmp/chromedriver*
 
 USER airflow
-# Install Python dependencies from the requirements.txt
-# COPY wheels/ /wheels/
-COPY requirements.txt /requirements.txt
-RUN pip install -r /requirements.txt
 
-# RUN pip install --no-cache-dir -r /opt/airflow/requirements.txt
+# Copy and install Python requirements
+COPY requirements.txt /opt/airflow/requirements.txt
+RUN pip install --no-cache-dir -r /opt/airflow/requirements.txt
 
 
