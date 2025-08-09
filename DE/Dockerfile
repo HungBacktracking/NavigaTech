@@ -5,7 +5,7 @@ USER root
 # Set Airflow to use LocalExecutor
 ENV AIRFLOW__CORE__EXECUTOR=LocalExecutor
 
-# Cài đặt Google Chrome và ChromeDriver với cách phân phối mới từ Google
+# Cài đặt Google Chrome và ChromeDriver
 RUN apt-get update && \
     apt-get install -y wget unzip curl gnupg && \
     curl -sSL https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
@@ -22,8 +22,22 @@ RUN apt-get update && \
 
 USER airflow
 
-# Copy and install Python requirements
+# Create virtualenv for Qdrant as airflow user
+RUN python3 -m venv /opt/airflow/venvs && \
+    /opt/airflow/venvs/bin/pip install --upgrade pip && \
+    /opt/airflow/venvs/bin/pip install \
+    "sqlalchemy>=2.0" \
+    qdrant-client \
+    googletrans \
+    llama-index-embeddings-huggingface \
+    llama-index-embeddings-huggingface-api \
+    "qdrant-client[fastembed]" \
+    fastembed-gpu \
+    pandas \
+    boto3 \
+    llama-index-embeddings-huggingface \
+    dotenv
+
+# Copy and install Python requirements (for airflow)
 COPY requirements.txt /opt/airflow/requirements.txt
 RUN pip install --no-cache-dir -r /opt/airflow/requirements.txt
-
-

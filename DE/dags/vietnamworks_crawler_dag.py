@@ -55,19 +55,10 @@ with DAG(
         bash_command=f'python3 {DAGS_DIR}/merge/merge_job.py'
     )
 
-    # Load to Qdrant
     load_to_qdrant = BashOperator(
         task_id='load_to_qdrant',
         bash_command="""
-        python3 -m venv /tmp/merge_venv && \
-        source /tmp/merge_venv/bin/activate && \
-        pip install sqlalchemy==2.0 && \
-        pip install -r /opt/airflow/requirements.txt && \
-        pip install qdrant-client && \
-        pip install googletrans && \
-        pip install "llama-index-embeddings-huggingface" && \
-        pip install "qdrant-client[fastembed]" fastembed-gpu && \
-        pip install "llama-index-embeddings-huggingface-api" && \
+        source /opt/airflow/venvs/bin/activate && \
         python3 /opt/airflow/dags/load/load_to_qdrant/load_to_qdrant.py
         """
     )
@@ -75,7 +66,7 @@ with DAG(
     # Load to database
     load_to_db = BashOperator(
         task_id='load_to_db',
-        bash_command=f'python3 {DAGS_DIR}/load/load_to_db.py'
+        bash_command=f'python3 {DAGS_DIR}/load/load_to_postgres/load_to_postgres.py'
     )
 
     # Task dependencies

@@ -14,11 +14,7 @@ load_dotenv("/opt/airflow/utils/.env")
 
 # --- Constants ---
 KEYWORDS = [
-    "Data Engineer", "Data Analyst", "Data Scientist", "Machine Learning",
-    "Artificial Intelligence", "MLOps", "LLM Engineer", "NLP Engineer",
-    "Software Engineer", "Backend Developer", "Frontend Developer",
-    "Full Stack Developer", "DevOps", "Cloud Engineer", "SRE",
-    "Platform Engineer", "Security Engineer", "Big Data Engineer"
+    "Data Engineer"
 ]
 COUNTRY = "Vietnam"
 MAX_THREADS = 5
@@ -35,7 +31,7 @@ def scrape_keyword(keyword):
             search_term=keyword,
             location=COUNTRY,
             country_indeed=COUNTRY,
-            results_wanted=5000,
+            results_wanted=5,
             linkedin_fetch_description=True,
             verbose=0
         )

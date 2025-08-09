@@ -22,11 +22,7 @@ load_dotenv("/opt/airflow/utils/.env")
 
 # Keywords list
 keywords = [
-    "Data Engineer", "Data Analyst", "Data Scientist", "Machine Learning",
-    "Artificial Intelligence", "MLOps", "LLM Engineer", "NLP Engineer",
-    "Software Engineer", "Backend Developer", "Frontend Developer",
-    "Full Stack Developer", "DevOps", "Cloud Engineer", "SRE",
-    "Platform Engineer", "Security Engineer", "Big Data Engineer"
+    "Data Engineer"
 ]
 
 # Selenium configuration
@@ -161,21 +157,6 @@ for keyword in keywords:
                     company_link = "Không rõ"
 
                 mo_ta, yeu_cau, salary, location, deadline, orther = extract_job_details(job_link)
-
-                # job_info = {
-                #     "Từ khóa": keyword,
-                #     "Tiêu đề": title,
-                #     "Link công việc": job_link,
-                #     "Công ty": company,
-                #     "Link công ty": company_link,
-                #     "Lương": salary,
-                #     "Địa điểm": location,
-                #     "Ngày hết hạn": deadline,
-                #     "Mô tả công việc": mo_ta,
-                #     "Yêu cầu công việc": yeu_cau,
-                #     "jd": orther,
-                #     "Logo công ty": company_logo_link,
-                # }
 
 
                 job_info = {
